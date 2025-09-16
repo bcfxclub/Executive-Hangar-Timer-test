@@ -1,6 +1,6 @@
 // 配置常量
 const CONFIG = {
-  API_BASE: localStorage.getItem('apiBase') || "/api",
+  API_BASE: localStorage.getItem('apiBase') || "https://bcfxclub.dpdns.org/api",
   DEFAULT_PASSWORD: 'admin',
   RETRY_TIMEOUT: 5000,
   MAX_RETRIES: 3,
