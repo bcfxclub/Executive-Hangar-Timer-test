@@ -1,7 +1,7 @@
 // 主应用逻辑
 document.addEventListener('DOMContentLoaded', () => {
   // 设置API地址
-  document.getElementById('api-url').value = CONFIG.API_BASE;
+  document.getElementById('https://bcfxclub.dpdns.org/api').value = CONFIG.API_BASE;
   
   // 加载设置
   adminPanel.loadSettings();
