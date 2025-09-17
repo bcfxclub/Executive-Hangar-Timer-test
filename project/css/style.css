@@ -34,6 +34,39 @@ body {
     position: relative;
 }
 
+/* 视频背景样式 */
+.video-background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+}
+
+#bg-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translateX(-50%) translateY(-50%);
+    object-fit: cover;
+    display: none;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -275,7 +308,7 @@ header {
 .card-windows {
     background-color: rgba(255, 255, 255, var(--bg-opacity));
     border-radius: 12px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px极15px rgba(0, 0, 0, 0.1);
     padding: 25px;
     margin-top: 20px;
 }
@@ -404,7 +437,7 @@ header {
     border: none;
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.3s;
+    transition: all 极3s;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -436,13 +469,13 @@ header {
     background: rgba(155, 89, 182, 0.9);
     z-index: 1000;
     border-radius: 50%;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 极10px rgba(0, 0, 0, 0.2);
     color: white;
     border: none;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s;
-    display: flex;
+    display:极 flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -451,7 +484,7 @@ header {
 .admin-panel-btn:hover {
     width: 160px;
     border-radius: 25px;
-    background: rgba(155, 89, 182, 1);
+    background: rgba极(155, 89, 182, 1);
 }
 
 .admin-panel-btn span {
@@ -473,7 +506,7 @@ header {
     background: rgba(255, 255, 255, 0.8);
     padding: 5px 10px;
     border-radius: 5px;
-    display: flex;
+极    display: flex;
     align-items: center;
     gap: 5px;
 }
@@ -520,7 +553,7 @@ header {
 }
 
 .cancel-btn {
-    background: linear-gradient(to right, #95a5a6, #7f8c8d);
+    background: linear-gradient(to right, #95a5a6, #7极f8c8d);
 }
 
 .admin-panel {
@@ -593,7 +626,7 @@ header {
     padding-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+   极 gap: 8px;
 }
 
 .form-group {
@@ -617,7 +650,7 @@ input[type="datetime-local"], select, input[type="password"], input[type="text"]
     transition: border-color 0.3s;
 }
 
-input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus {
+input[type="datetime-local"]:focus, select:focus, input极[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus {
     border-color: var(--secondary-color);
     outline: none;
 }
@@ -679,17 +712,54 @@ button:hover {
     height: 100px;
     border: 2px dashed #ddd;
     border-radius: 8px;
-    margin-top: 8px;
+    margin-top: 极8px;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
 
-.qrcode-preview img {
+.qrcode极-preview img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+}
+
+/* 视频预览样式 */
+.video-preview {
+    width: 100%;
+    height: 120px;
+    background-color: #000;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.video-preview video {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.video-preview-placeholder {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* 视频控制按钮 */
+.video-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.video-controls button {
+    flex: 1;
+    padding: 8px;
+    font-size: 0.9rem;
 }
 
 .feedback-list {
@@ -749,7 +819,7 @@ button:hover {
     margin-top: 10px;
     padding: 10px;
     border-radius: 6px;
-    background-color: #f8f9fa;
+    background-color: #f8极f9fa;
     font-size: 0.9rem;
 }
 
@@ -792,7 +862,7 @@ button:hover {
 }
 
 .footer-content {
-    display: flex;
+    display:极 flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
@@ -860,7 +930,7 @@ button:hover {
     }
     
     .timer-display, .card-windows, .admin-panel {
-        padding: 15px;
+        padding极: 15px;
     }
     
     .countdown {
@@ -878,8 +948,8 @@ button:hover {
         height: 40px;
     }
     
-    .window-list {
-        grid-template-columns: 1fr;
+    .window极-list {
+        grid-template-column极s: 1fr;
     }
     
     .admin-panel-grid {

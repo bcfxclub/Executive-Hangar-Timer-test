@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body id="body">
+    <!-- 视频背景容器 -->
+    <div class="video-background-container">
+        <video id="bg-video" autoplay loop muted playsinline>
+            Your browser does not support the video tag.
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
     <div class="invite-code-container" id="invite-code-container" style="display: none;">
         <a href="#" id="invite-link">
             <i class="fas fa-gift"></i>
@@ -255,6 +263,31 @@
                     <label for="invite-link-input">邀请链接URL</label>
                     <input type="url" id="invite-link-input" placeholder="输入邀请链接URL">
                 </div>
+                
+                <!-- 新增视频背景设置 -->
+                <div class="form-group">
+                    <label for="bg-video-url">背景视频URL (MP4)</label>
+                    <input type="url" id="bg-video-url" placeholder="输入背景视频URL">
+                    <div class="upload-group">
+                        <input type="file" id="bg-video-upload" accept="video/mp4,video/webm">
+                        <button id="upload-bg-video"><i class="fas fa-upload"></i></button>
+                    </div>
+                    <div class="video-preview" id="bg-video-preview">
+                        <div class="video-preview-placeholder">无背景视频</div>
+                    </div>
+                    <div class="video-controls">
+                        <button id="play-video-preview" style="background: var(--card-color);">
+                            <i class="fas fa-play"></i> 预览播放
+                        </button>
+                        <button id="pause-video-preview" style="background: var(--reset-color);">
+                            <i class="fas fa-pause"></i> 暂停预览
+                        </button>
+                    </div>
+                    <button id="delete-bg-video" style="background: var(--reset-color); margin-top: 10px;">
+                        <i class="fas fa-trash"></i> 删除背景视频
+                    </button>
+                </div>
+                
                 <div class="form-group">
                     <label for="bg-image">背景图片URL</label>
                     <input type="url" id="bg-image" placeholder="输入背景图片URL">
