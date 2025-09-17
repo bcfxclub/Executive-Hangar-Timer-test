@@ -137,7 +137,94 @@ class AdminPanel {
     document.getElementById('bg-image').addEventListener('change', function() {
       this.updateBgPreview(this.value);
     }.bind(this));
+// 在initEventListeners方法中添加
+document.getElementById('upload-bg-video').addEventListener('click', () => {
+    this.handleVideoUpload('bg-video-upload', 'bg-video-url');
+});
+
+document.getElementById('play-video-preview').addEventListener('click', () => {
+    this.playVideoPreview();
+});
+
+document.getElementById('pause-video-preview').addEventListener('click', () => {
+    this.pauseVideoPreview();
+});
+
+document.getElementById('delete-bg-video').addEventListener('click', () => {
+    this.deleteBackgroundVideo();
+});
+
+// 添加视频背景相关方法
+updateVideoPreview(url) {
+    const videoPreview = document.getElementById('bg-video-preview');
+    const bgVideo = document.getElementById('bg-video');
     
+    if (url && url.trim() !== '') {
+        videoPreview.innerHTML = `
+            <video controls style="max-width: 100%; max-height: 100%;">
+                <source src="${url}" type="video/mp4">
+                您的浏览器不支持视频播放
+            </video>
+        `;
+        bgVideo.innerHTML = `<source src="${url}" type="video/mp4">`;
+        bgVideo.style.display = 'block';
+        // 隐藏图片背景
+        document.body.style.backgroundImage = 'none';
+    } else {
+        videoPreview.innerHTML = '<div class="video-preview-placeholder">无背景视频</div>';
+        bgVideo.innerHTML = '';
+        bgVideo.style.display = 'none';
+    }
+}
+
+playVideoPreview() {
+    const video = document.querySelector('#bg-video-preview video');
+    if (video) {
+        video.play().catch(e => console.log('Video play failed:', e));
+    }
+}
+
+pauseVideoPreview() {
+    const video = document.querySelector('#bg-video-preview video');
+    if (video) {
+        video.pause();
+    }
+}
+
+handleVideoUpload(fileInputId, urlInputId) {
+    const fileInput = document.getElementById(fileInputId);
+    if (fileInput.files.length === 0) {
+        alert('请选择要上传的视频文件');
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    // 检查文件类型
+    if (!file.type.startsWith('video/')) {
+        alert('请选择视频文件');
+        return;
+    }
+    
+    // 检查文件大小（限制为20MB）
+    if (file.size > 20 * 1024 * 1024) {
+        alert('视频文件大小不能超过20MB');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById(urlInputId).value = e.target.result;
+        this.updateVideoPreview(e.target.result);
+    }.bind(this);
+    reader.readAsDataURL(file);
+}
+
+deleteBackgroundVideo() {
+    document.getElementById('bg-video-url').value = '';
+    this.updateVideoPreview('');
+    this.saveSettings();
+}    
     // 测试API连接
     document.getElementById('test-api').addEventListener('click', async () => {
       const apiUrl = document.getElementById('api-url').value;
@@ -702,3 +789,4 @@ class AdminPanel {
 
 // 创建全局管理员面板实例
 const adminPanel = new AdminPanel();
+
