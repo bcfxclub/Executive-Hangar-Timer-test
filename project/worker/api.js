@@ -1,282 +1,536 @@
-// index.js - Cloudflare Worker
-const DEFAULT_PASSWORD = 'admin';
+const express = require('express');
+const bodyParser = require('body-parser');
+const sqlite3 = require('sqlite3').verbose();
+const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const path = url.pathname;
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// 中间件
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+
+// 数据库初始化
+const db = new sqlite3.Database(':memory:');
+
+// 初始化数据库表
+db.serialize(() => {
+    // 配置表
+    db.run(`CREATE TABLE config (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    )`);
     
-    // 处理预检请求
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      });
+    // 反馈表
+    db.run(`CREATE TABLE feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        content TEXT NOT NULL,
+        contact TEXT,
+        userId INTEGER,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    // 访问记录表
+    db.run(`CREATE TABLE visits (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip TEXT NOT NULL,
+        userAgent TEXT,
+        userId INTEGER,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    // 用户表
+    db.run(`CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        email TEXT,
+        role TEXT DEFAULT 'user',
+        status TEXT DEFAULT 'pending',
+        registerDate DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    
+    // 默认配置
+    const defaultConfig = {
+        startTime: new Date().toISOString(),
+        initialPhase: '5-green',
+        timerEnabled: true,
+        notification: '欢迎使用星际公民行政机库计时系统',
+        notificationLink: '',
+        notificationColor: '#ffffff',
+        customTitle: '星际公民行政机库计时系统',
+        headerTextColor: '#ffffff',
+        headerFontSize: 1.8,
+        logoUrl: '',
+        logoSize: 120,
+        qrcodeUrl: '',
+        qrcodeCaption: '扫描二维码加入我们',
+        qrcodeCaptionColor: '#ffffff',
+        inviteCode: '',
+        inviteLink: '',
+        bgType: 'image',
+        bgImage: '',
+        videoUrl: '',
+        bgOpacity: 80,
+        windowTextColor: '#2d3748',
+        windowCommentColor: '#718096',
+        windowTitleColor: '#2c3e50',
+        calibrationTextColor: '#718096',
+        countdownTextColor: '#2c3e50',
+        hangarTimeTextColor: '#2d3748',
+        statusTextColor: '#2d3748',
+        calibrationTime: new Date().toLocaleString(),
+        apiUrl: 'https://time.bcfx.dpdns.org/api',
+        donationEnabled: false,
+        wechatQrcodeUrl: '',
+        alipayQrcodeUrl: '',
+        donationBtnColor: '#ff6b6b',
+        footerNotice: '欢迎使用行政机库计时系统',
+        footerNoticeLink: '',
+        recordInfo: 'UEE ICP备0000001号',
+        organizationName: '罗伯茨航空航天管理局',
+        projectDescription: '星际公民行政机库计时系统是一个用于管理机库开启时间的专业工具，提供精确的计时功能和状态指示。',
+        version: '当前版本：v2.1.4\n更新日期：2025-09-21\n更新内容：\n在上一版基础上，做出如下修改：\n1、后台管理可以查看访问人数，显示IP地址，在单独页面进行展示。\n2、反馈联系方式，只需要一个输入框。\n3、网页背景模式切换为第一优先级。',
+        about: '星际公民行政机库计时系统由航空航天管理局开发，旨在提供高效的机库时间管理解决方案。如有问题请联系：bcfx@vip.qq.com'
+    };
+    
+    const stmt = db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)");
+    for (const [key, value] of Object.entries(defaultConfig)) {
+        stmt.run(key, typeof value === 'object' ? JSON.stringify(value) : value);
+    }
+    stmt.finalize();
+    
+    // 创建默认管理员账户
+    const adminPassword = bcrypt.hashSync('admin', 10);
+    db.run("INSERT OR IGNORE INTO users (username, password, email, role, status) VALUES (?, ?, ?, ?, ?)", 
+        ['admin', adminPassword, 'admin@example.com', 'admin', 'approved']);
+});
+
+// 获取配置
+app.get('/api/config', (req, res) => {
+    db.all("SELECT key, value FROM config", (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        const config = {};
+        rows.forEach(row => {
+            try {
+                config[row.key] = JSON.parse(row.value);
+            } catch (e) {
+                config[row.key] = row.value;
+            }
+        });
+        
+        res.json(config);
+    });
+});
+
+// 保存配置
+app.post('/api/config', (req, res) => {
+    const config = req.body;
+    const stmt = db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)");
+    
+    for (const [key, value] of Object.entries(config)) {
+        stmt.run(key, typeof value === 'object' ? JSON.stringify(value) : value);
     }
     
-    // API 路由
-    if (path.startsWith('/api/config')) {
-      return handleConfigRequest(request, env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/verify-password')) {
-      return handleVerifyPassword(request, env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/change-password')) {
-      return handleChangePassword(request, env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/feedback')) {
-      return handleFeedbackRequest(request, env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/export')) {
-      return handleExportRequest(request, env.HANGAR_TIMER);
-    else if (path.startsWith('/api/reset')) {
-      return handleResetRequest(request, env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/status')) {
-      return handleStatusRequest(env.HANGAR_TIMER);
-    } else if (path.startsWith('/api/upload')) {
-      return handleUploadRequest(request, env.HANGAR_TIMER);
+    stmt.finalize((err) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true });
+    });
+});
+
+// 记录访问
+app.post('/api/record-visit', (req, res) => {
+    const { userAgent, userId } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    
+    db.run("INSERT INTO visits (ip, userAgent, userId) VALUES (?, ?, ?)", 
+        [ip, userAgent, userId], 
+        function(err) {
+            if (err) {
+                console.error('Error recording visit:', err);
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ success: true, id: this.lastID });
+        });
+});
+
+// 获取访问统计
+app.get('/api/visits', (req, res) => {
+    db.all("SELECT * FROM visits ORDER BY timestamp DESC", (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// 清除访问记录
+app.delete('/api/visits', (req, res) => {
+    db.run("DELETE FROM visits", (err) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true });
+    });
+});
+
+// 用户注册
+app.post('/api/register', (req, res) => {
+    const { username, password, email } = req.body;
+    
+    if (!username || !password || !email) {
+        return res.status(400).json({ success: false, message: '请填写所有必填字段' });
     }
     
-    // 默认响应
-    return new Response('Not Found', { status: 404 });
-  },
-};
+    // 检查用户名是否已存在
+    db.get("SELECT id FROM users WHERE username = ?", [username], (err, row) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+        
+        if (row) {
+            return res.status(400).json({ success: false, message: '用户名已存在' });
+        }
+        
+        // 检查邮箱是否已存在
+        db.get("SELECT id FROM users WHERE email = ?", [email], (err, row) => {
+            if (err) {
+                return res.status(500).json({ success: false, message: '服务器错误' });
+            }
+            
+            if (row) {
+                return res.status(400).json({ success: false, message: '邮箱已被注册' });
+            }
+            
+            // 创建用户
+            const hashedPassword = bcrypt.hashSync(password, 10);
+            db.run("INSERT INTO users (username, password, email, status) VALUES (?, ?, ?, ?)", 
+                [username, hashedPassword, email, 'pending'], 
+                function(err) {
+                    if (err) {
+                        return res.status(500).json({ success: false, message: '注册失败' });
+                    }
+                    res.json({ success: true, message: '注册成功，请等待管理员审核' });
+                });
+        });
+    });
+});
 
-// 处理配置请求
-async function handleConfigRequest(request, kv) {
-  if (request.method === 'GET') {
-    // 获取配置
-    const config = await kv.get('config');
-    return new Response(config || '{}', {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+// 用户登录
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: '请填写用户名和密码' });
+    }
+    
+    db.get("SELECT * FROM users WHERE username = ?", [username], (err, user) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+        
+        if (!user) {
+            return res.status(400).json({ success: false, message: '用户不存在' });
+        }
+        
+        if (user.status !== 'approved') {
+            return res.status(400).json({ success: false, message: '账户未通过审核' });
+        }
+        
+        if (!bcrypt.compareSync(password, user.password)) {
+            return res.status(400).json({ success: false, message: '密码错误' });
+        }
+        
+        // 移除密码字段
+        const { password: _, ...userWithoutPassword } = user;
+        res.json({ success: true, user: userWithoutPassword });
     });
-  } else if (request.method === 'POST') {
-    // 更新配置
-    const config = await request.json();
-    await kv.put('config', JSON.stringify(config));
-    return new Response(JSON.stringify({ success: true }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+});
 
-// 验证密码
-async function handleVerifyPassword(request, kv) {
-  if (request.method === 'POST') {
-    const { password } = await request.json();
-    const storedPassword = await kv.get('admin_password');
+// 忘记密码
+app.post('/api/forgot-password', (req, res) => {
+    const { email } = req.body;
     
-    // 如果没有设置密码，使用默认密码
-    const validPassword = storedPassword || DEFAULT_PASSWORD;
+    if (!email) {
+        return res.status(400).json({ success: false, message: '请输入邮箱地址' });
+    }
     
-    return new Response(JSON.stringify({
-      valid: password === validPassword
-    }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+    db.get("SELECT id FROM users WHERE email = ?", [email], (err, user) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: '服务器错误' });
+        }
+        
+        if (!user) {
+            return res.status(400).json({ success: false, message: '邮箱未注册' });
+        }
+        
+        // 在实际应用中，这里应该发送密码重置邮件
+        // 这里仅返回成功消息
+        res.json({ success: true, message: '密码重置链接已发送到您的邮箱' });
     });
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+});
+
+// 获取用户列表
+app.get('/api/users', (req, res) => {
+    db.all("SELECT id, username, email, role, status, registerDate FROM users ORDER BY registerDate DESC", (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// 更新用户信息
+app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { password, email } = req.body;
+    
+    let query = "UPDATE users SET ";
+    let params = [];
+    
+    if (password) {
+        query += "password = ?";
+        params.push(bcrypt.hashSync(password, 10));
+    }
+    
+    if (email) {
+        if (params.length > 0) query += ", ";
+        query += "email = ?";
+        params.push(email);
+    }
+    
+    query += " WHERE id = ?";
+    params.push(id);
+    
+    db.run(query, params, function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '更新失败' });
+        }
+        res.json({ success: true, message: '更新成功' });
+    });
+});
+
+// 审核用户
+app.post('/api/users/:id/approve', (req, res) => {
+    const { id } = req.params;
+    
+    db.run("UPDATE users SET status = 'approved' WHERE id = ?", [id], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '操作失败' });
+        }
+        res.json({ success: true, message: '用户已通过审核' });
+    });
+});
+
+app.post('/api/users/:id/reject', (req, res) => {
+    const { id } = req.params;
+    
+    db.run("UPDATE users SET status = 'rejected' WHERE id = ?", [id], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '操作失败' });
+        }
+        res.json({ success: true, message: '用户已拒绝' });
+    });
+});
+
+// 删除用户
+app.delete('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    
+    db.run("DELETE FROM users WHERE id = ?", [id], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+        res.json({ success: true, message: '用户已删除' });
+    });
+});
+
+// 提交反馈
+app.post('/api/feedback', (req, res) => {
+    const { content, contact, userId } = req.body;
+    
+    if (!content) {
+        return res.status(400).json({ success: false, message: '反馈内容不能为空' });
+    }
+    
+    db.run("INSERT INTO feedback (content, contact, userId) VALUES (?, ?, ?)", 
+        [content, contact, userId], 
+        function(err) {
+            if (err) {
+                return res.status(500).json({ success: false, message: '提交失败' });
+            }
+            res.json({ success: true, message: '反馈提交成功' });
+        });
+});
+
+// 获取反馈列表
+app.get('/api/feedback', (req, res) => {
+    db.all("SELECT * FROM feedback ORDER BY timestamp DESC", (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// 删除反馈
+app.delete('/api/feedback/:id', (req, res) => {
+    const { id } = req.params;
+    
+    db.run("DELETE FROM feedback WHERE id = ?", [id], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '删除失败' });
+        }
+        res.json({ success: true, message: '反馈已删除' });
+    });
+});
+
+// 导出数据
+app.get('/api/export', (req, res) => {
+    const data = {};
+    
+    db.all("SELECT * FROM config", (err, configRows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        
+        data.config = configRows.reduce((obj, row) => {
+            try {
+                obj[row.key] = JSON.parse(row.value);
+            } catch (e) {
+                obj[row.key] = row.value;
+            }
+            return obj;
+        }, {});
+        
+        db.all("SELECT * FROM feedback", (err, feedbackRows) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            
+            data.feedback = feedbackRows;
+            
+            db.all("SELECT id, username, email, role, status, registerDate FROM users", (err, userRows) => {
+                if (err) {
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                data.users = userRows;
+                
+                db.all("SELECT * FROM visits", (err, visitRows) => {
+                    if (err) {
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    data.visits = visitRows;
+                    res.json(data);
+                });
+            });
+        });
+    });
+});
+
+// 重置数据
+app.post('/api/reset', (req, res) => {
+    db.serialize(() => {
+        db.run("DELETE FROM config");
+        db.run("DELETE FROM feedback");
+        db.run("DELETE FROM visits");
+        db.run("DELETE FROM users");
+        
+        // 重新插入默认配置
+        const defaultConfig = {
+            startTime: new Date().toISOString(),
+            initialPhase: '5-green',
+            timerEnabled: true,
+            notification: '欢迎使用星际公民行政机库计时系统',
+            notificationLink: '',
+            notificationColor: '#ffffff',
+            customTitle: '星际公民行政机库计时系统',
+            headerTextColor: '#ffffff',
+            headerFontSize: 1.8,
+            logoUrl: '',
+            logoSize: 120,
+            qrcodeUrl: '',
+            qrcodeCaption: '扫描二维码加入我们',
+            qrcodeCaptionColor: '#ffffff',
+            inviteCode: '',
+            inviteLink: '',
+            bgType: 'image',
+            bgImage: '',
+            videoUrl: '',
+            bgOpacity: 80,
+            windowTextColor: '#2d3748',
+            windowCommentColor: '#718096',
+            windowTitleColor: '#2c3e50',
+            calibrationTextColor: '#718096',
+            countdownTextColor: '#2c3e50',
+            hangarTimeTextColor: '#2d3748',
+            statusTextColor: '#2d3748',
+            calibrationTime: new Date().toLocaleString(),
+            apiUrl: 'https://time.bcfx.dpdns.org/api',
+            donationEnabled: false,
+            wechatQrcodeUrl: '',
+            alipayQrcodeUrl: '',
+            donationBtnColor: '#ff6b6b',
+            footerNotice: '欢迎使用行政机库计时系统',
+            footerNoticeLink: '',
+            recordInfo: 'UEE ICP备0000001号',
+            organizationName: '罗伯茨航空航天管理局',
+            projectDescription: '星际公民行政机库计时系统是一个用于管理机库开启时间的专业工具，提供精确的计时功能和状态指示。',
+            version: '当前版本：v2.1.4\n更新日期：2025-09-21\n更新内容：\n在上一版基础上，做出如下修改：\n1、后台管理可以查看访问人数，显示IP地址，在单独页面进行展示。\n2、反馈联系方式，只需要一个输入框。\n3、网页背景模式切换为第一优先级。',
+            about: '星际公民行政机库计时系统由航空航天管理局开发，旨在提供高效的机库时间管理解决方案。如有问题请联系：bcfx@vip.qq.com'
+        };
+        
+        const stmt = db.prepare("INSERT INTO config (key, value) VALUES (?, ?)");
+        for (const [key, value] of Object.entries(defaultConfig)) {
+            stmt.run(key, typeof value === 'object' ? JSON.stringify(value) : value);
+        }
+        stmt.finalize();
+        
+        // 创建默认管理员账户
+        const adminPassword = bcrypt.hashSync('admin', 10);
+        db.run("INSERT INTO users (username, password, email, role, status) VALUES (?, ?, ?, ?, ?)", 
+            ['admin', adminPassword, 'admin@example.com', 'admin', 'approved']);
+            
+        res.json({ success: true, message: '数据已重置' });
+    });
+});
 
 // 修改密码
-async function handleChangePassword(request, kv) {
-  if (request.method === 'POST') {
-    const { password } = await request.json();
+app.post('/api/change-password', (req, res) => {
+    const { password } = req.body;
     
-    if (password && password.length >= 4) {
-      await kv.put('admin_password', password);
-      return new Response(JSON.stringify({ success: true }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } else {
-      return new Response(JSON.stringify({ success: false, error: '密码长度至少4位' }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
+    if (!password) {
+        return res.status(400).json({ success: false, message: '新密码不能为空' });
     }
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+    
+    // 在实际应用中，这里应该验证当前用户身份
+    // 这里直接修改管理员密码
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    db.run("UPDATE users SET password = ? WHERE username = 'admin'", [hashedPassword], function(err) {
+        if (err) {
+            return res.status(500).json({ success: false, message: '密码修改失败' });
+        }
+        res.json({ success: true, message: '密码已修改' });
+    });
+});
 
-// 处理反馈请求
-async function handleFeedbackRequest(request, kv) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-  const id = path.split('/').pop();
-  
-  if (request.method === 'GET') {
-    // 获取所有反馈
-    const feedback = await kv.get('feedback', 'json') || [];
-    return new Response(JSON.stringify(feedback), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } else if (request.method === 'POST') {
-    // 提交新反馈
-    const { content } = await request.json();
-    const feedback = await kv.get('feedback', 'json') || [];
-    
-    const newFeedback = {
-      id: Date.now().toString(),
-      content,
-      timestamp: new Date().toISOString()
-    };
-    
-    feedback.push(newFeedback);
-    await kv.put('feedback', JSON.stringify(feedback));
-    
-    return new Response(JSON.stringify({ success: true }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } else if (request.method === 'DELETE' && id) {
-    // 删除反馈
-    const feedback = await kv.get('feedback', 'json') || [];
-    const updatedFeedback = feedback.filter(item => item.id !== id);
-    
-    await kv.put('feedback', JSON.stringify(updatedFeedback));
-    
-    return new Response(JSON.stringify({ success: true }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+// 获取系统状态
+app.get('/api/status', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
-// 处理导出请求
-async function handleExportRequest(request, kv) {
-  if (request.method === 'GET') {
-    const config = await kv.get('config', 'json') || {};
-    const feedback = await kv.get('feedback', 'json') || [];
-    const adminPassword = await kv.get('admin_password') || DEFAULT_PASSWORD;
-    
-    const exportData = {
-      config,
-      feedback,
-      adminPassword,
-      exportedAt: new Date().toISOString()
-    };
-    
-    return new Response(JSON.stringify(exportData), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+// 启动服务器
+app.listen(PORT, () => {
+    console.log(`服务器运行在端口 ${PORT}`);
+});
 
-// 处理重置请求
-async function handleResetRequest(request, kv) {
-  if (request.method === 'POST') {
-    await kv.delete('config');
-    await kv.delete('feedback');
-    await kv.delete('admin_password');
-    
-    return new Response(JSON.stringify({ success: true }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
-
-// 处理状态请求
-async function handleStatusRequest(kv) {
-  try {
-    // 尝试读取KV来检查状态
-    await kv.get('config');
-    return new Response(JSON.stringify({ status: 'ok' }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  } catch (error) {
-    return new Response(JSON.stringify({ status: 'error' }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
-  }
-}
-
-// 处理上传请求
-async function handleUploadRequest(request, kv) {
-  if (request.method === 'POST') {
-    try {
-      const formData = await request.formData();
-      const file = formData.get('file');
-      
-      if (!file) {
-        return new Response(JSON.stringify({ success: false, error: '没有文件上传' }), {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
-      }
-      
-      // 这里只是示例，实际应用中应该将文件保存到云存储
-      // 并返回文件的URL
-      const fileName = `upload_${Date.now()}_${file.name}`;
-      
-      // 模拟上传成功，返回一个假URL
-      const fileUrl = `https://example.com/uploads/${fileName}`;
-      
-      return new Response(JSON.stringify({ 
-        success: true, 
-        url: fileUrl 
-      }), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ success: false, error: error.message }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-  }
-  
-  return new Response('Method Not Allowed', { status: 405 });
-}
+module.exports = app;
