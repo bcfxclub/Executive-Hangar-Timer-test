@@ -1723,7 +1723,7 @@
     </div>
 
     <script>
-        // API地址设置 - 使用默认API地址
+        // API地址设置 - 使用固定默认值，不存储在localStorage中
         let API_BASE = "https://time.bcfxclub.dpdns.org/api";
         
         // 初始化状态
@@ -1731,7 +1731,7 @@
         let currentPhase = 'reset';
         let currentLights = [];
         let countdownInterval;
-        let isAdmin = false; // 不再使用localStorage存储管理员状态
+        let isAdmin = localStorage.getItem('isAdmin') === 'true';
         let timerEnabled = true;
         let donationEnabled = false;
         
@@ -1904,6 +1904,7 @@
                     }
                     
                     if (config.apiUrl) {
+                        // 仅更新当前会话的API_BASE，不保存到localStorage
                         API_BASE = config.apiUrl;
                         document.getElementById('api-url').value = config.apiUrl;
                     }
@@ -1964,6 +1965,12 @@
                     
                     initializeTimer(config.initialPhase || '5-green');
                     
+                    // 如果是管理员，显示管理按钮
+                    if (isAdmin) {
+                        document.getElementById('admin-panel-btn').style.display = 'flex';
+                        document.getElementById('admin-login-btn').innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出管理员</span>';
+                    }
+
                     // 添加计时器状态实时保存功能
                     document.getElementById('timer-enabled').addEventListener('change', async function() {
                         timerEnabled = this.value === 'true';
@@ -2040,7 +2047,7 @@
                 });
                 
                 if (response.ok) {
-                    // 更新API地址
+                    // 更新当前会话的API_BASE，不保存到localStorage
                     API_BASE = config.apiUrl;
                     // 更新邀请码显示
                     updateInviteDisplay(config);
@@ -2304,6 +2311,7 @@
             if (isAdmin) {
                 // 退出管理员模式
                 isAdmin = false;
+                localStorage.setItem('isAdmin', 'false');
                 document.getElementById('admin-panel').style.display = 'none';
                 document.getElementById('admin-panel-btn').style.display = 'none';
                 this.innerHTML = '<i class="fas fa-user-lock"></i><span>管理员登录</span>';
@@ -2381,6 +2389,7 @@
                     const result = await response.json();
                     if (result.valid) {
                         isAdmin = true;
+                        localStorage.setItem('isAdmin', 'true');
                         document.getElementById('admin-panel').style.display = 'block';
                         document.getElementById('admin-panel-btn').style.display = 'flex';
                         document.getElementById('login-modal').style.display = 'none';
@@ -2624,7 +2633,7 @@
                 if (response.ok) {
                     resultDiv.textContent = 'API连接成功！';
                     resultDiv.className = 'api-test-result success';
-                    // 更新全局API_BASE
+                    // 更新当前会话的API_BASE，不保存到localStorage
                     API_BASE = apiUrl;
                 } else {
                     resultDiv.textContent = 'API连接失败：服务器返回错误';
@@ -2670,7 +2679,7 @@
                     
                     if (response.ok) {
                         alert('数据已重置');
-                        isAdmin = false;
+                        localStorage.setItem('isAdmin', 'false');
                         location.reload();
                     } else {
                         alert('重置失败');
