@@ -3932,29 +3932,27 @@
                     document.getElementById('admin-panel-btn').style.display = 'none';
                 }
             } else {
-                // 恢复为登录按钮
+                // 用户未登录
                 loginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
-                
-                // 隐藏用户中心和后台管理按钮
-                document.getElementById('user-center-btn').style.display = 'none';
                 document.getElementById('admin-panel-btn').style.display = 'none';
+                document.getElementById('user-center-btn').style.display = 'none';
             }
         }
         
-        // 更新反馈用户信息显示
+        // 更新反馈用户信息
         function updateFeedbackUserInfo() {
-            const feedbackUserInfo = document.getElementById('feedback-user-info');
-            const currentUsername = document.getElementById('current-username');
+            const userInfo = document.getElementById('feedback-user-info');
+            const usernameSpan = document.getElementById('current-username');
             
             if (currentUser) {
-                feedbackUserInfo.style.display = 'block';
-                currentUsername.textContent = currentUser.username;
+                userInfo.style.display = 'block';
+                usernameSpan.textContent = currentUser.username;
             } else {
-                feedbackUserInfo.style.display = 'none';
+                userInfo.style.display = 'none';
             }
         }
         
-        // 用户退出登录
+        // 退出登录
         function logout() {
             currentUser = null;
             localStorage.removeItem('currentUser');
@@ -3962,51 +3960,45 @@
             alert('已退出登录');
         }
         
-        // 用户登录按钮点击事件（支持退出登录）
+        // 添加退出登录事件
         document.getElementById('user-login-btn').addEventListener('click', function() {
             if (currentUser) {
-                // 如果已登录，点击退出登录
+                // 如果已登录，点击按钮是退出登录
                 logout();
             } else {
-                // 如果未登录，显示登录模态框
+                // 如果未登录，点击按钮是打开登录模态框
                 document.getElementById('login-modal').style.display = 'flex';
                 switchLoginTab('login');
             }
         });
         
-        // 页脚信息点击事件
+        // 页脚信息按钮事件
         document.getElementById('project-description-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value.replace(/\n/g, '<br>');
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('version-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value.replace(/\n/g, '<br>');
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('about-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '关于我们';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value.replace(/\n/g, '<br>');
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
+        // 关闭页脚信息模态框
         document.getElementById('close-footer-modal').addEventListener('click', function() {
             document.getElementById('footer-info-modal').style.display = 'none';
         });
         
-        // 关闭模态框（点击外部区域）
-        window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        });
-        
-        // 初始化页面
-        window.addEventListener('load', function() {
-            // 检查当前用户登录状态
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否有已登录的用户
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
@@ -4019,13 +4011,16 @@
             // 检查数据库状态
             checkDbStatus();
             
-            // 更新校准时间显示
-            updateCalibrationTime();
-            
-            // 如果是管理员，加载反馈列表
+            // 加载反馈（如果是管理员）
             if (currentUser && currentUser.role === 'admin') {
                 loadFeedback();
             }
+            
+            // 更新校准时间
+            updateCalibrationTime();
+            
+            // 设置定期更新校准时间
+            setInterval(updateCalibrationTime, 60000);
         });
     </script>
 </body>
