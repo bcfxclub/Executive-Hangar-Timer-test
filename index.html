@@ -1229,6 +1229,7 @@
             font-size: 0.75rem;
         }
         
+        /* 用户中心样式 - 修改为标签页形式 */
         .user-center {
             display: none;
             position: fixed;
@@ -1240,7 +1241,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             width: 90%;
-            max-width: 600px;
+            max-width: 800px;
             max-height: 85vh;
             overflow-y: auto;
             z-index: 1002;
@@ -1259,13 +1260,13 @@
             margin-bottom: 20px;
         }
         
-        .login-tabs {
+        .user-center-tabs {
             display: flex;
             margin-bottom: 20px;
             border-bottom: 1px solid #ddd;
         }
         
-        .login-tab {
+        .user-center-tab {
             padding: 10px 20px;
             cursor: pointer;
             background: #f1f1f1;
@@ -1276,17 +1277,17 @@
             transition: all 0.3s;
         }
         
-        .login-tab.active {
+        .user-center-tab.active {
             background: var(--secondary-color);
             color: white;
             border-color: var(--secondary-color);
         }
         
-        .login-tab-content {
+        .user-center-tab-content {
             display: none;
         }
         
-        .login-tab-content.active {
+        .user-center-tab-content.active {
             display: block;
         }
         
@@ -1299,8 +1300,13 @@
             margin-left: 5px;
         }
         
-        .user-admin {
+        .user-superadmin {
             background-color: #e74c3c;
+            color: white;
+        }
+        
+        .user-admin {
+            background-color: #9b59b6;
             color: white;
         }
         
@@ -1312,6 +1318,51 @@
         .user-pending {
             background-color: #f39c12;
             color: white;
+        }
+        
+        .user-inactive {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .permission-item input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .edit-user-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1003;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .edit-user-modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         @media (max-width: 768px) {
@@ -1412,6 +1463,19 @@
                 margin-top: 10px;
                 width: 100%;
                 justify-content: flex-end;
+            }
+            
+            .user-center-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .user-center-tab {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .permissions-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -1674,6 +1738,50 @@
         </div>
     </div>
 
+    <!-- 编辑用户模态框 -->
+    <div class="edit-user-modal" id="edit-user-modal">
+        <div class="edit-user-modal-content">
+            <h2><i class="fas fa-user-edit"></i> 编辑用户</h2>
+            <div class="form-group">
+                <label for="edit-username">用户名</label>
+                <input type="text" id="edit-username" readonly>
+            </div>
+            <div class="form-group">
+                <label for="edit-email">邮箱</label>
+                <input type="email" id="edit-email">
+            </div>
+            <div class="form-group">
+                <label for="edit-role">用户角色</label>
+                <select id="edit-role">
+                    <option value="user">普通用户</option>
+                    <option value="admin">管理员</option>
+                    <option value="superadmin">超级管理员</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>用户状态</label>
+                <div style="display: flex; gap: 15px;">
+                    <label><input type="checkbox" id="edit-approved"> 已审核</label>
+                    <label><input type="checkbox" id="edit-active"> 激活状态</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>权限设置</label>
+                <div class="permissions-grid" id="edit-permissions">
+                    <!-- 权限复选框将通过JavaScript动态生成 -->
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="edit-password">重置密码</label>
+                <input type="password" id="edit-password" placeholder="输入新密码（留空则不修改）">
+            </div>
+            <div class="modal-buttons">
+                <button id="save-user-btn">保存</button>
+                <button class="cancel-btn" id="cancel-edit-user">取消</button>
+            </div>
+        </div>
+    </div>
+
     <div class="admin-panel" id="admin-panel">
         <div class="admin-panel-header" id="admin-panel-header">
             <h2><i class="fas fa-cog"></i> 后台管理系统</h2>
@@ -1681,7 +1789,7 @@
         </div>
         
         <div class="admin-tabs">
-            <div class="admin-tab active" data-tab="basic">时间校准</div>
+            <div class="admin-tab active" data-tab="basic">基本设置</div>
             <div class="admin-tab" data-tab="notification">通知管理</div>
             <div class="admin-tab" data-tab="appearance">外观设置</div>
             <div class="admin-tab" data-tab="donation">捐助设置</div>
@@ -1694,7 +1802,7 @@
         
         <div class="admin-tab-content active" id="basic-tab">
             <div class="admin-card">
-                <h3><i class="fas fa-sliders-h"></i> 时间校准</h3>
+                <h3><i class="fas fa-sliders-h"></i> 基本设置</h3>
                 <div class="form-group">
                     <label for="start-time"><i class="fas fa-calendar-alt"></i> 开始时间</label>
                     <input type="datetime-local" id="start-time">
@@ -2028,51 +2136,66 @@
             <button class="cancel-btn" id="close-user-center">关闭</button>
         </div>
         
+        <div class="user-center-tabs">
+            <div class="user-center-tab active" data-tab="user-info">用户信息</div>
+            <div class="user-center-tab" data-tab="change-password">修改密码</div>
+            <div class="user-center-tab" data-tab="user-management" id="user-management-tab" style="display: none;">用户管理</div>
+        </div>
+        
         <div class="user-center-content">
-            <div class="admin-card">
-                <h3><i class="fas fa-user"></i> 用户信息</h3>
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="user-info-username" readonly>
+            <div class="user-center-tab-content active" id="user-info-tab">
+                <div class="admin-card">
+                    <h3><i class="fas fa-user"></i> 用户信息</h3>
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="user-info-username" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="user-info-email">
+                    </div>
+                    <div class="form-group">
+                        <label>角色</label>
+                        <div id="user-info-role"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>状态</label>
+                        <div id="user-info-status"></div>
+                    </div>
+                    <button id="update-user-info">
+                        <i class="fas fa-save"></i> 更新用户信息
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>邮箱</label>
-                    <input type="email" id="user-info-email">
-                </div>
-                <div class="form-group">
-                    <label>角色</label>
-                    <div id="user-info-role"></div>
-                </div>
-                <button id="update-user-info">
-                    <i class="fas fa-save"></i> 更新用户信息
-                </button>
             </div>
             
-            <div class="admin-card">
-                <h3><i class="fas fa-lock"></i> 修改密码</h3>
-                <div class="form-group">
-                    <label for="change-password-old">原密码</label>
-                    <input type="password" id="change-password-old" placeholder="输入原密码">
+            <div class="user-center-tab-content" id="change-password-tab">
+                <div class="admin-card">
+                    <h3><i class="fas fa-lock"></i> 修改密码</h3>
+                    <div class="form-group">
+                        <label for="change-password-old">原密码</label>
+                        <input type="password" id="change-password-old" placeholder="输入原密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="change-password-new">新密码</label>
+                        <input type="password" id="change-password-new" placeholder="输入新密码（至少4位）">
+                    </div>
+                    <div class="form-group">
+                        <label for="change-password-confirm">确认新密码</label>
+                        <input type="password" id="change-password-confirm" placeholder="再次输入新密码">
+                    </div>
+                    <button id="change-password-btn">
+                        <i class="fas fa-key"></i> 修改密码
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label for="change-password-new">新密码</label>
-                    <input type="password" id="change-password-new" placeholder="输入新密码（至少4位）">
-                </div>
-                <div class="form-group">
-                    <label for="change-password-confirm">确认新密码</label>
-                    <input type="password" id="change-password-confirm" placeholder="再次输入新密码">
-                </div>
-                <button id="change-password-btn">
-                    <i class="fas fa-key"></i> 修改密码
-                </button>
             </div>
             
-            <div id="admin-user-management" style="display: none;">
+            <div class="user-center-tab-content" id="user-management-tab-content">
                 <div class="admin-card">
                     <h3><i class="fas fa-users-cog"></i> 用户管理</h3>
                     <p>管理员专用功能：管理注册用户</p>
-                    <button id="manage-users-btn">
-                        <i class="fas fa-cog"></i> 打开用户管理
+                    <div class="user-list" id="user-management-list">加载中...</div>
+                    <button id="refresh-user-management" style="margin-top: 10px;">
+                        <i class="fas fa-sync"></i> 刷新用户列表
                     </button>
                 </div>
             </div>
@@ -2095,6 +2218,19 @@
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         let timerEnabled = true;
         let donationEnabled = false;
+        
+        // 权限标签定义
+        const PERMISSIONS = {
+            basic: { name: '基本设置', desc: '管理计时器基本设置' },
+            notification: { name: '通知管理', desc: '管理系统通知' },
+            appearance: { name: '外观设置', desc: '管理系统外观' },
+            donation: { name: '捐助设置', desc: '管理捐助功能' },
+            data: { name: '数据管理', desc: '管理数据导入导出' },
+            feedback: { name: '反馈管理', desc: '查看和管理用户反馈' },
+            visits: { name: '访问统计', desc: '查看访问统计' },
+            users: { name: '用户管理', desc: '管理系统用户' },
+            footer: { name: '页脚信息', desc: '管理页脚信息' }
+        };
         
         // 从API加载设置
         async function loadSettings() {
@@ -2355,22 +2491,62 @@
             const userLoginBtn = document.getElementById('user-login-btn');
             const adminPanelBtn = document.getElementById('admin-panel-btn');
             const userCenterBtn = document.getElementById('user-center-btn');
+            const userManagementTab = document.getElementById('user-management-tab');
             
             if (currentUser) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
-                if (currentUser.isAdmin) {
+                // 检查用户权限
+                const isAdmin = currentUser.role === 'admin' || currentUser.role === 'superadmin';
+                const canAccessAdmin = isAdmin && hasPermission('basic'); // 至少需要基本设置权限
+                
+                if (canAccessAdmin) {
                     adminPanelBtn.style.display = 'flex';
                     userCenterBtn.style.display = 'flex';
+                    
+                    // 如果是管理员，显示用户管理标签
+                    if (isAdmin) {
+                        userManagementTab.style.display = 'block';
+                    } else {
+                        userManagementTab.style.display = 'none';
+                    }
                 } else {
                     adminPanelBtn.style.display = 'none';
                     userCenterBtn.style.display = 'flex';
+                    userManagementTab.style.display = 'none';
                 }
+                
+                // 更新后台管理标签的显示（根据权限）
+                updateAdminTabsVisibility();
             } else {
                 userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
                 adminPanelBtn.style.display = 'none';
                 userCenterBtn.style.display = 'none';
+                userManagementTab.style.display = 'none';
             }
+        }
+        
+        // 检查用户权限
+        function hasPermission(permission) {
+            if (!currentUser) return false;
+            if (currentUser.role === 'superadmin') return true; // 超级管理员拥有所有权限
+            if (currentUser.role === 'admin') {
+                return currentUser.permissions && currentUser.permissions[permission] === true;
+            }
+            return false;
+        }
+        
+        // 更新后台管理标签的显示（根据权限）
+        function updateAdminTabsVisibility() {
+            const adminTabs = document.querySelectorAll('.admin-tab');
+            adminTabs.forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                if (tabName === 'basic' || hasPermission(tabName)) {
+                    tab.style.display = 'block';
+                } else {
+                    tab.style.display = 'none';
+                }
+            });
         }
         
         // 保存设置到API
@@ -2723,6 +2899,11 @@
             initDraggablePanel('user-center');
             // 加载用户信息
             loadUserInfo();
+            
+            // 如果是管理员，加载用户管理列表
+            if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'superadmin')) {
+                loadUserManagement();
+            }
         });
         
         // 捐助按钮
@@ -2806,11 +2987,36 @@
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
         
+        // 用户中心标签切换
+        function switchUserCenterTab(tabName) {
+            // 移除所有标签的active类
+            document.querySelectorAll('.user-center-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 隐藏所有内容
+            document.querySelectorAll('.user-center-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活选中的标签和内容
+            document.querySelector(`.user-center-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
         // 登录标签点击事件
         document.querySelectorAll('.login-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
                 switchLoginTab(tabName);
+            });
+        });
+        
+        // 用户中心标签点击事件
+        document.querySelectorAll('.user-center-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                switchUserCenterTab(tabName);
             });
         });
         
@@ -2996,7 +3202,7 @@
                     document.getElementById('feedback-contact').value = '';
                     
                     // 如果是管理员，重新加载反馈列表
-                    if (currentUser && currentUser.isAdmin) {
+                    if (currentUser && hasPermission('feedback')) {
                         loadFeedback();
                     }
                 } else {
@@ -3477,7 +3683,7 @@
             loadVisits();
         });
         
-        // 加载用户列表
+        // 加载用户列表（后台管理）
         async function loadUsers() {
             try {
                 const response = await fetch(`${API_BASE}/users`);
@@ -3496,12 +3702,18 @@
                         userItem.className = 'user-item';
                         
                         let roleBadge = '';
-                        if (user.isAdmin) {
+                        if (user.role === 'superadmin') {
+                            roleBadge = '<span class="user-role-badge user-superadmin">超级管理员</span>';
+                        } else if (user.role === 'admin') {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
                             roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
+                        }
+                        
+                        if (user.active === false) {
+                            roleBadge += '<span class="user-role-badge user-inactive">已冻结</span>';
                         }
                         
                         userItem.innerHTML = `
@@ -3512,63 +3724,16 @@
                             </div>
                             <div class="user-actions">
                                 ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                                <button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>
+                                ${user.active !== false ? `<button class="user-action-btn freeze-user" data-username="${user.username}" style="background: #f39c12;">冻结</button>` : `<button class="user-action-btn unfreeze-user" data-username="${user.username}" style="background: #2ecc71;">解冻</button>`}
+                                <button class="user-action-btn edit-user" data-username="${user.username}" style="background: #3498db;">编辑</button>
+                                ${user.role !== 'superadmin' ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
                             </div>
                         `;
                         userList.appendChild(userItem);
                     });
                     
-                    // 添加审核用户事件监听
-                    document.querySelectorAll('.approve-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ approved: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户审核通过');
-                                        loadUsers();
-                                    } else {
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Approve user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加删除用户事件监听
-                    document.querySelectorAll('.user-actions button:not(.approve-user)').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'DELETE'
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已删除');
-                                        loadUsers();
-                                    } else {
-                                        alert('删除失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Delete user error:', error);
-                                    alert('删除失败');
-                                }
-                            }
-                        });
-                    });
+                    // 添加用户操作事件监听
+                    addUserActionListeners();
                 }
             } catch (error) {
                 console.error('Load users error:', error);
@@ -3576,9 +3741,310 @@
             }
         }
         
+        // 加载用户管理列表（用户中心）
+        async function loadUserManagement() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                if (response.ok) {
+                    const users = await response.json();
+                    const userList = document.getElementById('user-management-list');
+                    
+                    if (users.length === 0) {
+                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
+                        return;
+                    }
+                    
+                    userList.innerHTML = '';
+                    users.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        
+                        let roleBadge = '';
+                        if (user.role === 'superadmin') {
+                            roleBadge = '<span class="user-role-badge user-superadmin">超级管理员</span>';
+                        } else if (user.role === 'admin') {
+                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
+                        } else if (user.approved) {
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
+                        }
+                        
+                        if (user.active === false) {
+                            roleBadge += '<span class="user-role-badge user-inactive">已冻结</span>';
+                        }
+                        
+                        userItem.innerHTML = `
+                            <div class="user-info">
+                                <div><strong>${user.username}</strong> ${roleBadge}</div>
+                                <div class="visit-date">邮箱: ${user.email}</div>
+                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
+                            </div>
+                            <div class="user-actions">
+                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                                ${user.active !== false ? `<button class="user-action-btn freeze-user" data-username="${user.username}" style="background: #f39c12;">冻结</button>` : `<button class="user-action-btn unfreeze-user" data-username="${user.username}" style="background: #2ecc71;">解冻</button>`}
+                                <button class="user-action-btn edit-user" data-username="${user.username}" style="background: #3498db;">编辑</button>
+                                ${user.role !== 'superadmin' ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                            </div>
+                        `;
+                        userList.appendChild(userItem);
+                    });
+                    
+                    // 添加用户操作事件监听
+                    addUserActionListeners();
+                }
+            } catch (error) {
+                console.error('Load user management error:', error);
+                document.getElementById('user-management-list').innerHTML = '加载用户列表失败';
+            }
+        }
+        
+        // 添加用户操作事件监听
+        function addUserActionListeners() {
+            // 审核用户
+            document.querySelectorAll('.approve-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${username}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ approved: true })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户审核通过');
+                                loadUsers();
+                                loadUserManagement();
+                            } else {
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Approve user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 冻结用户
+            document.querySelectorAll('.freeze-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要冻结用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${username}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ active: false })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已冻结');
+                                loadUsers();
+                                loadUserManagement();
+                            } else {
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Freeze user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 解冻用户
+            document.querySelectorAll('.unfreeze-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要解冻用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${username}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ active: true })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已解冻');
+                                loadUsers();
+                                loadUserManagement();
+                            } else {
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Unfreeze user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 编辑用户
+            document.querySelectorAll('.edit-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const username = this.getAttribute('data-username');
+                    openEditUserModal(username);
+                });
+            });
+            
+            // 删除用户
+            document.querySelectorAll('.user-actions button:not(.approve-user):not(.freeze-user):not(.unfreeze-user):not(.edit-user)').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${username}`, {
+                                method: 'DELETE'
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已删除');
+                                loadUsers();
+                                loadUserManagement();
+                            } else {
+                                alert('删除失败');
+                            }
+                        } catch (error) {
+                            console.error('Delete user error:', error);
+                            alert('删除失败');
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 打开编辑用户模态框
+        async function openEditUserModal(username) {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                if (response.ok) {
+                    const users = await response.json();
+                    const user = users.find(u => u.username === username);
+                    
+                    if (user) {
+                        document.getElementById('edit-username').value = user.username;
+                        document.getElementById('edit-email').value = user.email || '';
+                        document.getElementById('edit-role').value = user.role || 'user';
+                        document.getElementById('edit-approved').checked = user.approved || false;
+                        document.getElementById('edit-active').checked = user.active !== false;
+                        document.getElementById('edit-password').value = '';
+                        
+                        // 生成权限复选框
+                        const permissionsContainer = document.getElementById('edit-permissions');
+                        permissionsContainer.innerHTML = '';
+                        
+                        Object.keys(PERMISSIONS).forEach(permissionKey => {
+                            const permission = PERMISSIONS[permissionKey];
+                            const permissionItem = document.createElement('div');
+                            permissionItem.className = 'permission-item';
+                            
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.id = `edit-permission-${permissionKey}`;
+                            checkbox.value = permissionKey;
+                            checkbox.checked = user.permissions && user.permissions[permissionKey] === true;
+                            
+                            // 超级管理员自动拥有所有权限且不可修改
+                            if (user.role === 'superadmin') {
+                                checkbox.checked = true;
+                                checkbox.disabled = true;
+                            }
+                            
+                            const label = document.createElement('label');
+                            label.htmlFor = `edit-permission-${permissionKey}`;
+                            label.textContent = permission.name;
+                            
+                            permissionItem.appendChild(checkbox);
+                            permissionItem.appendChild(label);
+                            permissionsContainer.appendChild(permissionItem);
+                        });
+                        
+                        document.getElementById('edit-user-modal').style.display = 'flex';
+                    }
+                }
+            } catch (error) {
+                console.error('Open edit user modal error:', error);
+                alert('加载用户信息失败');
+            }
+        }
+        
+        // 保存用户编辑
+        document.getElementById('save-user-btn').addEventListener('click', async function() {
+            const username = document.getElementById('edit-username').value;
+            const email = document.getElementById('edit-email').value;
+            const role = document.getElementById('edit-role').value;
+            const approved = document.getElementById('edit-approved').checked;
+            const active = document.getElementById('edit-active').checked;
+            const newPassword = document.getElementById('edit-password').value;
+            
+            // 收集权限设置
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
+            });
+            
+            const userData = {
+                email,
+                role,
+                approved,
+                active,
+                permissions
+            };
+            
+            // 如果有新密码，添加到更新数据中
+            if (newPassword.trim() !== '') {
+                if (newPassword.length < 4) {
+                    alert('密码长度至少4位');
+                    return;
+                }
+                userData.password = newPassword;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${username}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (response.ok) {
+                    alert('用户信息已更新');
+                    document.getElementById('edit-user-modal').style.display = 'none';
+                    loadUsers();
+                    loadUserManagement();
+                } else {
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Update user error:', error);
+                alert('更新失败');
+            }
+        });
+        
+        // 取消编辑用户
+        document.getElementById('cancel-edit-user').addEventListener('click', function() {
+            document.getElementById('edit-user-modal').style.display = 'none';
+        });
+        
         // 刷新用户列表
         document.getElementById('refresh-users').addEventListener('click', function() {
             loadUsers();
+        });
+        
+        // 刷新用户管理列表
+        document.getElementById('refresh-user-management').addEventListener('click', function() {
+            loadUserManagement();
         });
         
         // 加载用户信息
@@ -3588,19 +4054,28 @@
                 document.getElementById('user-info-email').value = currentUser.email || '';
                 
                 let roleText = '';
-                if (currentUser.isAdmin) {
+                if (currentUser.role === 'superadmin') {
+                    roleText = '<span class="user-role-badge user-superadmin">超级管理员</span>';
+                } else if (currentUser.role === 'admin') {
                     roleText = '<span class="user-role-badge user-admin">管理员</span>';
                 } else {
                     roleText = '<span class="user-role-badge user-normal">普通用户</span>';
                 }
                 document.getElementById('user-info-role').innerHTML = roleText;
                 
-                // 如果是管理员，显示用户管理功能
-                if (currentUser.isAdmin) {
-                    document.getElementById('admin-user-management').style.display = 'block';
+                let statusText = '';
+                if (currentUser.approved) {
+                    statusText += '<span class="user-role-badge user-normal">已审核</span> ';
                 } else {
-                    document.getElementById('admin-user-management').style.display = 'none';
+                    statusText += '<span class="user-role-badge user-pending">待审核</span> ';
                 }
+                
+                if (currentUser.active !== false) {
+                    statusText += '<span class="user-role-badge user-normal">已激活</span>';
+                } else {
+                    statusText += '<span class="user-role-badge user-inactive">已冻结</span>';
+                }
+                document.getElementById('user-info-status').innerHTML = statusText;
             }
         }
         
@@ -3686,22 +4161,6 @@
                 console.error('Change password error:', error);
                 alert('密码修改失败');
             }
-        });
-        
-        // 管理用户按钮
-        document.getElementById('manage-users-btn').addEventListener('click', function() {
-            document.getElementById('user-center').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'block';
-            // 切换到用户管理标签
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.admin-tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.querySelector('.admin-tab[data-tab="users"]').classList.add('active');
-            document.getElementById('users-tab').classList.add('active');
-            loadUsers();
         });
         
         // 加载捐助记录
