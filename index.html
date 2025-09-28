@@ -710,6 +710,38 @@
             padding: 5px;
         }
         
+        .admin-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .admin-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .admin-tab.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .admin-tab-content {
+            display: none;
+        }
+        
+        .admin-tab-content.active {
+            display: block;
+        }
+        
         .admin-panel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -1161,8 +1193,7 @@
             color: var(--secondary-color);
         }
         
-        /* 用户管理样式 */
-        .users-list {
+        .user-list {
             max-height: 300px;
             overflow-y: auto;
             border: 1px solid #ddd;
@@ -1187,50 +1218,18 @@
             flex: 1;
         }
         
-        .user-username {
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .user-email {
-            font-size: 0.8rem;
-            color: var(--text-light);
-        }
-        
-        .user-status {
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-left: 8px;
-        }
-        
-        .status-active {
-            background-color: var(--card-color);
-            color: white;
-        }
-        
-        .status-pending {
-            background-color: #f39c12;
-            color: white;
-        }
-        
-        .status-frozen {
-            background-color: var(--reset-color);
-            color: white;
-        }
-        
         .user-actions {
             display: flex;
             gap: 5px;
         }
         
         .user-action-btn {
-            padding: 4px 8px;
-            font-size: 0.75rem;
             width: auto;
+            padding: 5px 10px;
+            font-size: 0.75rem;
         }
         
-        .user-center-panel {
+        .user-center {
             display: none;
             position: fixed;
             top: 50%;
@@ -1256,34 +1255,8 @@
             border-bottom: 2px solid var(--secondary-color);
         }
         
-        .user-center-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .user-center-tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .user-center-tab.active {
-            border-bottom-color: var(--secondary-color);
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-        
         .user-center-content {
-            min-height: 300px;
-        }
-        
-        .user-center-section {
-            display: none;
-        }
-        
-        .user-center-section.active {
-            display: block;
+            margin-bottom: 20px;
         }
         
         .login-tabs {
@@ -1295,23 +1268,50 @@
         .login-tab {
             padding: 10px 20px;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            flex: 1;
-            text-align: center;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
         }
         
         .login-tab.active {
-            border-bottom-color: var(--secondary-color);
-            color: var(--secondary-color);
-            font-weight: bold;
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
         }
         
-        .login-section {
+        .login-tab-content {
             display: none;
         }
         
-        .login-section.active {
+        .login-tab-content.active {
             display: block;
+        }
+        
+        .user-role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .user-admin {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .user-normal {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .user-pending {
+            background-color: #f39c12;
+            color: white;
         }
         
         @media (max-width: 768px) {
@@ -1324,7 +1324,7 @@
                 font-size: 1.4rem;
             }
             
-            .timer-display, .card-windows, .admin-panel, .user-center-panel {
+            .timer-display, .card-windows, .admin-panel, .user-center {
                 padding: 15px;
             }
             
@@ -1397,7 +1397,7 @@
                 padding: 12px;
             }
             
-            .admin-panel, .user-center-panel {
+            .admin-panel, .user-center {
                 width: 95%;
                 min-width: unset;
                 padding: 15px;
@@ -1409,7 +1409,7 @@
             }
             
             .user-actions {
-                margin-top: 8px;
+                margin-top: 10px;
                 width: 100%;
                 justify-content: flex-end;
             }
@@ -1549,19 +1549,17 @@
         <i class="fas fa-database"></i> <span>数据库状态: 检查中...</span>
     </div>
 
-    <!-- 登录/注册模态框 -->
     <div class="modal" id="login-modal">
         <div class="modal-content">
-            <h2><i class="fas fa-user"></i> 用户登录/注册</h2>
+            <h2><i class="fas fa-user"></i> 用户登录</h2>
             
             <div class="login-tabs">
                 <div class="login-tab active" data-tab="login">登录</div>
                 <div class="login-tab" data-tab="register">注册</div>
-                <div class="login-tab" data-tab="forgot">找回密码</div>
+                <div class="login-tab" data-tab="reset-password">找回密码</div>
             </div>
             
-            <!-- 登录表单 -->
-            <div class="login-section active" id="login-section">
+            <div class="login-tab-content active" id="login-tab">
                 <div class="form-group">
                     <label for="login-username">用户名</label>
                     <input type="text" id="login-username" placeholder="输入用户名">
@@ -1576,23 +1574,18 @@
                 </div>
             </div>
             
-            <!-- 注册表单 -->
-            <div class="login-section" id="register-section">
+            <div class="login-tab-content" id="register-tab">
                 <div class="form-group">
                     <label for="register-username">用户名</label>
-                    <input type="text" id="register-username" placeholder="输入用户名（至少3位）">
+                    <input type="text" id="register-username" placeholder="输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">密码</label>
+                    <input type="password" id="register-password" placeholder="输入密码（至少4位）">
                 </div>
                 <div class="form-group">
                     <label for="register-email">邮箱</label>
                     <input type="email" id="register-email" placeholder="输入邮箱">
-                </div>
-                <div class="form-group">
-                    <label for="register-password">密码</label>
-                    <input type="password" id="register-password" placeholder="输入密码（至少6位）">
-                </div>
-                <div class="form-group">
-                    <label for="register-confirm-password">确认密码</label>
-                    <input type="password" id="register-confirm-password" placeholder="再次输入密码">
                 </div>
                 <div class="modal-buttons">
                     <button id="register-btn">注册</button>
@@ -1600,19 +1593,22 @@
                 </div>
             </div>
             
-            <!-- 找回密码表单 -->
-            <div class="login-section" id="forgot-section">
+            <div class="login-tab-content" id="reset-password-tab">
                 <div class="form-group">
-                    <label for="forgot-username">用户名</label>
-                    <input type="text" id="forgot-username" placeholder="输入用户名">
+                    <label for="reset-username">用户名</label>
+                    <input type="text" id="reset-username" placeholder="输入用户名">
                 </div>
                 <div class="form-group">
-                    <label for="forgot-email">邮箱</label>
-                    <input type="email" id="forgot-email" placeholder="输入注册时使用的邮箱">
+                    <label for="reset-email">邮箱</label>
+                    <input type="email" id="reset-email" placeholder="输入注册时使用的邮箱">
+                </div>
+                <div class="form-group">
+                    <label for="reset-new-password">新密码</label>
+                    <input type="password" id="reset-new-password" placeholder="输入新密码（至少4位）">
                 </div>
                 <div class="modal-buttons">
-                    <button id="forgot-btn">发送重置链接</button>
-                    <button class="cancel-btn" id="cancel-forgot">取消</button>
+                    <button id="reset-password-btn">重置密码</button>
+                    <button class="cancel-btn" id="cancel-reset">取消</button>
                 </div>
             </div>
         </div>
@@ -1621,11 +1617,6 @@
     <div class="modal" id="feedback-modal">
         <div class="modal-content">
             <h2><i class="fas fa-comment"></i> 提交反馈</h2>
-            <div id="feedback-user-info" class="form-group" style="display: none;">
-                <p style="color: var(--secondary-color); font-weight: bold;">
-                    <i class="fas fa-user"></i> 当前用户: <span id="current-username"></span>
-                </p>
-            </div>
             <div class="form-group">
                 <label for="feedback-content">反馈内容</label>
                 <textarea id="feedback-content" placeholder="请输入您的反馈内容"></textarea>
@@ -1683,92 +1674,25 @@
         </div>
     </div>
 
-    <!-- 用户中心面板 -->
-    <div class="user-center-panel" id="user-center-panel">
-        <div class="user-center-header">
-            <h2><i class="fas fa-user-circle"></i> 用户中心</h2>
-            <button class="cancel-btn" id="close-user-center">关闭</button>
-        </div>
-        
-        <div class="user-center-tabs">
-            <div class="user-center-tab active" data-tab="profile">个人信息</div>
-            <div class="user-center-tab" data-tab="security" id="security-tab">安全设置</div>
-            <div class="user-center-tab" data-tab="users" id="users-tab" style="display: none;">用户管理</div>
-        </div>
-        
-        <div class="user-center-content">
-            <!-- 个人信息 -->
-            <div class="user-center-section active" id="profile-section">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="profile-username" readonly>
-                </div>
-                <div class="form-group">
-                    <label>邮箱</label>
-                    <input type="email" id="profile-email" readonly>
-                </div>
-                <div class="form-group">
-                    <label>注册时间</label>
-                    <input type="text" id="profile-register-date" readonly>
-                </div>
-                <div class="form-group">
-                    <label>最后登录时间</label>
-                    <input type="text" id="profile-last-login" readonly>
-                </div>
-                <div class="form-group">
-                    <label>用户角色</label>
-                    <input type="text" id="profile-role" readonly>
-                </div>
-                <div class="form-group">
-                    <label>用户状态</label>
-                    <input type="text" id="profile-status" readonly>
-                </div>
-            </div>
-            
-            <!-- 安全设置 -->
-            <div class="user-center-section" id="security-section">
-                <div class="form-group">
-                    <label for="change-password">新密码</label>
-                    <input type="password" id="change-password" placeholder="输入新密码">
-                </div>
-                <div class="form-group">
-                    <label for="change-confirm-password">确认新密码</label>
-                    <input type="password" id="change-confirm-password" placeholder="再次输入新密码">
-                </div>
-                <div class="form-group">
-                    <label for="change-email">新邮箱</label>
-                    <input type="email" id="change-email" placeholder="输入新邮箱">
-                </div>
-                <button id="save-security">保存更改</button>
-            </div>
-            
-            <!-- 用户管理（仅管理员可见） -->
-            <div class="user-center-section" id="users-section">
-                <div class="form-group">
-                    <h3><i class="fas fa-users"></i> 用户列表</h3>
-                    <div class="users-list" id="users-list">
-                        加载中...
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button id="refresh-users">
-                        <i class="fas fa-sync"></i> 刷新用户列表
-                    </button>
-                    <button id="clear-visits" style="background: var(--reset-color); margin-top: 10px;">
-                        <i class="fas fa-trash"></i> 清除访问记录
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 后台管理面板 -->
     <div class="admin-panel" id="admin-panel">
         <div class="admin-panel-header" id="admin-panel-header">
             <h2><i class="fas fa-cog"></i> 后台管理系统</h2>
             <button class="cancel-btn" id="close-admin-panel">关闭管理面板</button>
         </div>
-        <div class="admin-panel-grid">
+        
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="basic">基本设置</div>
+            <div class="admin-tab" data-tab="notification">通知管理</div>
+            <div class="admin-tab" data-tab="appearance">外观设置</div>
+            <div class="admin-tab" data-tab="donation">捐助设置</div>
+            <div class="admin-tab" data-tab="data">数据管理</div>
+            <div class="admin-tab" data-tab="feedback">反馈管理</div>
+            <div class="admin-tab" data-tab="visits">访问统计</div>
+            <div class="admin-tab" data-tab="users">用户管理</div>
+            <div class="admin-tab" data-tab="footer">页脚信息</div>
+        </div>
+        
+        <div class="admin-tab-content active" id="basic-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-sliders-h"></i> 基本设置</h3>
                 <div class="form-group">
@@ -1802,7 +1726,9 @@
                     <i class="fas fa-sync"></i> 更新计时器
                 </button>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="notification-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-bell"></i> 通知管理</h3>
                 <div class="form-group">
@@ -1822,7 +1748,9 @@
                     <i class="fas fa-save"></i> 更新通知
                 </button>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="appearance-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-image"></i> 外观设置</h3>
                 <div class="form-group">
@@ -1952,7 +1880,9 @@
                     <i class="fas fa-save"></i> 保存所有设置
                 </button>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="donation-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-donate"></i> 捐助设置</h3>
                 <div class="form-group">
@@ -1987,7 +1917,9 @@
                     <i class="fas fa-save"></i> 保存捐助设置
                 </button>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="data-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-database"></i> 数据管理</h3>
                 <div class="form-group">
@@ -2009,21 +1941,40 @@
                     </button>
                 </div>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="feedback-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-comments"></i> 反馈管理</h3>
                 <div class="feedback-list" id="feedback-list"></div>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="visits-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-chart-line"></i> 访问统计</h3>
-                <div class="visit-count" id="visit-count">总访问次数: 加载中...</div>
+                <div class="visit-count" id="visit-count">总IP数: 加载中...</div>
                 <div class="visits-list" id="visits-list">加载中...</div>
                 <button id="refresh-visits" style="margin-top: 10px;">
                     <i class="fas fa-sync"></i> 刷新访问统计
                 </button>
+                <button id="clear-visits" style="background: var(--reset-color); margin-top: 10px;">
+                    <i class="fas fa-trash"></i> 清除访问记录
+                </button>
             </div>
-            
+        </div>
+        
+        <div class="admin-tab-content" id="users-tab">
+            <div class="admin-card">
+                <h3><i class="fas fa-users"></i> 用户管理</h3>
+                <div class="user-list" id="user-list">加载中...</div>
+                <button id="refresh-users" style="margin-top: 10px;">
+                    <i class="fas fa-sync"></i> 刷新用户列表
+                </button>
+            </div>
+        </div>
+        
+        <div class="admin-tab-content" id="footer-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-info-circle"></i> 页脚信息设置</h3>
                 <div class="form-group">
@@ -2071,8 +2022,69 @@
         </div>
     </div>
 
+    <div class="user-center" id="user-center">
+        <div class="user-center-header">
+            <h2><i class="fas fa-user-circle"></i> 用户中心</h2>
+            <button class="cancel-btn" id="close-user-center">关闭</button>
+        </div>
+        
+        <div class="user-center-content">
+            <div class="admin-card">
+                <h3><i class="fas fa-user"></i> 用户信息</h3>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="user-info-username" readonly>
+                </div>
+                <div class="form-group">
+                    <label>邮箱</label>
+                    <input type="email" id="user-info-email">
+                </div>
+                <div class="form-group">
+                    <label>角色</label>
+                    <div id="user-info-role"></div>
+                </div>
+                <button id="update-user-info">
+                    <i class="fas fa-save"></i> 更新用户信息
+                </button>
+            </div>
+            
+            <div class="admin-card">
+                <h3><i class="fas fa-lock"></i> 修改密码</h3>
+                <div class="form-group">
+                    <label for="change-password-old">原密码</label>
+                    <input type="password" id="change-password-old" placeholder="输入原密码">
+                </div>
+                <div class="form-group">
+                    <label for="change-password-new">新密码</label>
+                    <input type="password" id="change-password-new" placeholder="输入新密码（至少4位）">
+                </div>
+                <div class="form-group">
+                    <label for="change-password-confirm">确认新密码</label>
+                    <input type="password" id="change-password-confirm" placeholder="再次输入新密码">
+                </div>
+                <button id="change-password-btn">
+                    <i class="fas fa-key"></i> 修改密码
+                </button>
+            </div>
+            
+            <div id="admin-user-management" style="display: none;">
+                <div class="admin-card">
+                    <h3><i class="fas fa-users-cog"></i> 用户管理</h3>
+                    <p>管理员专用功能：管理注册用户</p>
+                    <button id="manage-users-btn">
+                        <i class="fas fa-cog"></i> 打开用户管理
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="admin-panel-footer">
+            <button class="cancel-btn" id="close-user-center-bottom">关闭用户中心</button>
+        </div>
+    </div>
+
     <script>
-        // API地址设置
+        // API地址设置 - 使用固定默认值，不存储在localStorage中
         let API_BASE = "/api";
         
         // 初始化状态
@@ -2080,7 +2092,7 @@
         let currentPhase = 'reset';
         let currentLights = [];
         let countdownInterval;
-        let currentUser = null;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
         let timerEnabled = true;
         let donationEnabled = false;
         
@@ -2313,6 +2325,9 @@
                     }
                     
                     initializeTimer(config.initialPhase || '5-green');
+                    
+                    // 更新用户界面状态
+                    updateUserInterface();
 
                     // 添加计时器状态实时保存功能
                     document.getElementById('timer-enabled').addEventListener('change', async function() {
@@ -2332,6 +2347,29 @@
                     document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
                 }
                 initializeTimer('5-green');
+            }
+        }
+        
+        // 更新用户界面状态
+        function updateUserInterface() {
+            const userLoginBtn = document.getElementById('user-login-btn');
+            const adminPanelBtn = document.getElementById('admin-panel-btn');
+            const userCenterBtn = document.getElementById('user-center-btn');
+            
+            if (currentUser) {
+                userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
+                
+                if (currentUser.isAdmin) {
+                    adminPanelBtn.style.display = 'flex';
+                    userCenterBtn.style.display = 'flex';
+                } else {
+                    adminPanelBtn.style.display = 'none';
+                    userCenterBtn.style.display = 'flex';
+                }
+            } else {
+                userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
+                adminPanelBtn.style.display = 'none';
+                userCenterBtn.style.display = 'none';
             }
         }
         
@@ -2651,28 +2689,40 @@
         
         // 用户登录按钮
         document.getElementById('user-login-btn').addEventListener('click', function() {
-            document.getElementById('login-modal').style.display = 'flex';
-            switchLoginTab('login');
+            if (currentUser) {
+                // 退出登录
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateUserInterface();
+                alert('已退出登录');
+            } else {
+                document.getElementById('login-modal').style.display = 'flex';
+                // 切换到登录标签
+                switchLoginTab('login');
+            }
         });
         
         // 反馈按钮
         document.getElementById('feedback-btn').addEventListener('click', function() {
             document.getElementById('feedback-modal').style.display = 'flex';
-            updateFeedbackUserInfo();
         });
         
         // 后台管理按钮
         document.getElementById('admin-panel-btn').addEventListener('click', function() {
             document.getElementById('admin-panel').style.display = 'block';
-            initDraggablePanel();
-            // 加载访问统计
+            initDraggablePanel('admin-panel');
+            // 加载反馈和访问统计
+            loadFeedback();
             loadVisits();
+            loadUsers();
         });
         
         // 用户中心按钮
         document.getElementById('user-center-btn').addEventListener('click', function() {
-            document.getElementById('user-center-panel').style.display = 'block';
-            loadUserProfile();
+            document.getElementById('user-center').style.display = 'block';
+            initDraggablePanel('user-center');
+            // 加载用户信息
+            loadUserInfo();
         });
         
         // 捐助按钮
@@ -2690,9 +2740,13 @@
             document.getElementById('admin-panel').style.display = 'none';
         });
         
-        // 关闭用户中心面板
+        // 关闭用户中心
         document.getElementById('close-user-center').addEventListener('click', function() {
-            document.getElementById('user-center-panel').style.display = 'none';
+            document.getElementById('user-center').style.display = 'none';
+        });
+        
+        document.getElementById('close-user-center-bottom').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'none';
         });
         
         // 关闭二维码模态框
@@ -2716,16 +2770,16 @@
         document.getElementById('cancel-register').addEventListener('click', function() {
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('register-username').value = '';
-            document.getElementById('register-email').value = '';
             document.getElementById('register-password').value = '';
-            document.getElementById('register-confirm-password').value = '';
+            document.getElementById('register-email').value = '';
         });
         
         // 取消找回密码
-        document.getElementById('cancel-forgot').addEventListener('click', function() {
+        document.getElementById('cancel-reset').addEventListener('click', function() {
             document.getElementById('login-modal').style.display = 'none';
-            document.getElementById('forgot-username').value = '';
-            document.getElementById('forgot-email').value = '';
+            document.getElementById('reset-username').value = '';
+            document.getElementById('reset-email').value = '';
+            document.getElementById('reset-new-password').value = '';
         });
         
         // 取消反馈
@@ -2736,6 +2790,23 @@
         });
         
         // 登录标签切换
+        function switchLoginTab(tabName) {
+            // 移除所有标签的active类
+            document.querySelectorAll('.login-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 隐藏所有内容
+            document.querySelectorAll('.login-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活选中的标签和内容
+            document.querySelector(`.login-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        // 登录标签点击事件
         document.querySelectorAll('.login-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
@@ -2743,56 +2814,25 @@
             });
         });
         
-        // 用户中心标签切换
-        document.querySelectorAll('.user-center-tab').forEach(tab => {
+        // 后台管理标签点击事件
+        document.querySelectorAll('.admin-tab').forEach(tab => {
             tab.addEventListener('click', function() {
+                // 移除所有标签的active类
+                document.querySelectorAll('.admin-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有内容
+                document.querySelectorAll('.admin-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 激活选中的标签和内容
+                this.classList.add('active');
                 const tabName = this.getAttribute('data-tab');
-                switchUserCenterTab(tabName);
+                document.getElementById(`${tabName}-tab`).classList.add('active');
             });
         });
-        
-        // 切换登录标签
-        function switchLoginTab(tabName) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.login-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // 移除所有标签的激活状态
-            document.querySelectorAll('.login-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // 显示选中的标签内容
-            document.getElementById(`${tabName}-section`).classList.add('active');
-            
-            // 激活选中的标签
-            document.querySelector(`.login-tab[data-tab="${tabName}"]`).classList.add('active');
-        }
-        
-        // 切换用户中心标签
-        function switchUserCenterTab(tabName) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.user-center-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            // 移除所有标签的激活状态
-            document.querySelectorAll('.user-center-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // 显示选中的标签内容
-            document.getElementById(`${tabName}-section`).classList.add('active');
-            
-            // 激活选中的标签
-            document.querySelector(`.user-center-tab[data-tab="${tabName}"]`).classList.add('active');
-            
-            // 如果是用户管理标签且当前用户是管理员，加载用户列表
-            if (tabName === 'users' && currentUser && currentUser.role === 'admin') {
-                loadUsersList();
-            }
-        }
         
         // 登录
         document.getElementById('login-btn').addEventListener('click', async function() {
@@ -2805,7 +2845,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/login`, {
+                const response = await fetch(`${API_BASE}/verify-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -2815,17 +2855,16 @@
                 
                 if (response.ok) {
                     const result = await response.json();
-                    if (result.success) {
+                    if (result.valid) {
                         currentUser = result.user;
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('login-username').value = '';
                         document.getElementById('login-password').value = '';
-                        
-                        updateUIAfterLogin();
+                        updateUserInterface();
                         alert('登录成功');
                     } else {
-                        alert(result.message || '登录失败');
+                        alert(result.error || '用户名或密码错误');
                     }
                 } else {
                     alert('登录失败');
@@ -2839,27 +2878,16 @@
         // 注册
         document.getElementById('register-btn').addEventListener('click', async function() {
             const username = document.getElementById('register-username').value;
-            const email = document.getElementById('register-email').value;
             const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const email = document.getElementById('register-email').value;
             
-            if (!username || username.length < 3) {
-                alert('用户名至少需要3位');
+            if (!username || !password || !email) {
+                alert('请填写所有字段');
                 return;
             }
             
-            if (!email) {
-                alert('请输入邮箱');
-                return;
-            }
-            
-            if (!password || password.length < 6) {
-                alert('密码至少需要6位');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                alert('两次输入的密码不一致');
+            if (password.length < 4) {
+                alert('密码长度至少4位');
                 return;
             }
             
@@ -2869,7 +2897,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, email, password })
+                    body: JSON.stringify({ username, password, email })
                 });
                 
                 if (response.ok) {
@@ -2878,11 +2906,10 @@
                         alert('注册成功，请等待管理员审核');
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('register-username').value = '';
-                        document.getElementById('register-email').value = '';
                         document.getElementById('register-password').value = '';
-                        document.getElementById('register-confirm-password').value = '';
+                        document.getElementById('register-email').value = '';
                     } else {
-                        alert(result.message || '注册失败');
+                        alert(result.error || '注册失败');
                     }
                 } else {
                     alert('注册失败');
@@ -2894,40 +2921,47 @@
         });
         
         // 找回密码
-        document.getElementById('forgot-btn').addEventListener('click', async function() {
-            const username = document.getElementById('forgot-username').value;
-            const email = document.getElementById('forgot-email').value;
+        document.getElementById('reset-password-btn').addEventListener('click', async function() {
+            const username = document.getElementById('reset-username').value;
+            const email = document.getElementById('reset-email').value;
+            const newPassword = document.getElementById('reset-new-password').value;
             
-            if (!username || !email) {
-                alert('请输入用户名和邮箱');
+            if (!username || !email || !newPassword) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('密码长度至少4位');
                 return;
             }
             
             try {
-                const response = await fetch(`${API_BASE}/forgot-password`, {
+                const response = await fetch(`${API_BASE}/reset-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, email })
+                    body: JSON.stringify({ username, email, newPassword })
                 });
                 
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        alert('重置链接已发送到您的邮箱，请查收');
+                        alert('密码重置成功');
                         document.getElementById('login-modal').style.display = 'none';
-                        document.getElementById('forgot-username').value = '';
-                        document.getElementById('forgot-email').value = '';
+                        document.getElementById('reset-username').value = '';
+                        document.getElementById('reset-email').value = '';
+                        document.getElementById('reset-new-password').value = '';
                     } else {
-                        alert(result.message || '发送失败');
+                        alert(result.error || '密码重置失败');
                     }
                 } else {
-                    alert('发送失败');
+                    alert('密码重置失败');
                 }
             } catch (error) {
-                console.error('Forgot password error:', error);
-                alert('发送失败');
+                console.error('Reset password error:', error);
+                alert('密码重置失败');
             }
         });
         
@@ -2935,20 +2969,11 @@
         document.getElementById('submit-feedback').addEventListener('click', async function() {
             const content = document.getElementById('feedback-content').value;
             const contact = document.getElementById('feedback-contact').value;
+            const username = currentUser ? currentUser.username : null;
             
             if (!content.trim()) {
                 alert('请输入反馈内容');
                 return;
-            }
-            
-            const feedbackData = {
-                content,
-                contact: contact || ''
-            };
-            
-            // 如果用户已登录，添加用户名
-            if (currentUser) {
-                feedbackData.username = currentUser.username;
             }
             
             try {
@@ -2957,7 +2982,11 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(feedbackData)
+                    body: JSON.stringify({ 
+                        content,
+                        contact,
+                        username
+                    })
                 });
                 
                 if (response.ok) {
@@ -2967,7 +2996,7 @@
                     document.getElementById('feedback-contact').value = '';
                     
                     // 如果是管理员，重新加载反馈列表
-                    if (currentUser && currentUser.role === 'admin') {
+                    if (currentUser && currentUser.isAdmin) {
                         loadFeedback();
                     }
                 } else {
@@ -2989,11 +3018,78 @@
         
         // 保存外观设置
         document.getElementById('save-appearance').addEventListener('click', function() {
+            const customTitle = document.getElementById('custom-title').value;
+            const headerTextColor = document.getElementById('header-text-color').value;
+            const headerFontSize = document.getElementById('header-font-size').value;
+            const logoUrl = document.getElementById('logo-url').value;
+            const logoSize = document.getElementById('logo-size').value;
+            const qrcodeUrl = document.getElementById('qrcode-url').value;
+            const qrcodeCaption = document.getElementById('qrcode-caption-input').value;
+            const qrcodeCaptionColor = document.getElementById('qrcode-caption-color').value;
+            const inviteCode = document.getElementById('invite-code-input').value;
+            const inviteLink = document.getElementById('invite-link-input').value;
+            const bgType = document.getElementById('bg-type').value;
+            const bgImage = document.getElementById('bg-image').value;
+            const videoUrl = document.getElementById('video-url').value;
+            const bgOpacity = document.getElementById('bg-opacity').value;
+            const windowTextColor = document.getElementById('window-text-color').value;
+            const windowCommentColor = document.getElementById('window-comment-color').value;
+            const windowTitleColor = document.getElementById('window-title-color').value;
+            const calibrationTextColor = document.getElementById('calibration-text-color').value;
+            const countdownTextColor = document.getElementById('countdown-text-color').value;
+            const hangarTimeTextColor = document.getElementById('hangar-time-text-color').value;
+            const statusTextColor = document.getElementById('status-text-color').value;
+            
+            if (customTitle) {
+                document.getElementById('title').textContent = customTitle;
+            }
+            
+            document.documentElement.style.setProperty('--header-text-color', headerTextColor);
+            document.documentElement.style.setProperty('--header-font-size', headerFontSize + 'rem');
+            
+            updateLogoPreview(logoUrl);
+            document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+            
+            updateQrcodePreview(qrcodeUrl);
+            
+            if (qrcodeCaption) {
+                document.getElementById('qrcode-caption').textContent = qrcodeCaption;
+            }
+            
+            document.documentElement.style.setProperty('--qrcode-caption-color', qrcodeCaptionColor);
+            
+            updateInviteDisplay({inviteCode, inviteLink});
+            
+            updateBgPreview(bgImage, bgType);
+            updateVideoPreview(videoUrl);
+            
+            document.documentElement.style.setProperty('--bg-opacity', bgOpacity / 100);
+            document.getElementById('opacity-value').textContent = bgOpacity;
+            
+            document.documentElement.style.setProperty('--window-text-color', windowTextColor);
+            document.documentElement.style.setProperty('--window-comment-color', windowCommentColor);
+            document.documentElement.style.setProperty('--window-title-color', windowTitleColor);
+            document.documentElement.style.setProperty('--calibration-text-color', calibrationTextColor);
+            document.documentElement.style.setProperty('--countdown-text-color', countdownTextColor);
+            document.documentElement.style.setProperty('--hangar-time-text-color', hangarTimeTextColor);
+            document.documentElement.style.setProperty('--status-text-color', statusTextColor);
+            
+            // 更新背景显示
+            updateBackgroundDisplay(bgType, bgImage, videoUrl);
+            
             saveSettings();
         });
         
         // 保存捐助设置
         document.getElementById('save-donation-settings').addEventListener('click', function() {
+            const donationEnabled = document.getElementById('donation-enabled').value === 'true';
+            const wechatQrcodeUrl = document.getElementById('wechat-qrcode-url').value;
+            const alipayQrcodeUrl = document.getElementById('alipay-qrcode-url').value;
+            const donationBtnColor = document.getElementById('donation-btn-color').value;
+            
+            document.documentElement.style.setProperty('--donation-btn-bg', donationBtnColor);
+            updateDonationButtonDisplay();
+            
             saveSettings();
         });
         
@@ -3038,6 +3134,9 @@
                 preview.style.backgroundColor = input.value;
                 input.addEventListener('input', function() {
                     preview.style.backgroundColor = this.value;
+                    // 实时更新CSS变量
+                    const cssVarName = '--' + this.id.replace(/-/g, '-');
+                    document.documentElement.style.setProperty(cssVarName, this.value);
                 });
             }
         });
@@ -3135,7 +3234,9 @@
                     
                     if (response.ok) {
                         alert('数据已重置');
+                        currentUser = null;
                         localStorage.removeItem('currentUser');
+                        updateUserInterface();
                         location.reload();
                     } else {
                         alert('重置失败');
@@ -3271,8 +3372,6 @@
                         let usernameHtml = '';
                         if (item.username) {
                             usernameHtml = `<div class="feedback-username">用户: ${item.username}</div>`;
-                        } else {
-                            usernameHtml = `<div class="feedback-username">用户: 匿名用户</div>`;
                         }
                         
                         feedbackItem.innerHTML = `
@@ -3323,7 +3422,7 @@
                     const visitsList = document.getElementById('visits-list');
                     const visitCount = document.getElementById('visit-count');
                     
-                    visitCount.textContent = `总访问次数: ${visits.length}`;
+                    visitCount.textContent = `总IP数: ${visits.length}`;
                     
                     if (visits.length === 0) {
                         visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
@@ -3331,14 +3430,17 @@
                     }
                     
                     visitsList.innerHTML = '';
-                    // 按时间倒序排列
-                    visits.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    // 按最后访问时间倒序排列
+                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.lastVisit));
                     
                     visits.forEach(visit => {
                         const visitItem = document.createElement('div');
                         visitItem.className = 'visit-item';
                         visitItem.innerHTML = `
-                            <div><span class="visit-ip">${visit.ip}</span> - <span class="visit-date">${new Date(visit.timestamp).toLocaleString()}</span></div>
+                            <div><span class="visit-ip">${visit.ip}</span></div>
+                            <div class="visit-date">最后访问: ${new Date(visit.lastVisit).toLocaleString()}</div>
+                            <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
+                            <div class="visit-count">访问次数: ${visit.visitCount}</div>
                         `;
                         visitsList.appendChild(visitItem);
                     });
@@ -3349,17 +3451,12 @@
             }
         }
         
-        // 刷新访问统计
-        document.getElementById('refresh-visits').addEventListener('click', function() {
-            loadVisits();
-        });
-        
         // 清除访问记录
         document.getElementById('clear-visits').addEventListener('click', async function() {
             if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetch(`${API_BASE}/clear-visits`, {
-                        method: 'POST'
+                    const response = await fetch(`${API_BASE}/visits`, {
+                        method: 'DELETE'
                     });
                     
                     if (response.ok) {
@@ -3375,219 +3472,237 @@
             }
         });
         
+        // 刷新访问统计
+        document.getElementById('refresh-visits').addEventListener('click', function() {
+            loadVisits();
+        });
+        
         // 加载用户列表
-        async function loadUsersList() {
+        async function loadUsers() {
             try {
                 const response = await fetch(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
-                    const usersList = document.getElementById('users-list');
+                    const userList = document.getElementById('user-list');
                     
                     if (users.length === 0) {
-                        usersList.innerHTML = '<div class="user-item">暂无用户</div>';
+                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
                         return;
                     }
                     
-                    usersList.innerHTML = '';
+                    userList.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
                         
-                        let statusClass = '';
-                        let statusText = '';
-                        switch(user.status) {
-                            case 'active':
-                                statusClass = 'status-active';
-                                statusText = '已激活';
-                                break;
-                            case 'pending':
-                                statusClass = 'status-pending';
-                                statusText = '待审核';
-                                break;
-                            case 'frozen':
-                                statusClass = 'status-frozen';
-                                statusText = '已冻结';
-                                break;
+                        let roleBadge = '';
+                        if (user.isAdmin) {
+                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
+                        } else if (user.approved) {
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <div class="user-username">${user.username} <span class="user-status ${statusClass}">${statusText}</span></div>
-                                <div class="user-email">${user.email} | 角色: ${user.role} | 注册: ${new Date(user.registerDate).toLocaleDateString()}</div>
+                                <div><strong>${user.username}</strong> ${roleBadge}</div>
+                                <div class="visit-date">邮箱: ${user.email}</div>
+                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
                             </div>
                             <div class="user-actions">
-                                <button class="user-action-btn approve-user" data-id="${user.id}" ${user.status === 'active' ? 'disabled' : ''}>审核</button>
-                                <button class="user-action-btn freeze-user" data-id="${user.id}" ${user.status === 'frozen' ? 'disabled' : ''}>冻结</button>
-                                <button class="user-action-btn delete-user" data-id="${user.id}" style="background: var(--reset-color);">删除</button>
+                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                                <button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>
                             </div>
                         `;
-                        usersList.appendChild(userItem);
+                        userList.appendChild(userItem);
                     });
                     
-                    // 添加用户操作事件监听
+                    // 添加审核用户事件监听
                     document.querySelectorAll('.approve-user').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const userId = this.getAttribute('data-id');
-                            if (confirm('确定要审核通过这个用户吗？')) {
-                                await updateUserStatus(userId, 'active');
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
+                                try {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({ approved: true })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户审核通过');
+                                        loadUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Approve user error:', error);
+                                    alert('操作失败');
+                                }
                             }
                         });
                     });
                     
-                    document.querySelectorAll('.freeze-user').forEach(button => {
+                    // 添加删除用户事件监听
+                    document.querySelectorAll('.user-actions button:not(.approve-user)').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const userId = this.getAttribute('data-id');
-                            if (confirm('确定要冻结这个用户吗？')) {
-                                await updateUserStatus(userId, 'frozen');
-                            }
-                        });
-                    });
-                    
-                    document.querySelectorAll('.delete-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const userId = this.getAttribute('data-id');
-                            if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
-                                await deleteUser(userId);
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                                try {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                        method: 'DELETE'
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户已删除');
+                                        loadUsers();
+                                    } else {
+                                        alert('删除失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Delete user error:', error);
+                                    alert('删除失败');
+                                }
                             }
                         });
                     });
                 }
             } catch (error) {
                 console.error('Load users error:', error);
-                document.getElementById('users-list').innerHTML = '加载用户列表失败';
-            }
-        }
-        
-        // 更新用户状态
-        async function updateUserStatus(userId, status) {
-            try {
-                const response = await fetch(`${API_BASE}/user/${userId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ status })
-                });
-                
-                if (response.ok) {
-                    alert('用户状态已更新');
-                    loadUsersList();
-                } else {
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Update user status error:', error);
-                alert('更新失败');
-            }
-        }
-        
-        // 删除用户
-        async function deleteUser(userId) {
-            try {
-                const response = await fetch(`${API_BASE}/user/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    alert('用户已删除');
-                    loadUsersList();
-                } else {
-                    alert('删除失败');
-                }
-            } catch (error) {
-                console.error('Delete user error:', error);
-                alert('删除失败');
+                document.getElementById('user-list').innerHTML = '加载用户列表失败';
             }
         }
         
         // 刷新用户列表
         document.getElementById('refresh-users').addEventListener('click', function() {
-            loadUsersList();
+            loadUsers();
         });
         
-        // 加载用户个人信息
-        function loadUserProfile() {
-            if (!currentUser) return;
-            
-            document.getElementById('profile-username').value = currentUser.username;
-            document.getElementById('profile-email').value = currentUser.email;
-            document.getElementById('profile-register-date').value = new Date(currentUser.registerDate).toLocaleString();
-            document.getElementById('profile-last-login').value = new Date(currentUser.lastLogin).toLocaleString();
-            document.getElementById('profile-role').value = currentUser.role === 'admin' ? '管理员' : '普通用户';
-            document.getElementById('profile-status').value = currentUser.status === 'active' ? '已激活' : 
-                                                           currentUser.status === 'pending' ? '待审核' : '已冻结';
-            
-            // 如果是管理员，显示用户管理标签
-            if (currentUser.role === 'admin') {
-                document.getElementById('users-tab').style.display = 'block';
-            } else {
-                document.getElementById('users-tab').style.display = 'none';
+        // 加载用户信息
+        function loadUserInfo() {
+            if (currentUser) {
+                document.getElementById('user-info-username').value = currentUser.username;
+                document.getElementById('user-info-email').value = currentUser.email || '';
+                
+                let roleText = '';
+                if (currentUser.isAdmin) {
+                    roleText = '<span class="user-role-badge user-admin">管理员</span>';
+                } else {
+                    roleText = '<span class="user-role-badge user-normal">普通用户</span>';
+                }
+                document.getElementById('user-info-role').innerHTML = roleText;
+                
+                // 如果是管理员，显示用户管理功能
+                if (currentUser.isAdmin) {
+                    document.getElementById('admin-user-management').style.display = 'block';
+                } else {
+                    document.getElementById('admin-user-management').style.display = 'none';
+                }
             }
         }
         
-        // 保存安全设置
-        document.getElementById('save-security').addEventListener('click', async function() {
-            const newPassword = document.getElementById('change-password').value;
-            const confirmPassword = document.getElementById('change-confirm-password').value;
-            const newEmail = document.getElementById('change-email').value;
+        // 更新用户信息
+        document.getElementById('update-user-info').addEventListener('click', async function() {
+            const email = document.getElementById('user-info-email').value;
             
-            if (newPassword && newPassword.length < 6) {
-                alert('新密码至少需要6位');
-                return;
-            }
-            
-            if (newPassword && newPassword !== confirmPassword) {
-                alert('两次输入的新密码不一致');
-                return;
-            }
-            
-            if (newEmail && !isValidEmail(newEmail)) {
-                alert('请输入有效的邮箱地址');
+            if (!email) {
+                alert('请输入邮箱');
                 return;
             }
             
             try {
-                const updateData = {};
-                if (newPassword) updateData.password = newPassword;
-                if (newEmail) updateData.email = newEmail;
-                
-                const response = await fetch(`${API_BASE}/user/${currentUser.id}`, {
+                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(updateData)
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    alert('用户信息已更新');
+                    currentUser.email = email;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } else {
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Update user info error:', error);
+                alert('更新失败');
+            }
+        });
+        
+        // 修改密码
+        document.getElementById('change-password-btn').addEventListener('click', async function() {
+            const oldPassword = document.getElementById('change-password-old').value;
+            const newPassword = document.getElementById('change-password-new').value;
+            const confirmPassword = document.getElementById('change-password-confirm').value;
+            
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('密码长度至少4位');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        oldPassword, 
+                        newPassword 
+                    })
                 });
                 
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        alert('个人信息已更新');
-                        // 更新本地用户信息
-                        if (newEmail) currentUser.email = newEmail;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        loadUserProfile();
-                        
-                        // 清空密码字段
-                        document.getElementById('change-password').value = '';
-                        document.getElementById('change-confirm-password').value = '';
+                        alert('密码修改成功');
+                        document.getElementById('change-password-old').value = '';
+                        document.getElementById('change-password-new').value = '';
+                        document.getElementById('change-password-confirm').value = '';
                     } else {
-                        alert(result.message || '更新失败');
+                        alert(result.error || '密码修改失败');
                     }
                 } else {
-                    alert('更新失败');
+                    alert('密码修改失败');
                 }
             } catch (error) {
-                console.error('Update profile error:', error);
-                alert('更新失败');
+                console.error('Change password error:', error);
+                alert('密码修改失败');
             }
         });
         
-        // 邮箱验证
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
+        // 管理用户按钮
+        document.getElementById('manage-users-btn').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            // 切换到用户管理标签
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.admin-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelector('.admin-tab[data-tab="users"]').classList.add('active');
+            document.getElementById('users-tab').classList.add('active');
+            loadUsers();
+        });
         
         // 加载捐助记录
         async function loadDonationRecords() {
@@ -3838,9 +3953,9 @@
         }
         
         // 初始化可拖拽面板
-        function initDraggablePanel() {
-            const panel = document.getElementById('admin-panel');
-            const header = document.getElementById('admin-panel-header');
+        function initDraggablePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const header = panel.querySelector('.admin-panel-header, .user-center-header');
             
             let isDragging = false;
             let currentX;
@@ -3914,82 +4029,25 @@
             }
         }
         
-        // 更新登录后的UI
-        function updateUIAfterLogin() {
-            const loginBtn = document.getElementById('user-login-btn');
-            
-            if (currentUser) {
-                // 更新登录按钮为退出登录
-                loginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
-                
-                // 显示用户中心按钮
-                document.getElementById('user-center-btn').style.display = 'flex';
-                
-                // 如果是管理员，显示后台管理按钮
-                if (currentUser.role === 'admin') {
-                    document.getElementById('admin-panel-btn').style.display = 'flex';
-                } else {
-                    document.getElementById('admin-panel-btn').style.display = 'none';
-                }
-            } else {
-                // 恢复为登录按钮
-                loginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
-                
-                // 隐藏用户中心和后台管理按钮
-                document.getElementById('user-center-btn').style.display = 'none';
-                document.getElementById('admin-panel-btn').style.display = 'none';
-            }
-        }
-        
-        // 更新反馈用户信息显示
-        function updateFeedbackUserInfo() {
-            const feedbackUserInfo = document.getElementById('feedback-user-info');
-            const currentUsername = document.getElementById('current-username');
-            
-            if (currentUser) {
-                feedbackUserInfo.style.display = 'block';
-                currentUsername.textContent = currentUser.username;
-            } else {
-                feedbackUserInfo.style.display = 'none';
-            }
-        }
-        
-        // 用户退出登录
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('currentUser');
-            updateUIAfterLogin();
-            alert('已退出登录');
-        }
-        
-        // 用户登录按钮点击事件（支持退出登录）
-        document.getElementById('user-login-btn').addEventListener('click', function() {
-            if (currentUser) {
-                // 如果已登录，点击退出登录
-                logout();
-            } else {
-                // 如果未登录，显示登录模态框
-                document.getElementById('login-modal').style.display = 'flex';
-                switchLoginTab('login');
-            }
-        });
-        
         // 页脚信息点击事件
         document.getElementById('project-description-btn').addEventListener('click', function() {
+            const content = document.getElementById('project-description-input').value || '暂无项目介绍';
             document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('version-btn').addEventListener('click', function() {
+            const content = document.getElementById('version-input').value || '暂无版本信息';
             document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value;
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('about-btn').addEventListener('click', function() {
-            document.getElementById('footer-modal-title').textContent = '关于我们';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
+            const content = document.getElementById('about-input').value || '暂无关于信息';
+            document.getElementById('footer-modal-title').textContent = '关于本网站';
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
@@ -3997,36 +4055,56 @@
             document.getElementById('footer-info-modal').style.display = 'none';
         });
         
-        // 关闭模态框（点击外部区域）
-        window.addEventListener('click', function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+        // 自动检测文本中的链接并使其可点击
+        function autoLinkify() {
+            // 获取所有文本节点并检测URL
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let node;
+            while (node = walker.nextNode()) {
+                const text = node.nodeValue;
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                
+                if (urlRegex.test(text)) {
+                    const parent = node.parentNode;
+                    if (parent && parent.nodeName !== 'A' && parent.nodeName !== 'SCRIPT' && parent.nodeName !== 'STYLE') {
+                        const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                        const newElement = document.createElement('span');
+                        newElement.innerHTML = newHtml;
+                        parent.replaceChild(newElement, node);
+                    }
+                }
             }
-        });
+        }
         
-        // 初始化页面
-        window.addEventListener('load', function() {
-            // 检查当前用户登录状态
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-                updateUIAfterLogin();
+        // 记录访问
+        async function recordVisit() {
+            try {
+                await fetch(`${API_BASE}/visits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to record visit:', error);
             }
-            
-            // 加载设置
-            loadSettings();
-            
-            // 检查数据库状态
-            checkDbStatus();
-            
-            // 更新校准时间显示
-            updateCalibrationTime();
-            
-            // 如果是管理员，加载反馈列表
-            if (currentUser && currentUser.role === 'admin') {
-                loadFeedback();
-            }
-        });
+        }
+        
+        // 初始加载设置
+        document.getElementById('api-url').value = API_BASE;
+        loadSettings();
+        checkDbStatus();
+        autoLinkify();
+        recordVisit();
+        
+        // 每1分钟检查一次数据库状态
+        setInterval(checkDbStatus, 1 * 60 * 1000);
     </script>
 </body>
 </html>
