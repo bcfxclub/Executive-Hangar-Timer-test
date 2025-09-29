@@ -1644,7 +1644,7 @@
             <div class="login-tabs">
                 <div class="login-tab active" data-tab="login">登录</div>
                 <div class="login-tab" data-tab="register">注册</div>
-                <div class="login-tab" data-tab="reset-password">找回密码</div>
+ 
             </div>
             
             <div class="login-tab-content active" id="login-tab">
@@ -2968,15 +2968,7 @@
             document.getElementById('register-username').value = '';
             document.getElementById('register-password').value = '';
             document.getElementById('register-email').value = '';
-        });
-        
-        // 取消找回密码
-        document.getElementById('cancel-reset').addEventListener('click', function() {
-            document.getElementById('login-modal').style.display = 'none';
-            document.getElementById('reset-username').value = '';
-            document.getElementById('reset-email').value = '';
-            document.getElementById('reset-new-password').value = '';
-        });
+        });    
         
         // 取消反馈
         document.getElementById('cancel-feedback').addEventListener('click', function() {
@@ -3141,51 +3133,7 @@
             }
         });
         
-        // 找回密码
-        document.getElementById('reset-password-btn').addEventListener('click', async function() {
-            const username = document.getElementById('reset-username').value;
-            const email = document.getElementById('reset-email').value;
-            const newPassword = document.getElementById('reset-new-password').value;
-            
-            if (!username || !email || !newPassword) {
-                alert('请填写所有字段');
-                return;
-            }
-            
-            if (newPassword.length < 4) {
-                alert('密码长度至少4位');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/reset-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, email, newPassword })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('密码重置成功');
-                        document.getElementById('login-modal').style.display = 'none';
-                        document.getElementById('reset-username').value = '';
-                        document.getElementById('reset-email').value = '';
-                        document.getElementById('reset-new-password').value = '';
-                    } else {
-                        alert(result.error || '密码重置失败');
-                    }
-                } else {
-                    alert('密码重置失败');
-                }
-            } catch (error) {
-                console.error('Reset password error:', error);
-                alert('密码重置失败');
-            }
-        });
-        
+
         // 提交反馈
         document.getElementById('submit-feedback').addEventListener('click', async function() {
             const content = document.getElementById('feedback-content').value;
