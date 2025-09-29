@@ -4805,6 +4805,11 @@
         autoLinkify();
         recordVisit();
         
+    fetch(`${API_BASE}/users`, {
+  headers: {
+    'Username': currentUser.username
+  }
+})        
         // 每1分钟检查一次数据库状态
         setInterval(checkDbStatus, 1 * 60 * 1000);
     </script>
