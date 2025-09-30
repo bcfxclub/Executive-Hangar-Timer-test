@@ -1903,7 +1903,7 @@
                     </select>
                 </div>
                 <button id="update-timer">
-                    <i class="fas fa-sync"></i> 更新计时器
+                    <i class="fas fa-sync"></i> 校准时间
                 </button>
             </div>
         </div>
@@ -2984,7 +2984,7 @@
         // 设置初始时间
         document.getElementById('start-time').value = formatDateTime(startTime);
         
-        // 更新计时器
+        // 校准时间
         document.getElementById('update-timer').addEventListener('click', function() {
             const newStartTime = new Date(document.getElementById('start-time').value);
             const initialPhase = document.getElementById('initial-phase').value;
@@ -3891,7 +3891,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -4064,7 +4064,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
