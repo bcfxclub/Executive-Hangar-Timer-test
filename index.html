@@ -1854,7 +1854,7 @@
             </div>
         </div>
     </div>
-    <div class="admin-panel" id="admin-panel">
+        <div class="admin-panel" id="admin-panel">
         <div class="admin-panel-header" id="admin-panel-header">
             <h2><i class="fas fa-cog"></i> 后台管理系统</h2>
             <button class="cancel-btn" id="close-admin-panel">关闭管理面板</button>
@@ -2370,6 +2370,19 @@
         let donationEnabled = false;
         let currentEditingUser = null;
         
+        // 创建带认证的fetch函数
+        async function fetchWithAuth(url, options = {}) {
+            const headers = options.headers || {};
+            
+            // 如果用户已登录，添加认证头
+            if (currentUser) {
+                const authString = btoa(`${currentUser.username}:${currentUser.password}`);
+                headers['Authorization'] = `Basic ${authString}`;
+            }
+            
+            return fetch(url, { ...options, headers });
+        }
+        
         // 从API加载设置
         async function loadSettings() {
             try {
@@ -2377,7 +2390,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
-                const response = await fetch(`${API_BASE}/config`, {
+                const response = await fetchWithAuth(`${API_BASE}/config`, {
                     signal: controller.signal
                 });
                 
@@ -2703,7 +2716,7 @@
             };
             
             try {
-                const response = await fetch(`${API_BASE}/config`, {
+                const response = await fetchWithAuth(`${API_BASE}/config`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -3547,7 +3560,7 @@
         // 导出数据
         document.getElementById('export-data').addEventListener('click', async function() {
             try {
-                const response = await fetch(`${API_BASE}/export`);
+                const response = await fetchWithAuth(`${API_BASE}/export`);
                 if (response.ok) {
                     const data = await response.json();
                     const dataStr = JSON.stringify(data, null, 2);
@@ -3572,7 +3585,7 @@
         document.getElementById('reset-data').addEventListener('click', async function() {
             if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetch(`${API_BASE}/reset`, {
+                    const response = await fetchWithAuth(`${API_BASE}/reset`, {
                         method: 'POST'
                     });
                     
@@ -3734,7 +3747,7 @@
                             const id = this.getAttribute('data-id');
                             if (confirm('确定要删除这条反馈吗？')) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/feedback/${id}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/feedback/${id}`, {
                                         method: 'DELETE'
                                     });
                                     
@@ -3760,7 +3773,7 @@
         // 加载访问统计
         async function loadVisits() {
             try {
-                const response = await fetch(`${API_BASE}/visits`);
+                const response = await fetchWithAuth(`${API_BASE}/visits`);
                 if (response.ok) {
                     const visits = await response.json();
                     const visitsList = document.getElementById('visits-list');
@@ -3799,7 +3812,7 @@
         document.getElementById('clear-visits').addEventListener('click', async function() {
             if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetch(`${API_BASE}/visits`, {
+                    const response = await fetchWithAuth(`${API_BASE}/visits`, {
                         method: 'DELETE'
                     });
                     
@@ -3824,7 +3837,7 @@
         // 加载用户列表
         async function loadUsers() {
             try {
-                const response = await fetch(`${API_BASE}/users`);
+                const response = await fetchWithAuth(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('user-list');
@@ -3879,7 +3892,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -3915,7 +3928,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -3943,7 +3956,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要解冻用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -3971,7 +3984,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'DELETE'
                                     });
                                     
@@ -3998,7 +4011,7 @@
         // 加载管理员用户列表
         async function loadAdminUsers() {
             try {
-                const response = await fetch(`${API_BASE}/users`);
+                const response = await fetchWithAuth(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('admin-user-list');
@@ -4053,7 +4066,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -4089,7 +4102,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -4117,7 +4130,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要解冻用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
                                         headers: {
                                             'Content-Type': 'application/json'
@@ -4145,7 +4158,7 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'DELETE'
                                     });
                                     
@@ -4172,7 +4185,7 @@
         // 打开用户编辑模态框
         async function openUserEditModal(username) {
             try {
-                const response = await fetch(`${API_BASE}/users`);
+                const response = await fetchWithAuth(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
                     const user = users.find(u => u.username === username);
@@ -4263,7 +4276,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/users/${currentEditingUser.username}`, {
+                const response = await fetchWithAuth(`${API_BASE}/users/${currentEditingUser.username}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -4332,7 +4345,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
+                const response = await fetchWithAuth(`${API_BASE}/users/${currentUser.username}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -4375,7 +4388,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/change-password`, {
+                const response = await fetchWithAuth(`${API_BASE}/change-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -4409,7 +4422,7 @@
         // 加载捐助记录
         async function loadDonationRecords() {
             try {
-                const response = await fetch(`${API_BASE}/donations`);
+                const response = await fetchWithAuth(`${API_BASE}/donations`);
                 if (response.ok) {
                     const donations = await response.json();
                     const donationList = document.getElementById('donation-list');
