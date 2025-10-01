@@ -4416,270 +4416,221 @@
         });
         
         // 初始化计时器
-        function initializeTimer(initialPhase) {
-            const config = PHASE_CONFIG[initialPhase];
-            if (!config) {
-                console.error('Invalid initial phase:', initialPhase);
+        function initializeTimer(initialPhaseKey) {
+            clearInterval(countdownInterval);
+            
+            // 检查计时器是否启用
+            if (!timerEnabled) {
+                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-pause"></i> <span>计时器已关闭</span>';
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
+                document.getElementById('countdown').textContent = '00:00:00';
+                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-pause"></i> 计时器已关闭';
+                
+                // 将所有灯设置为灰色
+                for (let i = 0; i < 5; i++) {
+                    const lightElement = document.getElementById(`light-${i}`);
+                    lightElement.className = 'light gray';
+                }
+                
                 return;
             }
             
+            const config = PHASE_CONFIG[initialPhaseKey];
             currentPhase = config.phase;
             currentLights = [...config.lights];
             
-            // 计算偏移时间（分钟转毫秒）
-            const offsetMs = config.offset * 60 * 1000;
-            const adjustedStartTime = new Date(startTime.getTime() + offsetMs);
+            // 计算偏移时间（分钟）
+            let offsetMinutes = config.offset;
             
-            updateCalibrationTime();
-            updatePhaseDisplay();
-            updateLightsDisplay();
-            
-            // 清除之前的计时器
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
+            // 根据阶段调整偏移
+            if (config.phase === 'reset') {
+                offsetMinutes = config.offset;
+            } else if (config.phase === 'card') {
+                offsetMinutes = PHASE_DURATIONS.reset + config.offset;
+            } else if (config.phase === 'poweroff') {
+                offsetMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + config.offset;
             }
             
-            // 启动新的计时器
-            countdownInterval = setInterval(updateTimer, 1000);
+            // 调整开始时间
+            const adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
             
-            // 立即更新一次
-            updateTimer();
+            // 更新显示
+            updateDisplay(adjustedStartTime);
+            
+            // 计算并显示机库开启时间
+            calculateHangarOpenTimes(adjustedStartTime);
+            
+            // 启动计时器
+            countdownInterval = setInterval(function() {
+                updateDisplay(adjustedStartTime);
+            }, 1000);
         }
         
-        // 更新计时器
-        function updateTimer() {
-            if (!timerEnabled) {
-                document.getElementById('countdown').textContent = '计时器已关闭';
-                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-pause-circle"></i> <span>计时器已关闭</span>';
-                document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
-                return;
-            }
+        // 更新显示
+        function updateDisplay(adjustedStartTime) {
+            // 如果计时器已关闭，不更新显示
+            if (!timerEnabled) return;
             
             const now = new Date();
-            const elapsedMs = now - startTime;
-            const elapsedMinutes = elapsedMs / (1000 * 60);
+            const elapsedMs = now.getTime() - adjustedStartTime.getTime();
+            const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
             
-            // 计算当前阶段和剩余时间
-            let currentPhase = 'reset';
-            let phaseElapsedMinutes = elapsedMinutes;
-            let phaseDuration = PHASE_DURATIONS.reset;
+            // 计算当前周期内的经过时间
+            const cycleElapsedMs = elapsedMs % totalCycleMs;
             
-            // 确定当前阶段
-            if (phaseElapsedMinutes >= PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) {
-                // 完成一个完整周期，重新开始
-                const cycleDuration = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
-                const cyclesCompleted = Math.floor(phaseElapsedMinutes / cycleDuration);
-                phaseElapsedMinutes -= cyclesCompleted * cycleDuration;
-            }
+            // 确定当前阶段和剩余时间
+            let phaseTimeRemaining;
+            let phaseName;
+            let phaseIcon;
             
-            if (phaseElapsedMinutes < PHASE_DURATIONS.reset) {
+            // 计算机库开启时间
+            const currentCycleStart = new Date(now.getTime() - cycleElapsedMs);
+            const currentHangarOpenTime = new Date(currentCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
+            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
+            
+            if (cycleElapsedMs < PHASE_DURATIONS.reset * 60 * 1000) {
+                // 重置阶段 - 机库已关闭等待开启中
                 currentPhase = 'reset';
-                phaseDuration = PHASE_DURATIONS.reset;
-            } else if (phaseElapsedMinutes < PHASE_DURATIONS.reset + PHASE_DURATIONS.card) {
+                phaseName = '机库已关闭等待开启中';
+                phaseIcon = 'fas fa-sync-alt';
+                phaseTimeRemaining = PHASE_DURATIONS.reset * 60 * 1000 - cycleElapsedMs;
+                
+                // 计算灯的状态（每24分钟变化一次）
+                const lightChangeInterval = 24 * 60 * 1000;
+                const lightsChanged = Math.floor(cycleElapsedMs / lightChangeInterval);
+                
+                currentLights = Array(5).fill('red');
+                for (let i = 0; i < Math.min(lightsChanged, 5); i++) {
+                    currentLights[i] = 'green';
+                }
+                
+            } else if (cycleElapsedMs < (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000) {
+                // 插卡阶段 - 机库开启中可插卡
                 currentPhase = 'card';
-                phaseElapsedMinutes -= PHASE_DURATIONS.reset;
-                phaseDuration = PHASE_DURATIONS.card;
+                phaseName = '机库开启中可插卡';
+                phaseIcon = 'fas fa-credit-card';
+                phaseTimeRemaining = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000 - cycleElapsedMs;
+                
+                // 计算灯的状态（每12分钟变化一次）
+                const cardPhaseElapsed = cycleElapsedMs - PHASE_DURATIONS.reset * 60 * 1000;
+                const lightChangeInterval = 12 * 60 * 1000;
+                const lightsChanged = Math.floor(cardPhaseElapsed / lightChangeInterval);
+                
+                currentLights = Array(5).fill('green');
+                for (let i = 0; i < Math.min(lightsChanged, 5); i++) {
+                    currentLights[i] = 'gray';
+                }
+                
             } else {
+                // 断电阶段 - 机库关闭倒计时中
                 currentPhase = 'poweroff';
-                phaseElapsedMinutes -= (PHASE_DURATIONS.reset + PHASE_DURATIONS.card);
-                phaseDuration = PHASE_DURATIONS.poweroff;
+                phaseName = '机库关闭倒计时中';
+                phaseIcon = 'fas fa-power-off';
+                phaseTimeRemaining = totalCycleMs - cycleElapsedMs;
+                
+                currentLights = Array(5).fill('gray');
             }
-            
-            const phaseRemainingMinutes = phaseDuration - phaseElapsedMinutes;
-            const totalSeconds = Math.floor(phaseRemainingMinutes * 60);
-            
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            
-            // 更新倒计时显示
-            document.getElementById('countdown').textContent = 
-                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
             // 更新阶段指示器
             const phaseIndicator = document.getElementById('phase-indicator');
-            phaseIndicator.className = `phase-indicator phase-${currentPhase}`;
+            phaseIndicator.innerHTML = `<i class="${phaseIcon}"></i> <span>${phaseName}</span>`;
+            phaseIndicator.className = 'phase-indicator';
+            phaseIndicator.classList.add(`phase-${currentPhase}`);
             
-            let phaseText = '';
-            let phaseIcon = '';
-            
-            switch (currentPhase) {
-                case 'reset':
-                    phaseText = '机库已关闭等待开启中';
-                    phaseIcon = '<i class="fas fa-sync-alt"></i>';
-                    break;
-                case 'card':
-                    phaseText = '机库开启中可插卡开启机库';
-                    phaseIcon = '<i class="fas fa-id-card"></i>';
-                    break;
-                case 'poweroff':
-                    phaseText = '机库关闭中请等待';
-                    phaseIcon = '<i class="fas fa-power-off"></i>';
-                    break;
-            }
-            
-            phaseIndicator.innerHTML = `${phaseIcon} <span>${phaseText}</span>`;
+            // 更新倒计时显示
+            const countdownElement = document.getElementById('countdown');
+            countdownElement.textContent = formatTimeRemaining(phaseTimeRemaining);
             
             // 更新灯的状态
-            updateLightsByPhase(currentPhase, phaseElapsedMinutes, phaseDuration);
-            
-            // 更新机库开启时间
-            updateHangarOpenTime(now, elapsedMinutes);
-        }
-        
-        // 根据阶段更新灯的状态
-        function updateLightsByPhase(phase, elapsedMinutes, phaseDuration) {
-            let lights = [];
-            
-            switch (phase) {
-                case 'reset':
-                    // 重置阶段：从5红灯逐渐变为5绿灯
-                    const resetProgress = elapsedMinutes / phaseDuration;
-                    const greenCount = Math.min(5, Math.floor(resetProgress * 6)); // 0-5
-                    
-                    for (let i = 0; i < 5; i++) {
-                        lights.push(i < greenCount ? 'green' : 'red');
-                    }
-                    break;
-                    
-                case 'card':
-                    // 插卡阶段：从5绿灯逐渐变为5灰灯
-                    const cardProgress = elapsedMinutes / phaseDuration;
-                    const grayCount = Math.min(5, Math.floor(cardProgress * 6)); // 0-5
-                    
-                    for (let i = 0; i < 5; i++) {
-                        lights.push(i < grayCount ? 'gray' : 'green');
-                    }
-                    break;
-                    
-                case 'poweroff':
-                    // 关机阶段：全部灰灯
-                    lights = ['gray', 'gray', 'gray', 'gray', 'gray'];
-                    break;
-            }
-            
-            currentLights = lights;
             updateLightsDisplay();
         }
         
-        // 更新灯显示
+        // 更新灯的状态显示
         function updateLightsDisplay() {
-            const lightsContainer = document.getElementById('lights-container');
-            
             for (let i = 0; i < 5; i++) {
-                const light = document.getElementById(`light-${i}`);
-                if (light) {
-                    light.className = `light ${currentLights[i] || 'red'}`;
+                const lightElement = document.getElementById(`light-${i}`);
+                lightElement.className = 'light';
+                lightElement.classList.add(currentLights[i]);
+                
+                // 移除所有活动状态，然后为当前灯添加活动状态
+                if (currentLights[i] !== 'gray') {
+                    lightElement.classList.add('active');
                 }
             }
         }
         
-        // 更新阶段显示
-        function updatePhaseDisplay() {
-            const phaseIndicator = document.getElementById('phase-indicator');
-            
-            let phaseText = '';
-            let phaseIcon = '';
-            
-            switch (currentPhase) {
-                case 'reset':
-                    phaseText = '机库已关闭等待开启中';
-                    phaseIcon = '<i class="fas fa-sync-alt"></i>';
-                    break;
-                case 'card':
-                    phaseText = '机库开启中可插卡开启机库';
-                    phaseIcon = '<i class="fas fa-id-card"></i>';
-                    break;
-                case 'poweroff':
-                    phaseText = '机库关闭中请等待';
-                    phaseIcon = '<i class="fas fa-power-off"></i>';
-                    break;
-            }
-            
-            phaseIndicator.innerHTML = `${phaseIcon} <span>${phaseText}</span>`;
-            phaseIndicator.className = `phase-indicator phase-${currentPhase}`;
-        }
-        
-        // 更新机库开启时间
-        function updateHangarOpenTime(now, elapsedMinutes) {
-            const cycleDuration = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
-            const currentCycleStart = new Date(now.getTime() - elapsedMinutes * 60 * 1000);
-            
-            // 计算下一个机库开启时间（下一个reset阶段的开始）
-            let nextOpenTime;
-            
-            if (elapsedMinutes < PHASE_DURATIONS.reset) {
-                // 当前在reset阶段，下一个开启时间是当前周期的card阶段开始
-                nextOpenTime = new Date(currentCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-            } else {
-                // 当前在card或poweroff阶段，下一个开启时间是下一个周期的card阶段开始
-                nextOpenTime = new Date(currentCycleStart.getTime() + cycleDuration * 60 * 1000);
-            }
-            
-            document.getElementById('hangar-open-time').innerHTML = 
-                `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTime(nextOpenTime)}`;
-            
-            // 更新机库开启时间窗口
-            updateWindowList(currentCycleStart, cycleDuration);
-        }
-        
-        // 更新机库开启时间窗口列表
-        function updateWindowList(cycleStart, cycleDuration) {
+        // 计算机库开启时间
+        function calculateHangarOpenTimes(adjustedStartTime) {
             const windowList = document.getElementById('window-list');
-            const windows = [];
+            windowList.innerHTML = '';
             
-            // 计算过去和未来的几个开启时间
-            for (let i = -1; i <= 7; i++) {
-                const windowTime = new Date(cycleStart.getTime() + (i * cycleDuration + PHASE_DURATIONS.reset) * 60 * 1000);
-                windows.push(windowTime);
+            const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
+            const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
+            const now = new Date();
+            
+            // 计算上一个开启时间
+            let previousWindowTime = new Date(firstGreenTime.getTime());
+            while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
+                previousWindowTime = new Date(previousWindowTime.getTime() + totalCycleMs);
             }
             
-            // 排序窗口时间
-            windows.sort((a, b) => a - b);
+            // 如果当前时间已经超过了第一个开启时间，则显示上一个开启时间
+            if (now.getTime() > firstGreenTime.getTime()) {
+                const prevItem = document.createElement('li');
+                prevItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
+                windowList.appendChild(prevItem);
+            }
             
-            const now = new Date();
-            const listItems = [
-                `上次开启时间: ${formatDateTime(windows[0])}`,
-                `下次开启时间: ${formatDateTime(windows.find(t => t > now) || windows[1])}`,
-                `开启时间 1: ${formatDateTime(windows[2])}`,
-                `开启时间 2: ${formatDateTime(windows[3])}`,
-                `开启时间 3: ${formatDateTime(windows[4])}`,
-                `开启时间 4: ${formatDateTime(windows[5])}`,
-                `开启时间 5: ${formatDateTime(windows[6])}`,
-                `开启时间 6: ${formatDateTime(windows[7])}`,
-                `开启时间 7: ${formatDateTime(windows[8])}`
-            ];
-            
-            windowList.innerHTML = '';
-            listItems.forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `<i class="fas fa-window-restore"></i> ${item}`;
-                windowList.appendChild(li);
-            });
+            // 生成后续的8个机库开启时间节点
+            for (let i = 0; i < 8; i++) {
+                const windowTime = new Date(previousWindowTime.getTime() + (i + 1) * totalCycleMs);
+                const listItem = document.createElement('li');
+                
+                if (i === 0) {
+                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
+                } else {
+                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
+                }
+                
+                windowList.appendChild(listItem);
+            }
         }
         
-        // 格式化日期时间（简洁版）
+        // 格式化剩余时间
+        function formatTimeRemaining(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+        }
+        
+        // 格式化日期时间（用于输入框）
         function formatDateTime(date) {
-            return date.toLocaleString('zh-CN', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            }).replace(/\//g, '/');
+            const year = date.getFullYear();
+            const month = padZero(date.getMonth() + 1);
+            const day = padZero(date.getDate());
+            const hours = padZero(date.getHours());
+            const minutes = padZero(date.getMinutes());
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
         
-        // 格式化日期时间（完整版）
+        // 格式化完整日期时间（用于显示）
         function formatDateTimeFull(date) {
-            return date.toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            }).replace(/\//g, '/');
+            const year = date.getFullYear();
+            const month = padZero(date.getMonth() + 1);
+            const day = padZero(date.getDate());
+            const hours = padZero(date.getHours());
+            const minutes = padZero(date.getMinutes());
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+        
+        // 补零函数
+        function padZero(num) {
+            return num.toString().padStart(2, '0');
         }
         
         // 初始化可拖拽面板
