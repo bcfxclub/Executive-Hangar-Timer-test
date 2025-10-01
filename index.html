@@ -4697,7 +4697,7 @@
                     document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
                 }
             }
-            
+        }            
         // 页面加载完成后初始化
         window.addEventListener('DOMContentLoaded', function() {
             // 加载设置
@@ -4716,6 +4716,8 @@
                 });
             });
         });
+        // 每1分钟检查一次数据库状态
+        setInterval(checkDbStatus, 1 * 60 * 1000);
     </script>
 </body>
 </html>
