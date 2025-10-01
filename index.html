@@ -1903,7 +1903,7 @@
                     </select>
                 </div>
                 <button id="update-timer">
-                    <i class="fas fa-sync"></i> 校准时间
+                    <i class="fas fa-sync"></i> 更新计时器
                 </button>
             </div>
         </div>
@@ -2179,13 +2179,13 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v2.1.5
-更新日期：2025-09-30
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v2.1.4
+更新日期：2025-09-21
 更新内容：
 在上一版基础上，做出如下修改：
-1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。
-2、敏感字段字段过滤。
-3、保持用户登陆界面样式和布局不变。用户登录界面找回密码过程密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。</textarea>
+1、后台管理可以查看访问人数，显示IP地址，在单独页面进行展示。
+2、反馈联系方式，只需要一个输入框。
+3、网页背景模式切换为第一优先级。</textarea>
                 </div>
                 <div class="form-group">
                     <label for="about-input">关于本网站（详细内容）</label>
@@ -2366,41 +2366,26 @@
         let currentLights = [];
         let countdownInterval;
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        let userToken = localStorage.getItem('userToken') || null;
+        let currentToken = localStorage.getItem('authToken') || null;
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
         
-        // 带认证的fetch函数
+        // 创建带认证头的fetch函数
         async function fetchWithAuth(url, options = {}) {
             const headers = {
                 'Content-Type': 'application/json',
                 ...options.headers
             };
             
-            // 如果用户已登录且有token，添加Authorization头
-            if (userToken) {
-                headers['Authorization'] = `Bearer ${userToken}`;
+            if (currentToken) {
+                headers['Authorization'] = `Bearer ${currentToken}`;
             }
             
-            const response = await fetch(url, {
+            return fetch(url, {
                 ...options,
                 headers
             });
-            
-            // 如果返回401未授权，清除用户信息并重新登录
-            if (response.status === 401) {
-                currentUser = null;
-                userToken = null;
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('userToken');
-                updateUserInterface();
-                alert('登录已过期，请重新登录');
-                document.getElementById('login-modal').style.display = 'flex';
-                throw new Error('未授权访问');
-            }
-            
-            return response;
         }
         
         // 从API加载设置
@@ -2664,7 +2649,7 @@
             const userCenterBtn = document.getElementById('user-center-btn');
             const userManagementTab = document.getElementById('user-management-tab');
             
-            if (currentUser) {
+            if (currentUser && currentToken) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
                 if (currentUser.isAdmin || currentUser.isSuperAdmin) {
@@ -2754,14 +2739,13 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     return true;
                 } else {
-                    alert('保存失败');
+                    const errorData = await response.json();
+                    alert(`保存失败: ${errorData.error || '未知错误'}`);
                     return false;
                 }
             } catch (error) {
                 console.error('Failed to save settings:', error);
-                if (error.message !== '未授权访问') {
-                    alert('保存失败');
-                }
+                alert('保存失败');
                 return false;
             }
         }
@@ -2984,7 +2968,7 @@
         // 设置初始时间
         document.getElementById('start-time').value = formatDateTime(startTime);
         
-        // 校准时间
+        // 更新计时器
         document.getElementById('update-timer').addEventListener('click', function() {
             const newStartTime = new Date(document.getElementById('start-time').value);
             const initialPhase = document.getElementById('initial-phase').value;
@@ -3005,20 +2989,35 @@
         
         // 用户登录按钮
         document.getElementById('user-login-btn').addEventListener('click', function() {
-            if (currentUser) {
+            if (currentUser && currentToken) {
                 // 退出登录
-                currentUser = null;
-                userToken = null;
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('userToken');
-                updateUserInterface();
-                alert('已退出登录');
+                logout();
             } else {
                 document.getElementById('login-modal').style.display = 'flex';
                 // 切换到登录标签
                 switchLoginTab('login');
             }
         });
+        
+        // 退出登录
+        async function logout() {
+            try {
+                if (currentToken) {
+                    await fetchWithAuth(`${API_BASE}/logout`, {
+                        method: 'POST'
+                    });
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                currentUser = null;
+                currentToken = null;
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('authToken');
+                updateUserInterface();
+                alert('已退出登录');
+            }
+        }
         
         // 反馈按钮
         document.getElementById('feedback-btn').addEventListener('click', function() {
@@ -3211,9 +3210,9 @@
                     const result = await response.json();
                     if (result.valid) {
                         currentUser = result.user;
-                        userToken = result.token;
+                        currentToken = result.token;
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        localStorage.setItem('userToken', userToken);
+                        localStorage.setItem('authToken', currentToken);
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('login-username').value = '';
                         document.getElementById('login-password').value = '';
@@ -3596,13 +3595,12 @@
                     a.click();
                     document.body.removeChild(a);
                 } else {
-                    alert('导出失败');
+                    const errorData = await response.json();
+                    alert(`导出失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Export error:', error);
-                if (error.message !== '未授权访问') {
-                    alert('导出失败');
-                }
+                alert('导出失败');
             }
         });
         
@@ -3616,20 +3614,15 @@
                     
                     if (response.ok) {
                         alert('数据已重置');
-                        currentUser = null;
-                        userToken = null;
-                        localStorage.removeItem('currentUser');
-                        localStorage.removeItem('userToken');
-                        updateUserInterface();
+                        logout();
                         location.reload();
                     } else {
-                        alert('重置失败');
+                        const errorData = await response.json();
+                        alert(`重置失败: ${errorData.error || '未知错误'}`);
                     }
                 } catch (error) {
                     console.error('Reset error:', error);
-                    if (error.message !== '未授权访问') {
-                        alert('重置失败');
-                    }
+                    alert('重置失败');
                 }
             }
         });
@@ -3784,20 +3777,23 @@
                                         alert('反馈已删除');
                                         loadFeedback();
                                     } else {
-                                        alert('删除失败');
+                                        const errorData = await response.json();
+                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Delete feedback error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('删除失败');
-                                    }
+                                    alert('删除失败');
                                 }
                             }
                         });
                     });
+                } else {
+                    const errorData = await response.json();
+                    alert(`加载反馈失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Load feedback error:', error);
+                alert('加载反馈失败');
             }
         }
         
@@ -3832,6 +3828,9 @@
                         `;
                         visitsList.appendChild(visitItem);
                     });
+                } else {
+                    const errorData = await response.json();
+                    alert(`加载访问统计失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Load visits error:', error);
@@ -3851,13 +3850,12 @@
                         alert('访问记录已清除');
                         loadVisits();
                     } else {
-                        alert('清除失败');
+                        const errorData = await response.json();
+                        alert(`清除失败: ${errorData.error || '未知错误'}`);
                     }
                 } catch (error) {
                     console.error('Clear visits error:', error);
-                    if (error.message !== '未授权访问') {
-                        alert('清除失败');
-                    }
+                    alert('清除失败');
                 }
             }
         });
@@ -3891,7 +3889,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -3934,13 +3932,12 @@
                                         alert('用户审核通过');
                                         loadUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Approve user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -3969,13 +3966,12 @@
                                         alert('用户已冻结');
                                         loadUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Freeze user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -3996,13 +3992,12 @@
                                         alert('用户已解冻');
                                         loadUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Unfreeze user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -4022,17 +4017,19 @@
                                         alert('用户已删除');
                                         loadUsers();
                                     } else {
-                                        alert('删除失败');
+                                        const errorData = await response.json();
+                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('删除失败');
-                                    }
+                                    alert('删除失败');
                                 }
                             }
                         });
                     });
+                } else {
+                    const errorData = await response.json();
+                    alert(`加载用户列表失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Load users error:', error);
@@ -4064,7 +4061,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -4107,13 +4104,12 @@
                                         alert('用户审核通过');
                                         loadAdminUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Approve user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -4142,13 +4138,12 @@
                                         alert('用户已冻结');
                                         loadAdminUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Freeze user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -4169,13 +4164,12 @@
                                         alert('用户已解冻');
                                         loadAdminUsers();
                                     } else {
-                                        alert('操作失败');
+                                        const errorData = await response.json();
+                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Unfreeze user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('操作失败');
-                                    }
+                                    alert('操作失败');
                                 }
                             }
                         });
@@ -4195,17 +4189,19 @@
                                         alert('用户已删除');
                                         loadAdminUsers();
                                     } else {
-                                        alert('删除失败');
+                                        const errorData = await response.json();
+                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
-                                    if (error.message !== '未授权访问') {
-                                        alert('删除失败');
-                                    }
+                                    alert('删除失败');
                                 }
                             }
                         });
                     });
+                } else {
+                    const errorData = await response.json();
+                    alert(`加载用户列表失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Load admin users error:', error);
@@ -4255,6 +4251,9 @@
                     } else {
                         alert('用户不存在');
                     }
+                } else {
+                    const errorData = await response.json();
+                    alert(`加载用户信息失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Open user edit modal error:', error);
@@ -4321,13 +4320,12 @@
                     loadUsers();
                     loadAdminUsers();
                 } else {
-                    alert('更新失败');
+                    const errorData = await response.json();
+                    alert(`更新失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Save user edit error:', error);
-                if (error.message !== '未授权访问') {
-                    alert('更新失败');
-                }
+                alert('更新失败');
             }
         });
         
@@ -4385,13 +4383,12 @@
                     currentUser.email = email;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 } else {
-                    alert('更新失败');
+                    const errorData = await response.json();
+                    alert(`更新失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Update user info error:', error);
-                if (error.message !== '未授权访问') {
-                    alert('更新失败');
-                }
+                alert('更新失败');
             }
         });
         
@@ -4437,13 +4434,12 @@
                         alert(result.error || '密码修改失败');
                     }
                 } else {
-                    alert('密码修改失败');
+                    const errorData = await response.json();
+                    alert(`密码修改失败: ${errorData.error || '未知错误'}`);
                 }
             } catch (error) {
                 console.error('Change password error:', error);
-                if (error.message !== '未授权访问') {
-                    alert('密码修改失败');
-                }
+                alert('密码修改失败');
             }
         });
         
