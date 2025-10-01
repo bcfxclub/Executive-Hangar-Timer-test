@@ -6,6 +6,7 @@
     <title>星际公民行政机库计时系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 样式保持不变，与之前完全一样 */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -2366,26 +2367,34 @@
         let currentLights = [];
         let countdownInterval;
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-        let currentToken = localStorage.getItem('authToken') || null;
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
         
-        // 创建带认证头的fetch函数
-        async function fetchWithAuth(url, options = {}) {
+        // 获取认证头信息
+        function getAuthHeaders() {
             const headers = {
-                'Content-Type': 'application/json',
-                ...options.headers
+                'Content-Type': 'application/json'
             };
             
-            if (currentToken) {
-                headers['Authorization'] = `Bearer ${currentToken}`;
+            if (currentUser && currentUser.username) {
+                headers['Authorization'] = `Bearer ${currentUser.username}`;
             }
             
-            return fetch(url, {
-                ...options,
-                headers
-            });
+            return headers;
+        }
+        
+        // 检查API响应是否需要重新登录
+        function checkAuthResponse(response) {
+            if (response.status === 401) {
+                // 未授权，清除用户信息
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateUserInterface();
+                alert('会话已过期，请重新登录');
+                return false;
+            }
+            return true;
         }
         
         // 从API加载设置
@@ -2396,7 +2405,8 @@
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
                 const response = await fetch(`${API_BASE}/config`, {
-                    signal: controller.signal
+                    signal: controller.signal,
+                    headers: getAuthHeaders()
                 });
                 
                 clearTimeout(timeoutId);
@@ -2649,7 +2659,7 @@
             const userCenterBtn = document.getElementById('user-center-btn');
             const userManagementTab = document.getElementById('user-management-tab');
             
-            if (currentUser && currentToken) {
+            if (currentUser) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
                 if (currentUser.isAdmin || currentUser.isSuperAdmin) {
@@ -2721,8 +2731,9 @@
             };
             
             try {
-                const response = await fetchWithAuth(`${API_BASE}/config`, {
+                const response = await fetch(`${API_BASE}/config`, {
                     method: 'POST',
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(config)
                 });
                 
@@ -2739,8 +2750,10 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     return true;
                 } else {
-                    const errorData = await response.json();
-                    alert(`保存失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return false;
+                    }
+                    alert('保存失败');
                     return false;
                 }
             } catch (error) {
@@ -2989,35 +3002,18 @@
         
         // 用户登录按钮
         document.getElementById('user-login-btn').addEventListener('click', function() {
-            if (currentUser && currentToken) {
+            if (currentUser) {
                 // 退出登录
-                logout();
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateUserInterface();
+                alert('已退出登录');
             } else {
                 document.getElementById('login-modal').style.display = 'flex';
                 // 切换到登录标签
                 switchLoginTab('login');
             }
         });
-        
-        // 退出登录
-        async function logout() {
-            try {
-                if (currentToken) {
-                    await fetchWithAuth(`${API_BASE}/logout`, {
-                        method: 'POST'
-                    });
-                }
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                currentUser = null;
-                currentToken = null;
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('authToken');
-                updateUserInterface();
-                alert('已退出登录');
-            }
-        }
         
         // 反馈按钮
         document.getElementById('feedback-btn').addEventListener('click', function() {
@@ -3210,9 +3206,7 @@
                     const result = await response.json();
                     if (result.valid) {
                         currentUser = result.user;
-                        currentToken = result.token;
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        localStorage.setItem('authToken', currentToken);
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('login-username').value = '';
                         document.getElementById('login-password').value = '';
@@ -3582,7 +3576,9 @@
         // 导出数据
         document.getElementById('export-data').addEventListener('click', async function() {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/export`);
+                const response = await fetch(`${API_BASE}/export`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const data = await response.json();
                     const dataStr = JSON.stringify(data, null, 2);
@@ -3595,8 +3591,10 @@
                     a.click();
                     document.body.removeChild(a);
                 } else {
-                    const errorData = await response.json();
-                    alert(`导出失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('导出失败');
                 }
             } catch (error) {
                 console.error('Export error:', error);
@@ -3608,17 +3606,22 @@
         document.getElementById('reset-data').addEventListener('click', async function() {
             if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetchWithAuth(`${API_BASE}/reset`, {
-                        method: 'POST'
+                    const response = await fetch(`${API_BASE}/reset`, {
+                        method: 'POST',
+                        headers: getAuthHeaders()
                     });
                     
                     if (response.ok) {
                         alert('数据已重置');
-                        logout();
+                        currentUser = null;
+                        localStorage.removeItem('currentUser');
+                        updateUserInterface();
                         location.reload();
                     } else {
-                        const errorData = await response.json();
-                        alert(`重置失败: ${errorData.error || '未知错误'}`);
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('重置失败');
                     }
                 } catch (error) {
                     console.error('Reset error:', error);
@@ -3728,7 +3731,9 @@
         // 加载反馈
         async function loadFeedback() {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/feedback`);
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const feedback = await response.json();
                     const feedbackList = document.getElementById('feedback-list');
@@ -3769,16 +3774,19 @@
                             const id = this.getAttribute('data-id');
                             if (confirm('确定要删除这条反馈吗？')) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/feedback/${id}`, {
-                                        method: 'DELETE'
+                                    const response = await fetch(`${API_BASE}/feedback/${id}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders()
                                     });
                                     
                                     if (response.ok) {
                                         alert('反馈已删除');
                                         loadFeedback();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('删除失败');
                                     }
                                 } catch (error) {
                                     console.error('Delete feedback error:', error);
@@ -3788,19 +3796,21 @@
                         });
                     });
                 } else {
-                    const errorData = await response.json();
-                    alert(`加载反馈失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Load feedback error:', error);
-                alert('加载反馈失败');
             }
         }
         
         // 加载访问统计
         async function loadVisits() {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/visits`);
+                const response = await fetch(`${API_BASE}/visits`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const visits = await response.json();
                     const visitsList = document.getElementById('visits-list');
@@ -3829,8 +3839,9 @@
                         visitsList.appendChild(visitItem);
                     });
                 } else {
-                    const errorData = await response.json();
-                    alert(`加载访问统计失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Load visits error:', error);
@@ -3842,16 +3853,19 @@
         document.getElementById('clear-visits').addEventListener('click', async function() {
             if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetchWithAuth(`${API_BASE}/visits`, {
-                        method: 'DELETE'
+                    const response = await fetch(`${API_BASE}/visits`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
                     });
                     
                     if (response.ok) {
                         alert('访问记录已清除');
                         loadVisits();
                     } else {
-                        const errorData = await response.json();
-                        alert(`清除失败: ${errorData.error || '未知错误'}`);
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('清除失败');
                     }
                 } catch (error) {
                     console.error('Clear visits error:', error);
@@ -3868,7 +3882,9 @@
         // 加载用户列表
         async function loadUsers() {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/users`);
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('user-list');
@@ -3923,8 +3939,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ approved: true })
                                     });
                                     
@@ -3932,8 +3949,10 @@
                                         alert('用户审核通过');
                                         loadUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Approve user error:', error);
@@ -3957,8 +3976,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ frozen: true })
                                     });
                                     
@@ -3966,8 +3986,10 @@
                                         alert('用户已冻结');
                                         loadUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Freeze user error:', error);
@@ -3983,8 +4005,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要解冻用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ frozen: false })
                                     });
                                     
@@ -3992,8 +4015,10 @@
                                         alert('用户已解冻');
                                         loadUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Unfreeze user error:', error);
@@ -4009,16 +4034,19 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
-                                        method: 'DELETE'
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders()
                                     });
                                     
                                     if (response.ok) {
                                         alert('用户已删除');
                                         loadUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('删除失败');
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
@@ -4028,8 +4056,9 @@
                         });
                     });
                 } else {
-                    const errorData = await response.json();
-                    alert(`加载用户列表失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Load users error:', error);
@@ -4040,7 +4069,9 @@
         // 加载管理员用户列表
         async function loadAdminUsers() {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/users`);
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('admin-user-list');
@@ -4095,8 +4126,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ approved: true })
                                     });
                                     
@@ -4104,8 +4136,10 @@
                                         alert('用户审核通过');
                                         loadAdminUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Approve user error:', error);
@@ -4129,8 +4163,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ frozen: true })
                                     });
                                     
@@ -4138,8 +4173,10 @@
                                         alert('用户已冻结');
                                         loadAdminUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Freeze user error:', error);
@@ -4155,8 +4192,9 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要解冻用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
                                         method: 'PUT',
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify({ frozen: false })
                                     });
                                     
@@ -4164,8 +4202,10 @@
                                         alert('用户已解冻');
                                         loadAdminUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`操作失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('操作失败');
                                     }
                                 } catch (error) {
                                     console.error('Unfreeze user error:', error);
@@ -4181,16 +4221,19 @@
                             const username = this.getAttribute('data-username');
                             if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
                                 try {
-                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
-                                        method: 'DELETE'
+                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders()
                                     });
                                     
                                     if (response.ok) {
                                         alert('用户已删除');
                                         loadAdminUsers();
                                     } else {
-                                        const errorData = await response.json();
-                                        alert(`删除失败: ${errorData.error || '未知错误'}`);
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('删除失败');
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
@@ -4200,8 +4243,9 @@
                         });
                     });
                 } else {
-                    const errorData = await response.json();
-                    alert(`加载用户列表失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Load admin users error:', error);
@@ -4212,7 +4256,9 @@
         // 打开用户编辑模态框
         async function openUserEditModal(username) {
             try {
-                const response = await fetchWithAuth(`${API_BASE}/users`);
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const users = await response.json();
                     const user = users.find(u => u.username === username);
@@ -4252,8 +4298,9 @@
                         alert('用户不存在');
                     }
                 } else {
-                    const errorData = await response.json();
-                    alert(`加载用户信息失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Open user edit modal error:', error);
@@ -4306,8 +4353,9 @@
             }
             
             try {
-                const response = await fetchWithAuth(`${API_BASE}/users/${currentEditingUser.username}`, {
+                const response = await fetch(`${API_BASE}/users/${currentEditingUser.username}`, {
                     method: 'PUT',
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(updateData)
                 });
                 
@@ -4320,8 +4368,10 @@
                     loadUsers();
                     loadAdminUsers();
                 } else {
-                    const errorData = await response.json();
-                    alert(`更新失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新失败');
                 }
             } catch (error) {
                 console.error('Save user edit error:', error);
@@ -4373,8 +4423,9 @@
             }
             
             try {
-                const response = await fetchWithAuth(`${API_BASE}/users/${currentUser.username}`, {
+                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
                     method: 'PUT',
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ email })
                 });
                 
@@ -4383,8 +4434,10 @@
                     currentUser.email = email;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 } else {
-                    const errorData = await response.json();
-                    alert(`更新失败: ${errorData.error || '未知错误'}`);
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新失败');
                 }
             } catch (error) {
                 console.error('Update user info error:', error);
@@ -4414,8 +4467,11 @@
             }
             
             try {
-                const response = await fetchWithAuth(`${API_BASE}/change-password`, {
+                const response = await fetch(`${API_BASE}/change-password`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ 
                         username: currentUser.username, 
                         oldPassword, 
@@ -4434,8 +4490,7 @@
                         alert(result.error || '密码修改失败');
                     }
                 } else {
-                    const errorData = await response.json();
-                    alert(`密码修改失败: ${errorData.error || '未知错误'}`);
+                    alert('密码修改失败');
                 }
             } catch (error) {
                 console.error('Change password error:', error);
@@ -4446,7 +4501,9 @@
         // 加载捐助记录
         async function loadDonationRecords() {
             try {
-                const response = await fetch(`${API_BASE}/donations`);
+                const response = await fetch(`${API_BASE}/donations`, {
+                    headers: getAuthHeaders()
+                });
                 if (response.ok) {
                     const donations = await response.json();
                     const donationList = document.getElementById('donation-list');
@@ -4467,6 +4524,10 @@
                         `;
                         donationList.appendChild(donationRecord);
                     });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
             } catch (error) {
                 console.error('Load donations error:', error);
