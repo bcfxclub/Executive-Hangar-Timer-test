@@ -1756,10 +1756,6 @@
                     <input type="text" id="reset-username" placeholder="输入用户名">
                 </div>
                 <div class="form-group">
-                    <label for="reset-email">邮箱</label>
-                    <input type="email" id="reset-email" placeholder="输入注册邮箱">
-                </div>
-                <div class="form-group">
                     <label for="reset-security-question">密保问题</label>
                     <select id="reset-security-question">
                         <option value="">请选择密保问题</option>
@@ -1907,7 +1903,7 @@
                     </select>
                 </div>
                 <button id="update-timer">
-                    <i class="fas fa-sync"></i> 更新计时器
+                    <i class="fas fa-sync"></i> 校准时间
                 </button>
             </div>
         </div>
@@ -2183,13 +2179,13 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v2.1.4
-更新日期：2025-09-21
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v2.1.5
+更新日期：2025-09-30
 更新内容：
 在上一版基础上，做出如下修改：
-1、后台管理可以查看访问人数，显示IP地址，在单独页面进行展示。
-2、反馈联系方式，只需要一个输入框。
-3、网页背景模式切换为第一优先级。</textarea>
+1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。
+2、敏感字段字段过滤。
+3、保持用户登陆界面样式和布局不变。用户登录界面找回密码过程密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。</textarea>
                 </div>
                 <div class="form-group">
                     <label for="about-input">关于本网站（详细内容）</label>
@@ -2215,7 +2211,6 @@
         <div class="user-center-tabs">
             <div class="user-center-tab active" data-tab="user-info">用户信息</div>
             <div class="user-center-tab" data-tab="change-password">修改密码</div>
-            <div class="user-center-tab" data-tab="security-question">密保设置</div>
             <div class="user-center-tab" id="user-management-tab" data-tab="user-management" style="display: none;">用户管理</div>
         </div>
         
@@ -2257,29 +2252,6 @@
                 </div>
                 <button id="change-password-btn">
                     <i class="fas fa-key"></i> 修改密码
-                </button>
-            </div>
-        </div>
-        
-        <div class="user-center-tab-content" id="security-question-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-shield-alt"></i> 密保设置</h3>
-                <div class="form-group">
-                    <label for="user-security-question">密保问题</label>
-                    <select id="user-security-question">
-                        <option value="">请选择密保问题</option>
-                        <option value="你的姓名是什么？">你的姓名是什么？</option>
-                        <option value="你的父亲叫什么？">你的父亲叫什么？</option>
-                        <option value="你的母亲叫什么？">你的母亲叫什么？</option>
-                        <option value="你出生地所在的城市是哪里？">你出生地所在的城市是哪里？</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="user-security-answer">密保答案</label>
-                    <input type="text" id="user-security-answer" placeholder="输入密保答案">
-                </div>
-                <button id="update-security-question">
-                    <i class="fas fa-save"></i> 更新密保设置
                 </button>
             </div>
         </div>
@@ -2394,9 +2366,42 @@
         let currentLights = [];
         let countdownInterval;
         let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let userToken = localStorage.getItem('userToken') || null;
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
+        
+        // 带认证的fetch函数
+        async function fetchWithAuth(url, options = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            // 如果用户已登录且有token，添加Authorization头
+            if (userToken) {
+                headers['Authorization'] = `Bearer ${userToken}`;
+            }
+            
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+            
+            // 如果返回401未授权，清除用户信息并重新登录
+            if (response.status === 401) {
+                currentUser = null;
+                userToken = null;
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('userToken');
+                updateUserInterface();
+                alert('登录已过期，请重新登录');
+                document.getElementById('login-modal').style.display = 'flex';
+                throw new Error('未授权访问');
+            }
+            
+            return response;
+        }
         
         // 从API加载设置
         async function loadSettings() {
@@ -2662,11 +2667,7 @@
             if (currentUser) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
-                // 检查用户是否有任何后台管理权限
-                const hasAdminPermission = currentUser.isAdmin || currentUser.isSuperAdmin || 
-                    (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
-                
-                if (hasAdminPermission) {
+                if (currentUser.isAdmin || currentUser.isSuperAdmin) {
                     adminPanelBtn.style.display = 'flex';
                     userCenterBtn.style.display = 'flex';
                     
@@ -2676,9 +2677,6 @@
                     } else {
                         userManagementTab.style.display = 'none';
                     }
-                    
-                    // 动态更新后台管理面板的标签显示
-                    updateAdminPanelTabs();
                 } else {
                     adminPanelBtn.style.display = 'none';
                     userCenterBtn.style.display = 'flex';
@@ -2690,47 +2688,6 @@
                 userCenterBtn.style.display = 'none';
                 userManagementTab.style.display = 'none';
             }
-        }
-        
-        // 动态更新后台管理面板的标签显示
-        function updateAdminPanelTabs() {
-            if (!currentUser) return;
-            
-            const adminTabs = document.querySelectorAll('.admin-tab');
-            
-            // 定义权限与标签的映射关系
-            const permissionMap = {
-                'basic': '时间校准',
-                'notification': '通知管理',
-                'appearance': '外观设置',
-                'donation': '捐助设置',
-                'data': '数据管理',
-                'feedback': '反馈管理',
-                'visits': '访问统计',
-                'users': '用户管理',
-                'footer': '页脚信息'
-            };
-            
-            adminTabs.forEach(tab => {
-                const tabText = tab.textContent.trim();
-                let hasPermission = false;
-                
-                // 检查用户是否有该标签对应的权限
-                for (const [permission, name] of Object.entries(permissionMap)) {
-                    if (name === tabText) {
-                        hasPermission = currentUser.isSuperAdmin || 
-                            (currentUser.permissions && currentUser.permissions[permission]);
-                        break;
-                    }
-                }
-                
-                // 显示或隐藏标签
-                if (hasPermission) {
-                    tab.style.display = 'block';
-                } else {
-                    tab.style.display = 'none';
-                }
-            });
         }
         
         // 保存设置到API
@@ -2779,11 +2736,8 @@
             };
             
             try {
-                const response = await fetch(`${API_BASE}/config`, {
+                const response = await fetchWithAuth(`${API_BASE}/config`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(config)
                 });
                 
@@ -2805,7 +2759,9 @@
                 }
             } catch (error) {
                 console.error('Failed to save settings:', error);
-                alert('保存失败');
+                if (error.message !== '未授权访问') {
+                    alert('保存失败');
+                }
                 return false;
             }
         }
@@ -3028,7 +2984,7 @@
         // 设置初始时间
         document.getElementById('start-time').value = formatDateTime(startTime);
         
-        // 更新计时器
+        // 校准时间
         document.getElementById('update-timer').addEventListener('click', function() {
             const newStartTime = new Date(document.getElementById('start-time').value);
             const initialPhase = document.getElementById('initial-phase').value;
@@ -3052,7 +3008,9 @@
             if (currentUser) {
                 // 退出登录
                 currentUser = null;
+                userToken = null;
                 localStorage.removeItem('currentUser');
+                localStorage.removeItem('userToken');
                 updateUserInterface();
                 alert('已退出登录');
             } else {
@@ -3149,7 +3107,6 @@
         document.getElementById('cancel-reset').addEventListener('click', function() {
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('reset-username').value = '';
-            document.getElementById('reset-email').value = '';
             document.getElementById('reset-security-question').value = '';
             document.getElementById('reset-security-answer').value = '';
         });
@@ -3254,7 +3211,9 @@
                     const result = await response.json();
                     if (result.valid) {
                         currentUser = result.user;
+                        userToken = result.token;
                         localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        localStorage.setItem('userToken', userToken);
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('login-username').value = '';
                         document.getElementById('login-password').value = '';
@@ -3335,11 +3294,10 @@
         // 找回密码
         document.getElementById('recover-password-btn').addEventListener('click', async function() {
             const username = document.getElementById('reset-username').value;
-            const email = document.getElementById('reset-email').value;
             const securityQuestion = document.getElementById('reset-security-question').value;
             const securityAnswer = document.getElementById('reset-security-answer').value;
             
-            if (!username || !email || !securityQuestion || !securityAnswer) {
+            if (!username || !securityQuestion || !securityAnswer) {
                 alert('请填写所有字段');
                 return;
             }
@@ -3352,7 +3310,6 @@
                     },
                     body: JSON.stringify({ 
                         username, 
-                        email,
                         securityQuestion,
                         securityAnswer
                     })
@@ -3366,7 +3323,7 @@
                         document.getElementById('password-modal').style.display = 'flex';
                         document.getElementById('login-modal').style.display = 'none';
                     } else {
-                        alert(result.error || '用户名、邮箱或密保问题错误');
+                        alert(result.error || '密保问题或答案错误');
                     }
                 } else {
                     alert('找回密码失败');
@@ -3626,7 +3583,7 @@
         // 导出数据
         document.getElementById('export-data').addEventListener('click', async function() {
             try {
-                const response = await fetch(`${API_BASE}/export`);
+                const response = await fetchWithAuth(`${API_BASE}/export`);
                 if (response.ok) {
                     const data = await response.json();
                     const dataStr = JSON.stringify(data, null, 2);
@@ -3643,7 +3600,9 @@
                 }
             } catch (error) {
                 console.error('Export error:', error);
-                alert('导出失败');
+                if (error.message !== '未授权访问') {
+                    alert('导出失败');
+                }
             }
         });
         
@@ -3651,14 +3610,16 @@
         document.getElementById('reset-data').addEventListener('click', async function() {
             if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
                 try {
-                    const response = await fetch(`${API_BASE}/reset`, {
+                    const response = await fetchWithAuth(`${API_BASE}/reset`, {
                         method: 'POST'
                     });
                     
                     if (response.ok) {
                         alert('数据已重置');
                         currentUser = null;
+                        userToken = null;
                         localStorage.removeItem('currentUser');
+                        localStorage.removeItem('userToken');
                         updateUserInterface();
                         location.reload();
                     } else {
@@ -3666,7 +3627,9 @@
                     }
                 } catch (error) {
                     console.error('Reset error:', error);
-                    alert('重置失败');
+                    if (error.message !== '未授权访问') {
+                        alert('重置失败');
+                    }
                 }
             }
         });
@@ -3772,7 +3735,7 @@
         // 加载反馈
         async function loadFeedback() {
             try {
-                const response = await fetch(`${API_BASE}/feedback`);
+                const response = await fetchWithAuth(`${API_BASE}/feedback`);
                 if (response.ok) {
                     const feedback = await response.json();
                     const feedbackList = document.getElementById('feedback-list');
@@ -3813,7 +3776,7 @@
                             const id = this.getAttribute('data-id');
                             if (confirm('确定要删除这条反馈吗？')) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/feedback/${id}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/feedback/${id}`, {
                                         method: 'DELETE'
                                     });
                                     
@@ -3825,7 +3788,9 @@
                                     }
                                 } catch (error) {
                                     console.error('Delete feedback error:', error);
-                                    alert('删除失败');
+                                    if (error.message !== '未授权访问') {
+                                        alert('删除失败');
+                                    }
                                 }
                             }
                         });
@@ -3839,7 +3804,7 @@
         // 加载访问统计
         async function loadVisits() {
             try {
-                const response = await fetch(`${API_BASE}/visits`);
+                const response = await fetchWithAuth(`${API_BASE}/visits`);
                 if (response.ok) {
                     const visits = await response.json();
                     const visitsList = document.getElementById('visits-list');
@@ -3860,23 +3825,52 @@
                         const visitItem = document.createElement('div');
                         visitItem.className = 'visit-item';
                         visitItem.innerHTML = `
-                            <div class="visit-ip">${visit.ip}</div>
-                            <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
+                            <div><span class="visit-ip">${visit.ip}</span></div>
                             <div class="visit-date">最后访问: ${new Date(visit.lastVisit).toLocaleString()}</div>
-                            <div class="visit-date">访问次数: ${visit.count}</div>
+                            <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
+                            <div class="visit-count">访问次数: ${visit.visitCount}</div>
                         `;
                         visitsList.appendChild(visitItem);
                     });
                 }
             } catch (error) {
                 console.error('Load visits error:', error);
+                document.getElementById('visits-list').innerHTML = '加载访问统计失败';
             }
         }
+        
+        // 清除访问记录
+        document.getElementById('clear-visits').addEventListener('click', async function() {
+            if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
+                try {
+                    const response = await fetchWithAuth(`${API_BASE}/visits`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('访问记录已清除');
+                        loadVisits();
+                    } else {
+                        alert('清除失败');
+                    }
+                } catch (error) {
+                    console.error('Clear visits error:', error);
+                    if (error.message !== '未授权访问') {
+                        alert('清除失败');
+                    }
+                }
+            }
+        });
+        
+        // 刷新访问统计
+        document.getElementById('refresh-visits').addEventListener('click', function() {
+            loadVisits();
+        });
         
         // 加载用户列表
         async function loadUsers() {
             try {
-                const response = await fetch(`${API_BASE}/users`);
+                const response = await fetchWithAuth(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('user-list');
@@ -3896,12 +3890,10 @@
                             roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
-                        } else {
+                        } else if (user.approved) {
                             roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
-                        }
-                        
-                        if (!user.approved) {
-                            roleBadge += '<span class="user-role-badge user-pending">待审核</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
                         
                         if (user.frozen) {
@@ -3910,45 +3902,133 @@
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <div>${user.username} ${roleBadge}</div>
-                                <div class="user-email">${user.email || '未设置邮箱'}</div>
+                                <div><strong>${user.username}</strong> ${roleBadge}</div>
+                                <div class="visit-date">邮箱: ${user.email}</div>
+                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
                             </div>
                             <div class="user-actions">
-                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn delete-user" data-id="${user.id}" style="background: var(--reset-color);">删除</button>` : ''}
+                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                                <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                                ${user.frozen ? 
+                                    `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                                    `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                                }
+                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
                             </div>
                         `;
                         userList.appendChild(userItem);
                     });
                     
-                    // 添加编辑事件监听
-                    document.querySelectorAll('.edit-user').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const userId = this.getAttribute('data-id');
-                            openUserEditModal(userId, users);
+                    // 添加审核用户事件监听
+                    document.querySelectorAll('.approve-user').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ approved: true })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户审核通过');
+                                        loadUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Approve user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
                         });
                     });
                     
-                    // 添加删除事件监听
-                    document.querySelectorAll('.delete-user').forEach(button => {
+                    // 添加编辑用户事件监听
+                    document.querySelectorAll('.edit-user').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const username = this.getAttribute('data-username');
+                            openUserEditModal(username);
+                        });
+                    });
+                    
+                    // 添加冻结用户事件监听
+                    document.querySelectorAll('.freeze-user').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const userId = this.getAttribute('data-id');
-                            if (confirm('确定要删除这个用户吗？')) {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${userId}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ frozen: true })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户已冻结');
+                                        loadUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Freeze user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // 添加解冻用户事件监听
+                    document.querySelectorAll('.unfreeze-user').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要解冻用户 ${username} 吗？`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ frozen: false })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户已解冻');
+                                        loadUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Unfreeze user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // 添加删除用户事件监听
+                    document.querySelectorAll('.user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'DELETE'
                                     });
                                     
                                     if (response.ok) {
                                         alert('用户已删除');
                                         loadUsers();
-                                        loadAdminUsers();
                                     } else {
                                         alert('删除失败');
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
-                                    alert('删除失败');
+                                    if (error.message !== '未授权访问') {
+                                        alert('删除失败');
+                                    }
                                 }
                             }
                         });
@@ -3956,322 +4036,14 @@
                 }
             } catch (error) {
                 console.error('Load users error:', error);
+                document.getElementById('user-list').innerHTML = '加载用户列表失败';
             }
         }
-        
-        // 刷新用户列表
-        document.getElementById('refresh-users').addEventListener('click', function() {
-            loadUsers();
-        });
-        
-        // 刷新访问统计
-        document.getElementById('refresh-visits').addEventListener('click', function() {
-            loadVisits();
-        });
-        
-        // 清除访问记录
-        document.getElementById('clear-visits').addEventListener('click', async function() {
-            if (confirm('确定要清除所有访问记录吗？')) {
-                try {
-                    const response = await fetch(`${API_BASE}/visits`, {
-                        method: 'DELETE'
-                    });
-                    
-                    if (response.ok) {
-                        alert('访问记录已清除');
-                        loadVisits();
-                    } else {
-                        alert('清除失败');
-                    }
-                } catch (error) {
-                    console.error('Clear visits error:', error);
-                    alert('清除失败');
-                }
-            }
-        });
-        
-        // 打开用户编辑模态框
-        function openUserEditModal(userId, users) {
-            const user = users.find(u => u.id == userId);
-            if (!user) return;
-            
-            currentEditingUser = user;
-            
-            document.getElementById('edit-username').value = user.username;
-            document.getElementById('edit-email').value = user.email || '';
-            
-            // 设置用户角色
-            if (user.isSuperAdmin) {
-                document.getElementById('edit-role').value = 'super-admin';
-            } else if (user.isAdmin) {
-                document.getElementById('edit-role').value = 'admin';
-            } else {
-                document.getElementById('edit-role').value = 'normal';
-            }
-            
-            // 设置权限
-            const permissions = user.permissions || {};
-            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                const permission = checkbox.value;
-                checkbox.checked = permissions[permission] || false;
-            });
-            
-            // 设置审核状态
-            document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
-            
-            // 设置冻结状态
-            document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
-            
-            // 控制超级管理员选项的显示
-            const roleSelect = document.getElementById('edit-role');
-            if (currentUser && !currentUser.isSuperAdmin) {
-                // 普通管理员不能设置超级管理员选项
-                Array.from(roleSelect.options).forEach(option => {
-                    if (option.value === 'super-admin') {
-                        option.style.display = 'none';
-                    }
-                });
-            } else {
-                // 超级管理员可以设置所有选项
-                Array.from(roleSelect.options).forEach(option => {
-                    option.style.display = '';
-                });
-            }
-            
-            // 如果是超级管理员自己，角色选项应为只读
-            if (currentUser && currentUser.id === user.id && user.isSuperAdmin) {
-                roleSelect.disabled = true;
-                roleSelect.style.backgroundColor = '#f0f0f0';
-            } else {
-                roleSelect.disabled = false;
-                roleSelect.style.backgroundColor = '';
-            }
-            
-            document.getElementById('user-edit-modal').style.display = 'flex';
-        }
-        
-        // 保存用户编辑
-        document.getElementById('save-user-edit').addEventListener('click', async function() {
-            if (!currentEditingUser) return;
-            
-            const email = document.getElementById('edit-email').value;
-            const role = document.getElementById('edit-role').value;
-            const password = document.getElementById('edit-password').value;
-            const approved = document.getElementById('edit-approved').value === 'true';
-            const frozen = document.getElementById('edit-frozen').value === 'true';
-            
-            // 收集权限
-            const permissions = {};
-            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                permissions[checkbox.value] = checkbox.checked;
-            });
-            
-            try {
-                const response = await fetch(`${API_BASE}/users/${currentEditingUser.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email,
-                        role,
-                        password: password || undefined,
-                        approved,
-                        frozen,
-                        permissions
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('用户信息已更新');
-                    document.getElementById('user-edit-modal').style.display = 'none';
-                    loadUsers();
-                    loadAdminUsers();
-                } else {
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Update user error:', error);
-                alert('更新失败');
-            }
-        });
-        
-        // 取消用户编辑
-        document.getElementById('cancel-user-edit').addEventListener('click', function() {
-            document.getElementById('user-edit-modal').style.display = 'none';
-            currentEditingUser = null;
-        });
-        
-        // 加载用户信息
-        function loadUserInfo() {
-            if (!currentUser) return;
-            
-            document.getElementById('user-info-username').value = currentUser.username;
-            document.getElementById('user-info-email').value = currentUser.email || '';
-            
-            let roleText = '';
-            if (currentUser.isSuperAdmin) {
-                roleText = '<span class="user-role-badge user-super-admin">超级管理员</span>';
-            } else if (currentUser.isAdmin) {
-                roleText = '<span class="user-role-badge user-admin">管理员</span>';
-            } else {
-                roleText = '<span class="user-role-badge user-normal">普通用户</span>';
-            }
-            
-            if (!currentUser.approved) {
-                roleText += '<span class="user-role-badge user-pending">待审核</span>';
-            }
-            
-            if (currentUser.frozen) {
-                roleText += '<span class="user-role-badge user-frozen">已冻结</span>';
-            }
-            
-            document.getElementById('user-info-role').innerHTML = roleText;
-            
-            // 设置密保问题
-            if (currentUser.securityQuestion) {
-                document.getElementById('user-security-question').value = currentUser.securityQuestion;
-                document.getElementById('user-security-answer').value = currentUser.securityAnswer || '';
-            }
-        }
-        
-        // 更新用户信息
-        document.getElementById('update-user-info').addEventListener('click', async function() {
-            if (!currentUser) return;
-            
-            const email = document.getElementById('user-info-email').value;
-            
-            try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        currentUser.email = email;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        alert('用户信息已更新');
-                    } else {
-                        alert(result.error || '更新失败');
-                    }
-                } else {
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Update user info error:', error);
-                alert('更新失败');
-            }
-        });
-        
-        // 修改密码
-        document.getElementById('change-password-btn').addEventListener('click', async function() {
-            if (!currentUser) return;
-            
-            const oldPassword = document.getElementById('change-password-old').value;
-            const newPassword = document.getElementById('change-password-new').value;
-            const confirmPassword = document.getElementById('change-password-confirm').value;
-            
-            if (!oldPassword || !newPassword || !confirmPassword) {
-                alert('请填写所有密码字段');
-                return;
-            }
-            
-            if (newPassword.length < 4) {
-                alert('新密码长度至少4位');
-                return;
-            }
-            
-            if (newPassword !== confirmPassword) {
-                alert('新密码和确认密码不一致');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/change-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: currentUser.username,
-                        oldPassword,
-                        newPassword
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('密码修改成功');
-                        document.getElementById('change-password-old').value = '';
-                        document.getElementById('change-password-new').value = '';
-                        document.getElementById('change-password-confirm').value = '';
-                    } else {
-                        alert(result.error || '密码修改失败');
-                    }
-                } else {
-                    alert('密码修改失败');
-                }
-            } catch (error) {
-                console.error('Change password error:', error);
-                alert('密码修改失败');
-            }
-        });
-        
-        // 更新密保设置
-        document.getElementById('update-security-question').addEventListener('click', async function() {
-            if (!currentUser) return;
-            
-            const securityQuestion = document.getElementById('user-security-question').value;
-            const securityAnswer = document.getElementById('user-security-answer').value;
-            
-            if (!securityQuestion || !securityAnswer) {
-                alert('请选择密保问题并填写答案');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        securityQuestion,
-                        securityAnswer
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        currentUser.securityQuestion = securityQuestion;
-                        currentUser.securityAnswer = securityAnswer;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                        alert('密保设置已更新');
-                    } else {
-                        alert(result.error || '更新失败');
-                    }
-                } else {
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Update security question error:', error);
-                alert('更新失败');
-            }
-        });
         
         // 加载管理员用户列表
         async function loadAdminUsers() {
             try {
-                const response = await fetch(`${API_BASE}/users`);
+                const response = await fetchWithAuth(`${API_BASE}/users`);
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('admin-user-list');
@@ -4291,12 +4063,10 @@
                             roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
-                        } else {
+                        } else if (user.approved) {
                             roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
-                        }
-                        
-                        if (!user.approved) {
-                            roleBadge += '<span class="user-role-badge user-pending">待审核</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
                         
                         if (user.frozen) {
@@ -4305,45 +4075,133 @@
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <div>${user.username} ${roleBadge}</div>
-                                <div class="user-email">${user.email || '未设置邮箱'}</div>
+                                <div><strong>${user.username}</strong> ${roleBadge}</div>
+                                <div class="visit-date">邮箱: ${user.email}</div>
+                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
                             </div>
                             <div class="user-actions">
-                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn delete-user" data-id="${user.id}" style="background: var(--reset-color);">删除</button>` : ''}
+                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                                <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                                ${user.frozen ? 
+                                    `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                                    `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                                }
+                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
                             </div>
                         `;
                         userList.appendChild(userItem);
                     });
                     
-                    // 添加编辑事件监听
-                    document.querySelectorAll('#admin-user-list .edit-user').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const userId = this.getAttribute('data-id');
-                            openUserEditModal(userId, users);
+                    // 添加审核用户事件监听
+                    document.querySelectorAll('#admin-user-list .approve-user').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ approved: true })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户审核通过');
+                                        loadAdminUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Approve user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
                         });
                     });
                     
-                    // 添加删除事件监听
-                    document.querySelectorAll('#admin-user-list .delete-user').forEach(button => {
+                    // 添加编辑用户事件监听
+                    document.querySelectorAll('#admin-user-list .edit-user').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const username = this.getAttribute('data-username');
+                            openUserEditModal(username);
+                        });
+                    });
+                    
+                    // 添加冻结用户事件监听
+                    document.querySelectorAll('#admin-user-list .freeze-user').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const userId = this.getAttribute('data-id');
-                            if (confirm('确定要删除这个用户吗？')) {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要冻结用户 ${username} 吗？`)) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${userId}`, {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ frozen: true })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户已冻结');
+                                        loadAdminUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Freeze user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // 添加解冻用户事件监听
+                    document.querySelectorAll('#admin-user-list .unfreeze-user').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要解冻用户 ${username} 吗？`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
+                                        method: 'PUT',
+                                        body: JSON.stringify({ frozen: false })
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('用户已解冻');
+                                        loadAdminUsers();
+                                    } else {
+                                        alert('操作失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Unfreeze user error:', error);
+                                    if (error.message !== '未授权访问') {
+                                        alert('操作失败');
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    
+                    // 添加删除用户事件监听
+                    document.querySelectorAll('#admin-user-list .user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const username = this.getAttribute('data-username');
+                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                                try {
+                                    const response = await fetchWithAuth(`${API_BASE}/users/${username}`, {
                                         method: 'DELETE'
                                     });
                                     
                                     if (response.ok) {
                                         alert('用户已删除');
-                                        loadUsers();
                                         loadAdminUsers();
                                     } else {
                                         alert('删除失败');
                                     }
                                 } catch (error) {
                                     console.error('Delete user error:', error);
-                                    alert('删除失败');
+                                    if (error.message !== '未授权访问') {
+                                        alert('删除失败');
+                                    }
                                 }
                             }
                         });
@@ -4351,12 +4209,242 @@
                 }
             } catch (error) {
                 console.error('Load admin users error:', error);
+                document.getElementById('admin-user-list').innerHTML = '加载用户列表失败';
             }
         }
+        
+        // 打开用户编辑模态框
+        async function openUserEditModal(username) {
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/users`);
+                if (response.ok) {
+                    const users = await response.json();
+                    const user = users.find(u => u.username === username);
+                    
+                    if (user) {
+                        currentEditingUser = user;
+                        
+                        document.getElementById('edit-username').value = user.username;
+                        document.getElementById('edit-email').value = user.email || '';
+                        
+                        // 设置用户角色
+                        if (user.isSuperAdmin) {
+                            document.getElementById('edit-role').value = 'super-admin';
+                        } else if (user.isAdmin) {
+                            document.getElementById('edit-role').value = 'admin';
+                        } else {
+                            document.getElementById('edit-role').value = 'normal';
+                        }
+                        
+                        // 设置权限
+                        const permissions = user.permissions || {};
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.checked = permissions[checkbox.value] || false;
+                        });
+                        
+                        // 设置审核状态
+                        document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
+                        
+                        // 设置冻结状态
+                        document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
+                        
+                        // 清空密码字段
+                        document.getElementById('edit-password').value = '';
+                        
+                        document.getElementById('user-edit-modal').style.display = 'flex';
+                    } else {
+                        alert('用户不存在');
+                    }
+                }
+            } catch (error) {
+                console.error('Open user edit modal error:', error);
+                alert('加载用户信息失败');
+            }
+        }
+        
+        // 保存用户编辑
+        document.getElementById('save-user-edit').addEventListener('click', async function() {
+            if (!currentEditingUser) return;
+            
+            const email = document.getElementById('edit-email').value;
+            const role = document.getElementById('edit-role').value;
+            const password = document.getElementById('edit-password').value;
+            const approved = document.getElementById('edit-approved').value === 'true';
+            const frozen = document.getElementById('edit-frozen').value === 'true';
+            
+            // 收集权限设置
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
+            });
+            
+            const updateData = {
+                email,
+                approved,
+                frozen,
+                permissions
+            };
+            
+            // 设置角色
+            if (role === 'super-admin') {
+                updateData.isSuperAdmin = true;
+                updateData.isAdmin = true;
+            } else if (role === 'admin') {
+                updateData.isSuperAdmin = false;
+                updateData.isAdmin = true;
+            } else {
+                updateData.isSuperAdmin = false;
+                updateData.isAdmin = false;
+            }
+            
+            // 如果有新密码，添加密码字段
+            if (password) {
+                if (password.length < 4) {
+                    alert('密码长度至少4位');
+                    return;
+                }
+                updateData.password = password;
+            }
+            
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/users/${currentEditingUser.username}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (response.ok) {
+                    alert('用户信息已更新');
+                    document.getElementById('user-edit-modal').style.display = 'none';
+                    currentEditingUser = null;
+                    
+                    // 重新加载用户列表
+                    loadUsers();
+                    loadAdminUsers();
+                } else {
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Save user edit error:', error);
+                if (error.message !== '未授权访问') {
+                    alert('更新失败');
+                }
+            }
+        });
+        
+        // 取消用户编辑
+        document.getElementById('cancel-user-edit').addEventListener('click', function() {
+            document.getElementById('user-edit-modal').style.display = 'none';
+            currentEditingUser = null;
+        });
+        
+        // 刷新用户列表
+        document.getElementById('refresh-users').addEventListener('click', function() {
+            loadUsers();
+        });
         
         // 刷新管理员用户列表
         document.getElementById('refresh-admin-users').addEventListener('click', function() {
             loadAdminUsers();
+        });
+        
+        // 加载用户信息
+        function loadUserInfo() {
+            if (currentUser) {
+                document.getElementById('user-info-username').value = currentUser.username;
+                document.getElementById('user-info-email').value = currentUser.email || '';
+                
+                let roleText = '';
+                if (currentUser.isSuperAdmin) {
+                    roleText = '<span class="user-role-badge user-super-admin">超级管理员</span>';
+                } else if (currentUser.isAdmin) {
+                    roleText = '<span class="user-role-badge user-admin">管理员</span>';
+                } else {
+                    roleText = '<span class="user-role-badge user-normal">普通用户</span>';
+                }
+                document.getElementById('user-info-role').innerHTML = roleText;
+            }
+        }
+        
+        // 更新用户信息
+        document.getElementById('update-user-info').addEventListener('click', async function() {
+            const email = document.getElementById('user-info-email').value;
+            
+            if (!email) {
+                alert('请输入邮箱');
+                return;
+            }
+            
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/users/${currentUser.username}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    alert('用户信息已更新');
+                    currentUser.email = email;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } else {
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Update user info error:', error);
+                if (error.message !== '未授权访问') {
+                    alert('更新失败');
+                }
+            }
+        });
+        
+        // 修改密码
+        document.getElementById('change-password-btn').addEventListener('click', async function() {
+            const oldPassword = document.getElementById('change-password-old').value;
+            const newPassword = document.getElementById('change-password-new').value;
+            const confirmPassword = document.getElementById('change-password-confirm').value;
+            
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('密码长度至少4位');
+                return;
+            }
+            
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/change-password`, {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        username: currentUser.username, 
+                        oldPassword, 
+                        newPassword 
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密码修改成功');
+                        document.getElementById('change-password-old').value = '';
+                        document.getElementById('change-password-new').value = '';
+                        document.getElementById('change-password-confirm').value = '';
+                    } else {
+                        alert(result.error || '密码修改失败');
+                    }
+                } else {
+                    alert('密码修改失败');
+                }
+            } catch (error) {
+                console.error('Change password error:', error);
+                if (error.message !== '未授权访问') {
+                    alert('密码修改失败');
+                }
+            }
         });
         
         // 加载捐助记录
@@ -4365,55 +4453,29 @@
                 const response = await fetch(`${API_BASE}/donations`);
                 if (response.ok) {
                     const donations = await response.json();
-                    const donationRecords = document.getElementById('donation-records');
-                    
-                    if (!donationRecords) return;
+                    const donationList = document.getElementById('donation-list');
                     
                     if (donations.length === 0) {
-                        donationRecords.innerHTML = '<div class="donation-record">暂无捐助记录</div>';
+                        donationList.innerHTML = '<div class="donation-record">暂无捐助记录</div>';
                         return;
                     }
                     
-                    donationRecords.innerHTML = '';
-                    donations.forEach(donation => {
+                    donationList.innerHTML = '';
+                    donations.forEach(item => {
                         const donationRecord = document.createElement('div');
                         donationRecord.className = 'donation-record';
                         donationRecord.innerHTML = `
-                            <div><strong>${donation.username || '匿名用户'}</strong> 捐助了 <strong>${donation.amount}元</strong></div>
-                            <div class="feedback-date">${new Date(donation.timestamp).toLocaleString()}</div>
-                            ${donation.message ? `<div class="feedback-content">留言: ${donation.message}</div>` : ''}
+                            <div><strong>${item.name || '匿名用户'}</strong> 捐助了 <strong>${item.amount}元</strong></div>
+                            <div class="feedback-date">${new Date(item.timestamp).toLocaleString()}</div>
+                            ${item.message ? `<div>留言: ${item.message}</div>` : ''}
                         `;
-                        donationRecords.appendChild(donationRecord);
+                        donationList.appendChild(donationRecord);
                     });
                 }
             } catch (error) {
                 console.error('Load donations error:', error);
             }
         }
-        
-        // 页脚信息按钮点击事件
-        document.getElementById('project-description-btn').addEventListener('click', function() {
-            document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
-            document.getElementById('footer-info-modal').style.display = 'flex';
-        });
-        
-        document.getElementById('version-btn').addEventListener('click', function() {
-            document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value;
-            document.getElementById('footer-info-modal').style.display = 'flex';
-        });
-        
-        document.getElementById('about-btn').addEventListener('click', function() {
-            document.getElementById('footer-modal-title').textContent = '关于我们';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
-            document.getElementById('footer-info-modal').style.display = 'flex';
-        });
-        
-        // 关闭页脚信息模态框
-        document.getElementById('close-footer-modal').addEventListener('click', function() {
-            document.getElementById('footer-info-modal').style.display = 'none';
-        });
         
         // 初始化计时器
         function initializeTimer(initialPhaseKey) {
@@ -4636,43 +4698,54 @@
         // 初始化可拖拽面板
         function initDraggablePanel(panelId) {
             const panel = document.getElementById(panelId);
-            const header = document.getElementById(panelId === 'admin-panel' ? 'admin-panel-header' : 'user-center-header');
+            const header = panel.querySelector('.admin-panel-header, .user-center-header');
             
             let isDragging = false;
-            let dragOffsetX, dragOffsetY;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
             
-            header.addEventListener('mousedown', startDrag);
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', stopDrag);
+            header.addEventListener("mousedown", dragStart);
+            document.addEventListener("mouseup", dragEnd);
+            document.addEventListener("mousemove", drag);
             
-            function startDrag(e) {
-                isDragging = true;
-                const rect = panel.getBoundingClientRect();
-                dragOffsetX = e.clientX - rect.left;
-                dragOffsetY = e.clientY - rect.top;
-                panel.style.cursor = 'grabbing';
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                if (e.target === header || e.target.parentNode === header) {
+                    isDragging = true;
+                }
+            }
+            
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                
+                isDragging = false;
             }
             
             function drag(e) {
-                if (!isDragging) return;
-                
-                const x = e.clientX - dragOffsetX;
-                const y = e.clientY - dragOffsetY;
-                
-                // 限制在视口内
-                const maxX = window.innerWidth - panel.offsetWidth;
-                const maxY = window.innerHeight - panel.offsetHeight;
-                
-                panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-                panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-                panel.style.transform = 'none';
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    setTranslate(currentX, currentY, panel);
+                }
             }
             
-            function stopDrag() {
-                isDragging = false;
-                panel.style.cursor = '';
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
             }
         }
+        
         // 检查数据库状态
         async function checkDbStatus() {
             try {
@@ -4697,25 +4770,82 @@
                     document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
                 }
             }
-        }            
-        // 页面加载完成后初始化
-        window.addEventListener('DOMContentLoaded', function() {
-            // 加载设置
-            loadSettings();
+        }
+        
+        // 页脚信息点击事件
+        document.getElementById('project-description-btn').addEventListener('click', function() {
+            const content = document.getElementById('project-description-input').value || '暂无项目介绍';
+            document.getElementById('footer-modal-title').textContent = '项目介绍';
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('version-btn').addEventListener('click', function() {
+            const content = document.getElementById('version-input').value || '暂无版本信息';
+            document.getElementById('footer-modal-title').textContent = '版本更新';
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('about-btn').addEventListener('click', function() {
+            const content = document.getElementById('about-input').value || '暂无关于信息';
+            document.getElementById('footer-modal-title').textContent = '关于本网站';
+            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('close-footer-modal').addEventListener('click', function() {
+            document.getElementById('footer-info-modal').style.display = 'none';
+        });
+        
+        // 自动检测文本中的链接并使其可点击
+        function autoLinkify() {
+            // 获取所有文本节点并检测URL
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
             
-            // 更新用户界面
-            updateUserInterface();
-            
-            // 添加点击外部关闭模态框的功能
-            window.addEventListener('click', function(event) {
-                const modals = document.querySelectorAll('.modal, .admin-panel, .user-center, .user-edit-modal, .password-modal');
-                modals.forEach(modal => {
-                    if (event.target === modal) {
-                        modal.style.display = 'none';
+            let node;
+            while (node = walker.nextNode()) {
+                const text = node.nodeValue;
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                
+                if (urlRegex.test(text)) {
+                    const parent = node.parentNode;
+                    if (parent && parent.nodeName !== 'A' && parent.nodeName !== 'SCRIPT' && parent.nodeName !== 'STYLE') {
+                        const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                        const newElement = document.createElement('span');
+                        newElement.innerHTML = newHtml;
+                        parent.replaceChild(newElement, node);
+                    }
+                }
+            }
+        }
+        
+        // 记录访问
+        async function recordVisit() {
+            try {
+                await fetch(`${API_BASE}/visits`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
                 });
-            });
-        });
+            } catch (error) {
+                console.error('Failed to record visit:', error);
+            }
+        }
+        
+        // 初始加载设置
+        document.getElementById('api-url').value = API_BASE;
+        loadSettings();
+        checkDbStatus();
+        autoLinkify();
+        recordVisit();
+        
         // 每1分钟检查一次数据库状态
         setInterval(checkDbStatus, 1 * 60 * 1000);
     </script>
