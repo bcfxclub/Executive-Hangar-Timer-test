@@ -1757,6 +1757,10 @@
                     <input type="text" id="reset-username" placeholder="输入用户名">
                 </div>
                 <div class="form-group">
+                    <label for="reset-email">邮箱</label>
+                    <input type="email" id="reset-email" placeholder="输入邮箱">
+                </div>
+                <div class="form-group">
                     <label for="reset-security-question">密保问题</label>
                     <select id="reset-security-question">
                         <option value="">请选择密保问题</option>
@@ -1778,6 +1782,7 @@
         </div>
     </div>
     
+    <!-- 其余代码将在第二部分提供 -->
     <div class="modal" id="feedback-modal">
         <div class="modal-content">
             <h2><i class="fas fa-comment"></i> 提交反馈</h2>
@@ -2212,6 +2217,7 @@
         <div class="user-center-tabs">
             <div class="user-center-tab active" data-tab="user-info">用户信息</div>
             <div class="user-center-tab" data-tab="change-password">修改密码</div>
+            <div class="user-center-tab" data-tab="security-question">密保设置</div>
             <div class="user-center-tab" id="user-management-tab" data-tab="user-management" style="display: none;">用户管理</div>
         </div>
         
@@ -2253,6 +2259,29 @@
                 </div>
                 <button id="change-password-btn">
                     <i class="fas fa-key"></i> 修改密码
+                </button>
+            </div>
+        </div>
+        
+        <div class="user-center-tab-content" id="security-question-tab">
+            <div class="admin-card">
+                <h3><i class="fas fa-shield-alt"></i> 密保设置</h3>
+                <div class="form-group">
+                    <label for="user-security-question">密保问题</label>
+                    <select id="user-security-question">
+                        <option value="">请选择密保问题</option>
+                        <option value="你的姓名是什么？">你的姓名是什么？</option>
+                        <option value="你的父亲叫什么？">你的父亲叫什么？</option>
+                        <option value="你的母亲叫什么？">你的母亲叫什么？</option>
+                        <option value="你出生地所在的城市是哪里？">你出生地所在的城市是哪里？</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="user-security-answer">密保答案</label>
+                    <input type="text" id="user-security-answer" placeholder="输入密保答案">
+                </div>
+                <button id="update-security-question">
+                    <i class="fas fa-save"></i> 更新密保设置
                 </button>
             </div>
         </div>
@@ -2662,7 +2691,11 @@
             if (currentUser) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
-                if (currentUser.isAdmin || currentUser.isSuperAdmin) {
+                // 检查用户权限，动态显示管理面板
+                const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
+                    (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
+                
+                if (hasAnyPermission) {
                     adminPanelBtn.style.display = 'flex';
                     userCenterBtn.style.display = 'flex';
                     
@@ -2672,6 +2705,9 @@
                     } else {
                         userManagementTab.style.display = 'none';
                     }
+                    
+                    // 动态更新管理面板标签显示
+                    updateAdminPanelTabs();
                 } else {
                     adminPanelBtn.style.display = 'none';
                     userCenterBtn.style.display = 'flex';
@@ -2682,6 +2718,38 @@
                 adminPanelBtn.style.display = 'none';
                 userCenterBtn.style.display = 'none';
                 userManagementTab.style.display = 'none';
+            }
+        }
+        
+        // 动态更新管理面板标签显示
+        function updateAdminPanelTabs() {
+            if (!currentUser) return;
+            
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                let shouldShow = false;
+                
+                // 超级管理员可以看到所有标签
+                if (currentUser.isSuperAdmin) {
+                    shouldShow = true;
+                } 
+                // 管理员根据权限显示标签
+                else if (currentUser.isAdmin && currentUser.permissions) {
+                    shouldShow = currentUser.permissions[tabName] || false;
+                }
+                // 普通用户根据权限显示标签
+                else if (currentUser.permissions) {
+                    shouldShow = currentUser.permissions[tabName] || false;
+                }
+                
+                tab.style.display = shouldShow ? 'block' : 'none';
+            });
+            
+            // 如果没有显示的标签，隐藏管理面板按钮
+            const visibleTabs = Array.from(tabs).filter(tab => tab.style.display !== 'none');
+            if (visibleTabs.length === 0) {
+                document.getElementById('admin-panel-btn').style.display = 'none';
             }
         }
         
@@ -3102,6 +3170,7 @@
         document.getElementById('cancel-reset').addEventListener('click', function() {
             document.getElementById('login-modal').style.display = 'none';
             document.getElementById('reset-username').value = '';
+            document.getElementById('reset-email').value = '';
             document.getElementById('reset-security-question').value = '';
             document.getElementById('reset-security-answer').value = '';
         });
@@ -3287,10 +3356,11 @@
         // 找回密码
         document.getElementById('recover-password-btn').addEventListener('click', async function() {
             const username = document.getElementById('reset-username').value;
+            const email = document.getElementById('reset-email').value;
             const securityQuestion = document.getElementById('reset-security-question').value;
             const securityAnswer = document.getElementById('reset-security-answer').value;
             
-            if (!username || !securityQuestion || !securityAnswer) {
+            if (!username || !email || !securityQuestion || !securityAnswer) {
                 alert('请填写所有字段');
                 return;
             }
@@ -3303,6 +3373,7 @@
                     },
                     body: JSON.stringify({ 
                         username, 
+                        email,
                         securityQuestion,
                         securityAnswer
                     })
@@ -3316,7 +3387,7 @@
                         document.getElementById('password-modal').style.display = 'flex';
                         document.getElementById('login-modal').style.display = 'none';
                     } else {
-                        alert(result.error || '密保问题或答案错误');
+                        alert(result.error || '用户名、邮箱或密保问题错误');
                     }
                 } else {
                     alert('找回密码失败');
@@ -4272,10 +4343,22 @@
                         // 设置用户角色
                         if (user.isSuperAdmin) {
                             document.getElementById('edit-role').value = 'super-admin';
+                            // 超级管理员角色设置为只读
+                            document.getElementById('edit-role').disabled = true;
                         } else if (user.isAdmin) {
                             document.getElementById('edit-role').value = 'admin';
+                            document.getElementById('edit-role').disabled = false;
                         } else {
                             document.getElementById('edit-role').value = 'normal';
+                            document.getElementById('edit-role').disabled = false;
+                        }
+                        
+                        // 如果是普通管理员编辑用户，不能设置超级管理员选项
+                        if (currentUser && !currentUser.isSuperAdmin) {
+                            const superAdminOption = document.querySelector('#edit-role option[value="super-admin"]');
+                            if (superAdminOption) {
+                                superAdminOption.style.display = 'none';
+                            }
                         }
                         
                         // 设置权限
@@ -4396,7 +4479,7 @@
         });
         
         // 加载用户信息
-        function loadUserInfo() {
+        async function loadUserInfo() {
             if (currentUser) {
                 document.getElementById('user-info-username').value = currentUser.username;
                 document.getElementById('user-info-email').value = currentUser.email || '';
@@ -4410,6 +4493,24 @@
                     roleText = '<span class="user-role-badge user-normal">普通用户</span>';
                 }
                 document.getElementById('user-info-role').innerHTML = roleText;
+                
+                // 加载密保设置
+                try {
+                    const response = await fetch(`${API_BASE}/users`, {
+                        headers: getAuthHeaders()
+                    });
+                    if (response.ok) {
+                        const users = await response.json();
+                        const user = users.find(u => u.username === currentUser.username);
+                        
+                        if (user) {
+                            document.getElementById('user-security-question').value = user.securityQuestion || '';
+                            // 注意：密保答案不显示，只允许修改
+                        }
+                    }
+                } catch (error) {
+                    console.error('Load user security question error:', error);
+                }
             }
         }
         
@@ -4441,6 +4542,41 @@
                 }
             } catch (error) {
                 console.error('Update user info error:', error);
+                alert('更新失败');
+            }
+        });
+        
+        // 更新密保设置
+        document.getElementById('update-security-question').addEventListener('click', async function() {
+            const securityQuestion = document.getElementById('user-security-question').value;
+            const securityAnswer = document.getElementById('user-security-answer').value;
+            
+            if (!securityQuestion || !securityAnswer) {
+                alert('请选择密保问题并填写答案');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ 
+                        securityQuestion,
+                        securityAnswer 
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('密保设置已更新');
+                    document.getElementById('user-security-answer').value = '';
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Update security question error:', error);
                 alert('更新失败');
             }
         });
