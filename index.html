@@ -1782,7 +1782,6 @@
         </div>
     </div>
     
-    <!-- 其余代码将在第二部分提供 -->
     <div class="modal" id="feedback-modal">
         <div class="modal-content">
             <h2><i class="fas fa-comment"></i> 提交反馈</h2>
@@ -2414,6 +2413,9 @@
         let donationEnabled = false;
         let currentEditingUser = null;
         
+        // 新增：全局变量用于存储调整后的开始时间
+        let adjustedStartTime = new Date();
+        
         // 获取认证头信息 - 修改为使用令牌
         function getAuthHeaders() {
             const headers = {
@@ -2743,6 +2745,9 @@
                 userCenterBtn.style.display = 'none';
                 userManagementTab.style.display = 'none';
             }
+            
+            // 新增：用户登录状态变化时刷新机库开启时间显示
+            calculateHangarOpenTimes(adjustedStartTime);
         }
         
         // 动态更新管理面板标签显示
@@ -3316,6 +3321,9 @@
                         document.getElementById('login-password').value = '';
                         updateUserInterface();
                         alert('登录成功');
+                        
+                        // 新增：登录成功后刷新机库开启时间显示
+                        calculateHangarOpenTimes(adjustedStartTime);
                     } else {
                         alert(result.error || '用户名或密码错误');
                     }
@@ -3931,7 +3939,7 @@
                     
                     visitsList.innerHTML = '';
                     // 按最后访问时间倒序排列
-                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.lastVisit));
+                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.firstVisit));
                     
                     visits.forEach(visit => {
                         const visitItem = document.createElement('div');
@@ -4741,8 +4749,8 @@
                 offsetMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + config.offset;
             }
             
-            // 调整开始时间
-            const adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
+            // 调整开始时间 - 修改为赋值给全局变量
+            adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
             
             // 更新显示
             updateDisplay(adjustedStartTime);
@@ -4938,7 +4946,7 @@
         // 格式化完整日期时间（用于显示）
         function formatDateTimeFull(date) {
             const year = date.getFullYear();
-            const month = padZero(date.getMonth() + 0);
+            const month = padZero(date.getMonth() + 1);
             const day = padZero(date.getDate());
             const hours = padZero(date.getHours());
             const minutes = padZero(date.getMinutes());
