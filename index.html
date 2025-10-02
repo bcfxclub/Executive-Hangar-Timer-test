@@ -1781,8 +1781,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- 其余代码将在第二部分提供 -->
     <div class="modal" id="feedback-modal">
         <div class="modal-content">
             <h2><i class="fas fa-comment"></i> 提交反馈</h2>
@@ -1906,14 +1904,6 @@
                     <select id="timer-enabled">
                         <option value="true">开启</option>
                         <option value="false">关闭</option>
-                    </select>
-                </div>
-                <!-- 新增：机库开启时间显示控制 -->
-                <div class="form-group">
-                    <label for="hangar-times-visible"><i class="fas fa-eye"></i> 机库开启时间显示</label>
-                    <select id="hangar-times-visible">
-                        <option value="true">所有人可见</option>
-                        <option value="false">仅登录用户可见</option>
                     </select>
                 </div>
                 <button id="update-timer">
@@ -2193,8 +2183,8 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.2
-更新日期：2025-10-01
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.3
+更新日期：2025-10-02
 更新内容：
 在上一版基础上，做出如下修改：
 1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。用户登录界面找回密码功能重置密码按钮改为找回密码按钮，密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。
@@ -2368,11 +2358,6 @@
                         <input type="checkbox" id="edit-permission-footer" value="footer">
                         <label for="edit-permission-footer">页脚信息</label>
                     </div>
-                    <!-- 新增：机库开启时间显示权限 -->
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-                        <label for="edit-permission-view-hangar-times">机库开启时间显示</label>
-                    </div>
                 </div>
             </div>
             <div class="form-group">
@@ -2413,6 +2398,7 @@
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
+        let adjustedStartTime = null; // 新增：用于存储调整后的开始时间
         
         // 获取认证头信息 - 修改为使用令牌
         function getAuthHeaders() {
@@ -2469,16 +2455,6 @@
                     if (config.timerEnabled !== undefined) {
                         timerEnabled = config.timerEnabled;
                         document.getElementById('timer-enabled').value = timerEnabled.toString();
-                    }
-                    
-                    // 新增：机库开启时间显示设置
-                    if (config.hangarTimesVisible !== undefined) {
-                        document.getElementById('hangar-times-visible').value = config.hangarTimesVisible.toString();
-                        localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
-                    } else {
-                        // 默认值为true
-                        document.getElementById('hangar-times-visible').value = 'true';
-                        localStorage.setItem('hangarTimesVisible', 'true');
                     }
                     
                     if (config.notification) {
@@ -2743,6 +2719,11 @@
                 userCenterBtn.style.display = 'none';
                 userManagementTab.style.display = 'none';
             }
+            
+            // 刷新机库开启时间显示
+            if (adjustedStartTime) {
+                calculateHangarOpenTimes(adjustedStartTime);
+            }
         }
         
         // 动态更新管理面板标签显示
@@ -2783,7 +2764,6 @@
                 startTime: new Date(document.getElementById('start-time').value).toISOString(),
                 initialPhase: document.getElementById('initial-phase').value,
                 timerEnabled: document.getElementById('timer-enabled').value === 'true',
-                hangarTimesVisible: document.getElementById('hangar-times-visible').value === 'true',
                 notification: document.getElementById('notification-content').value,
                 notificationLink: document.getElementById('notification-link').value,
                 notificationColor: document.getElementById('notification-color').value,
@@ -2841,8 +2821,6 @@
                     updateDonationButtonDisplay();
                     // 更新背景显示
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
-                    // 更新机库开启时间显示设置
-                    localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
                     return true;
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -4742,7 +4720,7 @@
             }
             
             // 调整开始时间
-            const adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
+            adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
             
             // 更新显示
             updateDisplay(adjustedStartTime);
@@ -4858,34 +4836,6 @@
             const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
             const now = new Date();
             
-            // 检查机库开启时间显示设置
-            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false'; // 默认为true
-            
-            // 检查用户权限
-            let canViewHangarTimes = hangarTimesVisible;
-            
-            if (!hangarTimesVisible && currentUser) {
-                // 如果全局设置为仅登录用户可见，检查用户权限
-                canViewHangarTimes = currentUser.isSuperAdmin || currentUser.isAdmin || 
-                    (currentUser.permissions && currentUser.permissions.viewHangarTimes);
-            }
-            
-            // 如果设置为仅登录用户可见且用户未登录，显示提示信息
-            if (!hangarTimesVisible && !currentUser) {
-                const loginPrompt = document.createElement('li');
-                loginPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 请登录账号查看机库开启时间`;
-                windowList.appendChild(loginPrompt);
-                return;
-            }
-            
-            // 如果用户已登录但没有查看权限
-            if (!canViewHangarTimes) {
-                const permissionPrompt = document.createElement('li');
-                permissionPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 您没有权限查看机库开启时间`;
-                windowList.appendChild(permissionPrompt);
-                return;
-            }
-            
             // 计算上一个开启时间
             let previousWindowTime = new Date(firstGreenTime.getTime());
             while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
@@ -4938,7 +4888,7 @@
         // 格式化完整日期时间（用于显示）
         function formatDateTimeFull(date) {
             const year = date.getFullYear();
-            const month = padZero(date.getMonth() + 0);
+            const month = padZero(date.getMonth() + 1);
             const day = padZero(date.getDate());
             const hours = padZero(date.getHours());
             const minutes = padZero(date.getMinutes());
