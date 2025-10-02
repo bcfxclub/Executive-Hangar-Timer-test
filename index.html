@@ -1781,7 +1781,7 @@
             </div>
         </div>
     </div>
-    
+    <!-- 其余代码将在第二部分提供 -->
     <div class="modal" id="feedback-modal">
         <div class="modal-content">
             <h2><i class="fas fa-comment"></i> 提交反馈</h2>
@@ -1859,545 +1859,6 @@
             </div>
         </div>
     </div>
-    <div class="admin-panel" id="admin-panel">
-        <div class="admin-panel-header" id="admin-panel-header">
-            <h2><i class="fas fa-cog"></i> 后台管理系统</h2>
-            <button class="cancel-btn" id="close-admin-panel">关闭管理面板</button>
-        </div>
-        
-        <div class="admin-tabs">
-            <div class="admin-tab active" data-tab="basic">时间校准</div>
-            <div class="admin-tab" data-tab="notification">通知管理</div>
-            <div class="admin-tab" data-tab="appearance">外观设置</div>
-            <div class="admin-tab" data-tab="donation">捐助设置</div>
-            <div class="admin-tab" data-tab="data">数据管理</div>
-            <div class="admin-tab" data-tab="feedback">反馈管理</div>
-            <div class="admin-tab" data-tab="visits">访问统计</div>
-            <div class="admin-tab" data-tab="users">用户管理</div>
-            <div class="admin-tab" data-tab="footer">页脚信息</div>
-        </div>
-        
-        <div class="admin-tab-content active" id="basic-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-sliders-h"></i> 时间校准</h3>
-                <div class="form-group">
-                    <label for="start-time"><i class="fas fa-calendar-alt"></i> 开始时间</label>
-                    <input type="datetime-local" id="start-time">
-                </div>
-                <div class="form-group">
-                    <label for="initial-phase"><i class="fas fa-list-alt"></i> 初始阶段</label>
-                    <select id="initial-phase">
-                        <option value="5-red">5红灯</option>
-                        <option value="1-green-4-red">1绿灯4红灯</option>
-                        <option value="2-green-3-red">2绿灯3红灯</option>
-                        <option value="3-green-2-red">3绿灯2红灯</option>
-                        <option value="4-green-1-red">4绿灯1红灯</option>
-                        <option value="5-green" selected>5绿灯</option>
-                        <option value="1-gray-4-green">1灰灯4绿灯</option>
-                        <option value="2-gray-3-green">2灰灯3绿灯</option>
-                        <option value="3-gray-2-green">3灰灯2绿灯</option>
-                        <option value="4-gray-1-green">4灰灯1绿灯</option>
-                        <option value="5-gray">5灰灯</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="timer-enabled"><i class="fas fa-power-off"></i> 计时器状态</label>
-                    <select id="timer-enabled">
-                        <option value="true">开启</option>
-                        <option value="false">关闭</option>
-                    </select>
-                </div>
-                <!-- 新增：机库开启时间显示控制 -->
-                <div class="form-group">
-                    <label for="hangar-times-visible"><i class="fas fa-eye"></i> 机库开启时间显示</label>
-                    <select id="hangar-times-visible">
-                        <option value="true">所有人可见</option>
-                        <option value="false">仅登录用户可见</option>
-                    </select>
-                </div>
-                <button id="update-timer">
-                    <i class="fas fa-sync"></i> 更新计时器
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="notification-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-bell"></i> 通知管理</h3>
-                <div class="form-group">
-                    <label for="notification-content">通知内容</label>
-                    <textarea id="notification-content" placeholder="输入通知内容（可包含链接）"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="notification-link">通知链接URL（选填）</label>
-                    <input type="url" id="notification-link" placeholder="输入通知链接URL">
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="notification-color">通知文字颜色</label>
-                    <input type="color" id="notification-color" value="#ffffff">
-                    <div class="color-preview" id="notification-color-preview" style="background-color: #ffffff;"></div>
-                </div>
-                <button id="update-notification">
-                    <i class="fas fa-save"></i> 更新通知
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="appearance-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-image"></i> 外观设置</h3>
-                <div class="form-group">
-                    <label for="custom-title">系统标题</label>
-                    <input type="text" id="custom-title" placeholder="输入系统标题">
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="header-text-color">标题文字颜色</label>
-                    <input type="color" id="header-text-color" value="#ffffff">
-                    <div class="color-preview" id="header-text-color-preview"></div>
-                </div>
-                <div class="form-group">
-                    <label for="header-font-size">标题字体大小</label>
-                    <input type="range" id="header-font-size" min="1" max="3" step="0.1" value="1.8">
-                    <span id="header-font-size-value">1.8rem</span>
-                </div>
-                <div class="form-group">
-                    <label for="logo-url">Logo URL</label>
-                    <input type="url" id="logo-url" placeholder="输入Logo URL">
-                    <div class="upload-group">
-                        <input type="file" id="logo-upload" accept="image/*">
-                        <button id="upload-logo"><i class="fas fa-upload"></i></button>
-                    </div>
-                    <div class="logo-preview" id="logo-preview"></div>
-                </div>
-                <div class="form-group">
-                    <label for="logo-size">Logo大小</label>
-                    <input type="range" id="logo-size" min="80" max="200" value="120">
-                    <span id="logo-size-value">120px</span>
-                </div>
-                <div class="form-group">
-                    <label for="qrcode-url">二维码URL</label>
-                    <input type="url" id="qrcode-url" placeholder="输入二维码URL">
-                    <div class="upload-group">
-                        <input type="file" id="qrcode-upload" accept="image/*">
-                        <button id="upload-qrcode"><i class="fas fa-upload"></i></button>
-                    </div>
-                    <div class="qrcode-preview" id="qrcode-preview"></div>
-                    <button id="delete-qrcode" style="background: var(--reset-color); margin-top: 10px;">
-                        <i class="fas fa-trash"></i> 删除二维码
-                    </button>
-                </div>
-                <div class="form-group">
-                    <label for="qrcode-caption-input">二维码注释</label>
-                    <input type="text" id="qrcode-caption-input" placeholder="输入二维码注释">
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="qrcode-caption-color">二维码注释颜色</label>
-                    <input type="color" id="qrcode-caption-color" value="#ffffff">
-                    <div class="color-preview" id="qrcode-caption-color-preview"></div>
-                </div>
-                <div class="form-group">
-                    <label for="invite-code-input">邀请码</label>
-                    <input type="text" id="invite-code-input" placeholder="输入邀请码">
-                </div>
-                <div class="form-group">
-                    <label for="invite-link-input">邀请链接URL</label>
-                    <input type="url" id="invite-link-input" placeholder="输入邀请链接URL">
-                </div>
-                <div class="form-group">
-                    <label for="bg-type">背景类型</label>
-                    <select id="bg-type">
-                        <option value="image">图片</option>
-                        <option value="video">视频</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="bg-image">图片背景URL</label>
-                    <input type="url" id="bg-image" placeholder="输入图片背景URL">
-                    <div class="upload-group">
-                        <input type="file" id="bg-upload" accept="image/*">
-                        <button id="upload-bg"><i class="fas fa-upload"></i></button>
-                    </div>
-                    <div class="bg-preview" id="bg-preview"></div>
-                </div>
-                <div class="form-group">
-                    <label for="video-url">视频背景URL</label>
-                    <input type="url" id="video-url" placeholder="输入视频背景URL">
-                    <div class="upload-group">
-                        <input type="file" id="video-upload" accept="video/*">
-                        <button id="upload-video"><i class="fas fa-upload"></i></button>
-                    </div>
-                    <div class="video-preview" id="video-preview">
-                        <span>视频预览区域</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="bg-opacity">背景透明度: <span id="opacity-value">80</span>%</label>
-                    <input type="range" id="bg-opacity" min="10" max="100" value="80">
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="window-text-color">机库开启时间窗口文字颜色</label>
-                    <input type="color" id="window-text-color" value="#2d3748">
-                    <div class="color-preview" id="window-text-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="window-comment-color">机库开启时间窗口注释颜色</label>
-                    <input type="color" id="window-comment-color" value="#718096">
-                    <div class="color-preview" id="window-comment-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="window-title-color">机库开启时间标题颜色</label>
-                    <input type="color" id="window-title-color" value="#2c3e50">
-                    <div class="color-preview" id="window-title-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="calibration-text-color">倒计时校准时间文字颜色</label>
-                    <input type="color" id="calibration-text-color" value="#718096">
-                    <div class="color-preview" id="calibration-text-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="countdown-text-color">倒计时文字颜色</label>
-                    <input type="color" id="countdown-text-color" value="#2c3e50">
-                    <div class="color-preview" id="countdown-text-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="hangar-time-text-color">倒计时机库开启时间文字颜色</label>
-                    <input type="color" id="hangar-time-text-color" value="#2d3748">
-                    <div class="color-preview" id="hangar-time-text-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="status-text-color">倒计时指示灯状态文字颜色</label>
-                    <input type="color" id="status-text-color" value="#2d3748">
-                    <div class="color-preview" id="status-text-color-preview"></div>
-                </div>
-                <button id="save-appearance">
-                    <i class="fas fa-save"></i> 保存所有设置
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="donation-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-donate"></i> 捐助设置</h3>
-                <div class="form-group">
-                    <label for="donation-enabled">捐助功能</label>
-                    <select id="donation-enabled">
-                        <option value="true">开启</option>
-                        <option value="false">关闭</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="wechat-qrcode-url">微信支付二维码URL</label>
-                    <input type="url" id="wechat-qrcode-url" placeholder="输入微信支付二维码URL">
-                    <div class="upload-group">
-                        <input type="file" id="wechat-qrcode-upload" accept="image/*">
-                        <button id="upload-wechat-qrcode"><i class="fas fa-upload"></i></button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="alipay-qrcode-url">支付宝二维码URL</label>
-                    <input type="url" id="alipay-qrcode-url" placeholder="输入支付宝二维码URL">
-                    <div class="upload-group">
-                        <input type="file" id="alipay-qrcode-upload" accept="image/*">
-                        <button id="upload-alipay-qrcode"><i class="fas fa-upload"></i></button>
-                    </div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="donation-btn-color">捐助按钮颜色</label>
-                    <input type="color" id="donation-btn-color" value="#ff6b6b">
-                    <div class="color-preview" id="donation-btn-color-preview"></div>
-                </div>
-                <button id="save-donation-settings">
-                    <i class="fas fa-save"></i> 保存捐助设置
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="data-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-database"></i> 数据管理</h3>
-                <div class="form-group">
-                    <label for="api-url">API地址</label>
-                    <input type="url" id="api-url" placeholder="输入API地址" value="/api">
-                    <button id="test-api" style="margin-top: 10px;">
-                        <i class="fas fa-plug"></i> 测试API连接
-                    </button>
-                    <div id="api-test-result" class="api-test-result"></div>
-                </div>
-                <div class="form-group">
-                    <button id="export-data">
-                        <i class="fas fa-download"></i> 导出数据
-                    </button>
-                </div>
-                <div class="form-group">
-                    <button id="reset-data" style="background: var(--reset-color);">
-                        <i class="fas fa-trash"></i> 重置数据
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="feedback-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-comments"></i> 反馈管理</h3>
-                <div class="feedback-list" id="feedback-list"></div>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="visits-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-chart-line"></i> 访问统计</h3>
-                <div class="visit-count" id="visit-count">总IP数: 加载中...</div>
-                <div class="visits-list" id="visits-list">加载中...</div>
-                <button id="refresh-visits" style="margin-top: 10px;">
-                    <i class="fas fa-sync"></i> 刷新访问统计
-                </button>
-                <button id="clear-visits" style="background: var(--reset-color); margin-top: 10px;">
-                    <i class="fas fa-trash"></i> 清除访问记录
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="users-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-users"></i> 用户管理</h3>
-                <div class="user-list" id="user-list">加载中...</div>
-                <button id="refresh-users" style="margin-top: 10px;">
-                    <i class="fas fa-sync"></i> 刷新用户列表
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-tab-content" id="footer-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-info-circle"></i> 页脚信息设置</h3>
-                <div class="form-group">
-                    <label for="footer-notice-input">底部公告栏</label>
-                    <textarea id="footer-notice-input" placeholder="输入底部公告栏内容（可包含链接）" rows="3">欢迎使用行政机库计时系统</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="footer-notice-link">公告栏链接URL（选填）</label>
-                    <input type="url" id="footer-notice-link" placeholder="输入公告栏链接URL">
-                </div>
-                <div class="form-group">
-                    <label for="record-info-input">备案信息</label>
-                    <input type="text" id="record-info-input" placeholder="输入备案信息" value="UEE ICP备0000001号">
-                </div>
-                <div class="form-group">
-                    <label for="organization-name-input">组织名称</label>
-                    <input type="text" id="organization-name-input" placeholder="输入组织名称" value="罗伯茨航空航天管理局">
-                </div>
-                <div class="form-group">
-                    <label for="project-description-input">项目介绍（详细内容）</label>
-                    <textarea id="project-description-input" placeholder="输入项目介绍" rows="4">星际公民行政机库计时系统是一个用于管理机库开启时间的专业工具，提供精确的计时功能和状态指示。</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.2
-更新日期：2025-10-01
-更新内容：
-在上一版基础上，做出如下修改：
-1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。用户登录界面找回密码功能重置密码按钮改为找回密码按钮，密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。
-2、直接通过网址访问api/users内email字段数据要同password字段一样过滤。
-3、保持用户登陆界面样式和布局不变。不要修改用户登录模态框的样式。
-</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="about-input">关于本网站（详细内容）</label>
-                    <textarea id="about-input" placeholder="输入关于本网站" rows="4">星际公民行政机库计时系统由航空航天管理局开发，旨在提供高效的机库时间管理解决方案。如有问题请联系：bcfx@vip.qq.com</textarea>
-                </div>
-                <button id="save-footer-info">
-                    <i class="fas fa-save"></i> 保存页脚信息
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-panel-footer">
-            <button class="cancel-btn" id="close-admin-panel-bottom">关闭管理面板</button>
-        </div>
-    </div>
-
-    <div class="user-center" id="user-center">
-        <div class="user-center-header">
-            <h2><i class="fas fa-user-circle"></i> 用户中心</h2>
-            <button class="cancel-btn" id="close-user-center">关闭</button>
-        </div>
-        
-        <div class="user-center-tabs">
-            <div class="user-center-tab active" data-tab="user-info">用户信息</div>
-            <div class="user-center-tab" data-tab="change-password">修改密码</div>
-            <div class="user-center-tab" data-tab="security-question">密保设置</div>
-            <div class="user-center-tab" id="user-management-tab" data-tab="user-management" style="display: none;">用户管理</div>
-        </div>
-        
-        <div class="user-center-tab-content active" id="user-info-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-user"></i> 用户信息</h3>
-                <div class="form-group">
-                    <label>用户名</label>
-                    <input type="text" id="user-info-username" readonly>
-                </div>
-                <div class="form-group">
-                    <label>邮箱</label>
-                    <input type="email" id="user-info-email">
-                </div>
-                <div class="form-group">
-                    <label>角色</label>
-                    <div id="user-info-role"></div>
-                </div>
-                <button id="update-user-info">
-                    <i class="fas fa-save"></i> 更新用户信息
-                </button>
-            </div>
-        </div>
-        
-        <div class="user-center-tab-content" id="change-password-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-lock"></i> 修改密码</h3>
-                <div class="form-group">
-                    <label for="change-password-old">原密码</label>
-                    <input type="password" id="change-password-old" placeholder="输入原密码">
-                </div>
-                <div class="form-group">
-                    <label for="change-password-new">新密码</label>
-                    <input type="password" id="change-password-new" placeholder="输入新密码（至少4位）">
-                </div>
-                <div class="form-group">
-                    <label for="change-password-confirm">确认新密码</label>
-                    <input type="password" id="change-password-confirm" placeholder="再次输入新密码">
-                </div>
-                <button id="change-password-btn">
-                    <i class="fas fa-key"></i> 修改密码
-                </button>
-            </div>
-        </div>
-        
-        <div class="user-center-tab-content" id="security-question-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-shield-alt"></i> 密保设置</h3>
-                <div class="form-group">
-                    <label for="user-security-question">密保问题</label>
-                    <select id="user-security-question">
-                        <option value="">请选择密保问题</option>
-                        <option value="你的姓名是什么？">你的姓名是什么？</option>
-                        <option value="你的父亲叫什么？">你的父亲叫什么？</option>
-                        <option value="你的母亲叫什么？">你的母亲叫什么？</option>
-                        <option value="你出生地所在的城市是哪里？">你出生地所在的城市是哪里？</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="user-security-answer">密保答案</label>
-                    <input type="text" id="user-security-answer" placeholder="输入密保答案">
-                </div>
-                <button id="update-security-question">
-                    <i class="fas fa-save"></i> 更新密保设置
-                </button>
-            </div>
-        </div>
-        
-        <div class="user-center-tab-content" id="user-management-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-users-cog"></i> 用户管理</h3>
-                <div class="user-list" id="admin-user-list">加载中...</div>
-                <button id="refresh-admin-users" style="margin-top: 10px;">
-                    <i class="fas fa-sync"></i> 刷新用户列表
-                </button>
-            </div>
-        </div>
-        
-        <div class="admin-panel-footer">
-            <button class="cancel-btn" id="close-user-center-bottom">关闭用户中心</button>
-        </div>
-    </div>
-
-    <div class="user-edit-modal" id="user-edit-modal">
-        <div class="user-edit-modal-content">
-            <h2><i class="fas fa-user-edit"></i> 编辑用户</h2>
-            <div class="form-group">
-                <label for="edit-username">用户名</label>
-                <input type="text" id="edit-username" readonly>
-            </div>
-            <div class="form-group">
-                <label for="edit-email">邮箱</label>
-                <input type="email" id="edit-email">
-            </div>
-            <div class="form-group">
-                <label for="edit-role">用户角色</label>
-                <select id="edit-role">
-                    <option value="normal">普通用户</option>
-                    <option value="admin">管理员</option>
-                    <option value="super-admin">超级管理员</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>权限设置</label>
-                <div class="permissions-grid" id="edit-permissions">
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-basic" value="basic">
-                        <label for="edit-permission-basic">时间校准</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-notification" value="notification">
-                        <label for="edit-permission-notification">通知管理</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-appearance" value="appearance">
-                        <label for="edit-permission-appearance">外观设置</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-donation" value="donation">
-                        <label for="edit-permission-donation">捐助设置</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-data" value="data">
-                        <label for="edit-permission-data">数据管理</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-feedback" value="feedback">
-                        <label for="edit-permission-feedback">反馈管理</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-visits" value="visits">
-                        <label for="edit-permission-visits">访问统计</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-users" value="users">
-                        <label for="edit-permission-users">用户管理</label>
-                    </div>
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-footer" value="footer">
-                        <label for="edit-permission-footer">页脚信息</label>
-                    </div>
-                    <!-- 新增：机库开启时间显示权限 -->
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-                        <label for="edit-permission-view-hangar-times">机库开启时间显示</label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="edit-password">重置密码</label>
-                <input type="password" id="edit-password" placeholder="输入新密码（留空则不修改）">
-            </div>
-            <div class="form-group">
-                <label for="edit-approved">审核状态</label>
-                <select id="edit-approved">
-                    <option value="true">已审核</option>
-                    <option value="false">待审核</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="edit-frozen">冻结状态</label>
-                <select id="edit-frozen">
-                    <option value="false">正常</option>
-                    <option value="true">冻结</option>
-                </select>
-            </div>
-            <div class="modal-buttons">
-                <button id="save-user-edit">保存</button>
-                <button class="cancel-btn" id="cancel-user-edit">取消</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
@@ -2412,10 +1873,8 @@
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
-        
-        // 新增：全局变量用于存储调整后的开始时间
-        let adjustedStartTime = new Date();
-        
+        let adjustedStartTime = null; // 新增：用于存储调整后的开始时间
+
         // 获取认证头信息 - 修改为使用令牌
         function getAuthHeaders() {
             const headers = {
@@ -2441,7 +1900,57 @@
             }
             return true;
         }
-        
+
+        // 更新用户界面状态 - 新增动态刷新机库开启时间功能
+        function updateUserInterface() {
+            const userLoginBtn = document.getElementById('user-login-btn');
+            const adminPanelBtn = document.getElementById('admin-panel-btn');
+            const userCenterBtn = document.getElementById('user-center-btn');
+            const userManagementTab = document.getElementById('user-management-tab');
+            
+            if (currentUser) {
+                userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
+                
+                // 检查用户权限，动态显示管理面板
+                const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
+                    (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
+                
+                if (hasAnyPermission) {
+                    adminPanelBtn.style.display = 'flex';
+                    userCenterBtn.style.display = 'flex';
+                    
+                    // 如果是管理员或超级管理员，显示用户管理标签
+                    if (currentUser.isSuperAdmin || (currentUser.permissions && currentUser.permissions.users)) {
+                        userManagementTab.style.display = 'block';
+                    } else {
+                        userManagementTab.style.display = 'none';
+                    }
+                    
+                    // 动态更新管理面板标签显示
+                    updateAdminPanelTabs();
+                } else {
+                    adminPanelBtn.style.display = 'none';
+                    userCenterBtn.style.display = 'flex';
+                    userManagementTab.style.display = 'none';
+                }
+            } else {
+                userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
+                adminPanelBtn.style.display = 'none';
+                userCenterBtn.style.display = 'none';
+                userManagementTab.style.display = 'none';
+            }
+            
+            // 新增：动态刷新机库开启时间显示
+            refreshHangarTimesDisplay();
+        }
+
+        // 新增：动态刷新机库开启时间显示
+        function refreshHangarTimesDisplay() {
+            if (adjustedStartTime) {
+                calculateHangarOpenTimes(adjustedStartTime);
+            }
+        }
+
         // 从API加载设置
         async function loadSettings() {
             try {
@@ -2706,50 +2215,7 @@
                 initializeTimer('5-green');
             }
         }
-        
-        // 更新用户界面状态
-        function updateUserInterface() {
-            const userLoginBtn = document.getElementById('user-login-btn');
-            const adminPanelBtn = document.getElementById('admin-panel-btn');
-            const userCenterBtn = document.getElementById('user-center-btn');
-            const userManagementTab = document.getElementById('user-management-tab');
-            
-            if (currentUser) {
-                userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
-                
-                // 检查用户权限，动态显示管理面板
-                const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
-                    (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
-                
-                if (hasAnyPermission) {
-                    adminPanelBtn.style.display = 'flex';
-                    userCenterBtn.style.display = 'flex';
-                    
-                    // 如果是管理员或超级管理员，显示用户管理标签
-                    if (currentUser.isSuperAdmin || (currentUser.permissions && currentUser.permissions.users)) {
-                        userManagementTab.style.display = 'block';
-                    } else {
-                        userManagementTab.style.display = 'none';
-                    }
-                    
-                    // 动态更新管理面板标签显示
-                    updateAdminPanelTabs();
-                } else {
-                    adminPanelBtn.style.display = 'none';
-                    userCenterBtn.style.display = 'flex';
-                    userManagementTab.style.display = 'none';
-                }
-            } else {
-                userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
-                adminPanelBtn.style.display = 'none';
-                userCenterBtn.style.display = 'none';
-                userManagementTab.style.display = 'none';
-            }
-            
-            // 新增：用户登录状态变化时刷新机库开启时间显示
-            calculateHangarOpenTimes(adjustedStartTime);
-        }
-        
+
         // 动态更新管理面板标签显示
         function updateAdminPanelTabs() {
             if (!currentUser) return;
@@ -2848,6 +2314,8 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     // 更新机库开启时间显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    // 新增：动态刷新机库开启时间显示
+                    refreshHangarTimesDisplay();
                     return true;
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -3321,9 +2789,6 @@
                         document.getElementById('login-password').value = '';
                         updateUserInterface();
                         alert('登录成功');
-                        
-                        // 新增：登录成功后刷新机库开启时间显示
-                        calculateHangarOpenTimes(adjustedStartTime);
                     } else {
                         alert(result.error || '用户名或密码错误');
                     }
@@ -3939,7 +3404,7 @@
                     
                     visitsList.innerHTML = '';
                     // 按最后访问时间倒序排列
-                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.firstVisit));
+                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.lastVisit));
                     
                     visits.forEach(visit => {
                         const visitItem = document.createElement('div');
@@ -4749,7 +4214,7 @@
                 offsetMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + config.offset;
             }
             
-            // 调整开始时间 - 修改为赋值给全局变量
+            // 调整开始时间
             adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
             
             // 更新显示
@@ -4857,7 +4322,7 @@
             }
         }
         
-        // 计算机库开启时间
+        // 计算机库开启时间 - 新增动态刷新功能
         function calculateHangarOpenTimes(adjustedStartTime) {
             const windowList = document.getElementById('window-list');
             windowList.innerHTML = '';
