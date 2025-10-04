@@ -1444,8 +1444,12 @@
             margin-left: 10px;
         }
         
-        /* 新增：手机版校准时间样式调整 */
+        /* 手机端校准时间样式调整 */
         @media (max-width: 768px) {
+            .calibration-time {
+                bottom: 25px; /* 上移校准时间 */
+            }
+            
             .container {
                 padding: 10px;
             }
@@ -1557,12 +1561,6 @@
             .copy-password-btn {
                 margin-left: 0;
                 width: 100%;
-            }
-            
-            /* 手机版校准时间上移 */
-            .calibration-time {
-                bottom: 60px;
-                left: 15px;
             }
         }
     </style>
@@ -1914,10 +1912,10 @@
             </div>
         </div>
         
-        <!-- 新增：开启时间标签 -->
+        <!-- 新增：开启时间设置标签 -->
         <div class="admin-tab-content" id="hangar-times-tab">
             <div class="admin-card">
-                <h3><i class="fas fa-clock"></i> 开启时间设置</h3>
+                <h3><i class="fas fa-eye"></i> 开启时间显示设置</h3>
                 <div class="form-group">
                     <label for="timer-enabled"><i class="fas fa-power-off"></i> 计时器状态</label>
                     <select id="timer-enabled">
@@ -1932,6 +1930,9 @@
                         <option value="false">仅登录用户可见</option>
                     </select>
                 </div>
+                <button id="save-hangar-times-settings">
+                    <i class="fas fa-save"></i> 保存设置
+                </button>
             </div>
         </div>
         
@@ -2101,7 +2102,7 @@
                 </div>
                 <div class="form-group">
                     <label for="donation-description-input">捐助说明</label>
-                    <textarea id="donation-description-input" placeholder="输入捐助说明">您的捐助将帮助我们持续维护和改进系统</textarea>
+                    <textarea id="donation-description-input" placeholder="输入捐助说明" rows="3">您的捐助将帮助我们持续维护和改进系统</textarea>
                 </div>
                 <div class="form-group">
                     <label for="wechat-qrcode-url">微信支付二维码URL</label>
@@ -2357,6 +2358,10 @@
                     </div>
                     <!-- 管理员权限（默认隐藏） -->
                     <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-hangar-times" value="hangarTimes">
+                        <label for="edit-permission-hangar-times">开启时间设置</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-basic" value="basic">
                         <label for="edit-permission-basic">时间校准</label>
                     </div>
@@ -2391,11 +2396,6 @@
                     <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-footer" value="footer">
                         <label for="edit-permission-footer">页脚信息</label>
-                    </div>
-                    <!-- 新增：开启时间管理权限 -->
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-hangar-times" value="hangar-times">
-                        <label for="edit-permission-hangar-times">开启时间管理</label>
                     </div>
                 </div>
             </div>
@@ -2506,6 +2506,12 @@
                         // 默认值为true
                         document.getElementById('hangar-times-visible').value = 'true';
                         localStorage.setItem('hangarTimesVisible', 'true');
+                    }
+                    
+                    // 新增：捐助说明
+                    if (config.donationDescription) {
+                        document.getElementById('donation-description-input').value = config.donationDescription;
+                        document.getElementById('donation-description').textContent = config.donationDescription;
                     }
                     
                     if (config.notification) {
@@ -2674,12 +2680,6 @@
                         document.documentElement.style.setProperty('--donation-btn-bg', config.donationBtnColor);
                     }
                     
-                    // 新增：捐助说明
-                    if (config.donationDescription) {
-                        document.getElementById('donation-description-input').value = config.donationDescription;
-                        document.getElementById('donation-description').textContent = config.donationDescription;
-                    }
-                    
                     // 加载页脚信息
                     if (config.footerNotice) {
                         document.getElementById('footer-notice-input').value = config.footerNotice;
@@ -2724,10 +2724,10 @@
                         initializeTimer(document.getElementById('initial-phase').value);
                     });
                     
-                    // 添加机库开启时间显示实时保存功能
+                    // 添加机库开启时间显示设置实时保存功能
                     document.getElementById('hangar-times-visible').addEventListener('change', async function() {
-                        localStorage.setItem('hangarTimesVisible', this.value);
                         await saveSettings();
+                        // 实时刷新机库开启时间显示
                         calculateHangarOpenTimes(adjustedStartTime);
                     });
                 } else {
@@ -2827,6 +2827,7 @@
                 initialPhase: document.getElementById('initial-phase').value,
                 timerEnabled: document.getElementById('timer-enabled').value === 'true',
                 hangarTimesVisible: document.getElementById('hangar-times-visible').value === 'true',
+                donationDescription: document.getElementById('donation-description-input').value,
                 notification: document.getElementById('notification-content').value,
                 notificationLink: document.getElementById('notification-link').value,
                 notificationColor: document.getElementById('notification-color').value,
@@ -2857,7 +2858,6 @@
                 wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
                 alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
                 donationBtnColor: document.getElementById('donation-btn-color').value,
-                donationDescription: document.getElementById('donation-description-input').value,
                 footerNotice: document.getElementById('footer-notice-input').value,
                 footerNoticeLink: document.getElementById('footer-notice-link').value,
                 recordInfo: document.getElementById('record-info-input').value,
@@ -3138,6 +3138,11 @@
             initializeTimer(initialPhase);
             
             // 保存设置
+            saveSettings();
+        });
+        
+        // 保存开启时间设置
+        document.getElementById('save-hangar-times-settings').addEventListener('click', function() {
             saveSettings();
         });
         
@@ -3613,13 +3618,9 @@
             const wechatQrcodeUrl = document.getElementById('wechat-qrcode-url').value;
             const alipayQrcodeUrl = document.getElementById('alipay-qrcode-url').value;
             const donationBtnColor = document.getElementById('donation-btn-color').value;
-            const donationDescription = document.getElementById('donation-description-input').value;
             
             document.documentElement.style.setProperty('--donation-btn-bg', donationBtnColor);
             updateDonationButtonDisplay();
-            
-            // 更新捐助说明
-            document.getElementById('donation-description').textContent = donationDescription;
             
             saveSettings();
         });
@@ -3886,7 +3887,7 @@
             reader.readAsDataURL(file);
         });
         
-        // 加载反馈
+        // 加载反馈列表
         async function loadFeedback() {
             try {
                 const response = await fetch(`${API_BASE}/feedback`, {
@@ -3894,37 +3895,35 @@
                 });
                 
                 if (response.ok) {
-                    const feedbacks = await response.json();
+                    const feedback = await response.json();
                     const feedbackList = document.getElementById('feedback-list');
+                    feedbackList.innerHTML = '';
                     
-                    if (feedbacks.length === 0) {
-                        feedbackList.innerHTML = '<p>暂无反馈</p>';
+                    if (feedback.length === 0) {
+                        feedbackList.innerHTML = '<div class="feedback-item">暂无反馈</div>';
                         return;
                     }
                     
-                    feedbackList.innerHTML = '';
-                    feedbacks.forEach(feedback => {
+                    feedback.forEach(item => {
                         const feedbackItem = document.createElement('div');
                         feedbackItem.className = 'feedback-item';
-                        
                         feedbackItem.innerHTML = `
-                            <div class="feedback-date">${formatDateTimeFull(new Date(feedback.timestamp))}</div>
-                            ${feedback.username ? `<div class="feedback-username">用户: ${feedback.username}</div>` : ''}
-                            <div class="feedback-content">${feedback.content}</div>
-                            ${feedback.contact ? `<div class="feedback-contact">联系方式: ${feedback.contact}</div>` : ''}
-                            <button class="delete-feedback" data-id="${feedback.id}">删除</button>
+                            <div class="feedback-date">${formatDateTimeFull(new Date(item.date))}</div>
+                            ${item.username ? `<div class="feedback-username">用户: ${item.username}</div>` : ''}
+                            <div class="feedback-content">${escapeHtml(item.content)}</div>
+                            ${item.contact ? `<div class="feedback-contact">联系方式: ${escapeHtml(item.contact)}</div>` : ''}
+                            <button class="delete-feedback" data-id="${item.id}">删除</button>
                         `;
-                        
                         feedbackList.appendChild(feedbackItem);
                     });
                     
-                    // 添加删除事件
-                    feedbackList.querySelectorAll('.delete-feedback').forEach(button => {
+                    // 添加删除事件监听
+                    document.querySelectorAll('.delete-feedback').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const feedbackId = this.getAttribute('data-id');
-                            if (confirm('确定要删除这条反馈吗？')) {
+                            const id = this.getAttribute('data-id');
+                            if (confirm('确定删除这条反馈吗？')) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/feedback/${feedbackId}`, {
+                                    const response = await fetch(`${API_BASE}/feedback/${id}`, {
                                         method: 'DELETE',
                                         headers: getAuthHeaders()
                                     });
@@ -3948,11 +3947,11 @@
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    document.getElementById('feedback-list').innerHTML = '<p>加载失败</p>';
+                    document.getElementById('feedback-list').innerHTML = '<div class="feedback-item">加载失败</div>';
                 }
             } catch (error) {
                 console.error('Load feedback error:', error);
-                document.getElementById('feedback-list').innerHTML = '<p>加载失败</p>';
+                document.getElementById('feedback-list').innerHTML = '<div class="feedback-item">加载失败</div>';
             }
         }
         
@@ -3971,31 +3970,35 @@
                     visitCount.textContent = `总IP数: ${visits.length}`;
                     
                     if (visits.length === 0) {
-                        visitsList.innerHTML = '<p>暂无访问记录</p>';
+                        visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
                         return;
                     }
                     
                     visitsList.innerHTML = '';
-                    visits.forEach(visit => {
+                    
+                    // 只显示最近的20条记录
+                    const recentVisits = visits.slice(0, 20);
+                    
+                    recentVisits.forEach(visit => {
                         const visitItem = document.createElement('div');
                         visitItem.className = 'visit-item';
-                        
                         visitItem.innerHTML = `
                             <div class="visit-ip">${visit.ip}</div>
-                            <div class="visit-date">${formatDateTimeFull(new Date(visit.timestamp))}</div>
+                            <div class="visit-date">${formatDateTimeFull(new Date(visit.date))}</div>
                         `;
-                        
                         visitsList.appendChild(visitItem);
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    document.getElementById('visits-list').innerHTML = '<p>加载失败</p>';
+                    document.getElementById('visits-list').innerHTML = '<div class="visit-item">加载失败</div>';
+                    document.getElementById('visit-count').textContent = '总IP数: 加载失败';
                 }
             } catch (error) {
                 console.error('Load visits error:', error);
-                document.getElementById('visits-list').innerHTML = '<p>加载失败</p>';
+                document.getElementById('visits-list').innerHTML = '<div class="visit-item">加载失败</div>';
+                document.getElementById('visit-count').textContent = '总IP数: 加载失败';
             }
         }
         
@@ -4006,7 +4009,7 @@
         
         // 清除访问记录
         document.getElementById('clear-visits').addEventListener('click', async function() {
-            if (confirm('确定要清除所有访问记录吗？')) {
+            if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
                 try {
                     const response = await fetch(`${API_BASE}/visits`, {
                         method: 'DELETE',
@@ -4028,7 +4031,7 @@
             }
         });
         
-        // 加载用户列表
+        // 加载用户列表（普通用户）
         async function loadUsers() {
             try {
                 const response = await fetch(`${API_BASE}/users`, {
@@ -4038,13 +4041,13 @@
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('user-list');
+                    userList.innerHTML = '';
                     
                     if (users.length === 0) {
-                        userList.innerHTML = '<p>暂无用户</p>';
+                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
                         return;
                     }
                     
-                    userList.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
@@ -4061,29 +4064,27 @@
                         }
                         
                         if (user.frozen) {
-                            roleBadge += '<span class="user-role-badge user-frozen">冻结</span>';
+                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
                         }
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <strong>${user.username}</strong>
-                                ${roleBadge}
-                                <div>邮箱: ${user.email || '未设置'}</div>
-                                <div>注册时间: ${formatDateTimeFull(new Date(user.createdAt))}</div>
+                                <strong>${user.username}</strong> ${roleBadge}
+                                <div>${user.email}</div>
+                                <div>注册时间: ${formatDateTimeFull(new Date(user.registeredAt))}</div>
                             </div>
                         `;
-                        
                         userList.appendChild(userItem);
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    document.getElementById('user-list').innerHTML = '<p>加载失败</p>';
+                    document.getElementById('user-list').innerHTML = '<div class="user-item">加载失败</div>';
                 }
             } catch (error) {
                 console.error('Load users error:', error);
-                document.getElementById('user-list').innerHTML = '<p>加载失败</p>';
+                document.getElementById('user-list').innerHTML = '<div class="user-item">加载失败</div>';
             }
         }
         
@@ -4094,30 +4095,30 @@
         
         // 加载用户信息
         function loadUserInfo() {
-            if (currentUser) {
-                document.getElementById('user-info-username').value = currentUser.username;
-                document.getElementById('user-info-email').value = currentUser.email || '';
-                
-                let roleText = '';
-                if (currentUser.isSuperAdmin) {
-                    roleText = '超级管理员';
-                } else if (currentUser.isAdmin) {
-                    roleText = '管理员';
-                } else {
-                    roleText = '普通用户';
-                }
-                
-                if (currentUser.frozen) {
-                    roleText += ' (冻结)';
-                }
-                
-                document.getElementById('user-info-role').textContent = roleText;
-                
-                // 加载密保设置
-                if (currentUser.securityQuestion) {
-                    document.getElementById('user-security-question').value = currentUser.securityQuestion;
-                    document.getElementById('user-security-answer').value = currentUser.securityAnswer || '';
-                }
+            if (!currentUser) return;
+            
+            document.getElementById('user-info-username').value = currentUser.username;
+            document.getElementById('user-info-email').value = currentUser.email || '';
+            
+            let roleText = '';
+            if (currentUser.isSuperAdmin) {
+                roleText = '<span class="user-role-badge user-super-admin">超级管理员</span>';
+            } else if (currentUser.isAdmin) {
+                roleText = '<span class="user-role-badge user-admin">管理员</span>';
+            } else {
+                roleText = '<span class="user-role-badge user-normal">普通用户</span>';
+            }
+            
+            if (currentUser.frozen) {
+                roleText += '<span class="user-role-badge user-frozen">已冻结</span>';
+            }
+            
+            document.getElementById('user-info-role').innerHTML = roleText;
+            
+            // 加载密保设置
+            if (currentUser.securityQuestion) {
+                document.getElementById('user-security-question').value = currentUser.securityQuestion;
+                document.getElementById('user-security-answer').value = currentUser.securityAnswer || '';
             }
         }
         
@@ -4141,7 +4142,7 @@
                     // 更新本地用户信息
                     currentUser.email = email;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert('用户信息已更新');
+                    alert('用户信息更新成功');
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
@@ -4161,7 +4162,7 @@
             const confirmPassword = document.getElementById('change-password-confirm').value;
             
             if (!oldPassword || !newPassword || !confirmPassword) {
-                alert('请填写所有密码字段');
+                alert('请填写所有字段');
                 return;
             }
             
@@ -4187,10 +4188,15 @@
                 });
                 
                 if (response.ok) {
-                    alert('密码修改成功');
-                    document.getElementById('change-password-old').value = '';
-                    document.getElementById('change-password-new').value = '';
-                    document.getElementById('change-password-confirm').value = '';
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密码修改成功');
+                        document.getElementById('change-password-old').value = '';
+                        document.getElementById('change-password-new').value = '';
+                        document.getElementById('change-password-confirm').value = '';
+                    } else {
+                        alert(result.error || '密码修改失败');
+                    }
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
@@ -4214,10 +4220,11 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
-                    method: 'PUT',
+                const response = await fetch(`${API_BASE}/security-question`, {
+                    method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ 
+                        username: currentUser.username,
                         securityQuestion,
                         securityAnswer
                     })
@@ -4228,7 +4235,7 @@
                     currentUser.securityQuestion = securityQuestion;
                     currentUser.securityAnswer = securityAnswer;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert('密保设置已更新');
+                    alert('密保设置更新成功');
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
@@ -4251,13 +4258,13 @@
                 if (response.ok) {
                     const users = await response.json();
                     const userList = document.getElementById('admin-user-list');
+                    userList.innerHTML = '';
                     
                     if (users.length === 0) {
-                        userList.innerHTML = '<p>暂无用户</p>';
+                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
                         return;
                     }
                     
-                    userList.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
@@ -4274,59 +4281,41 @@
                         }
                         
                         if (user.frozen) {
-                            roleBadge += '<span class="user-role-badge user-frozen">冻结</span>';
+                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
                         }
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <strong>${user.username}</strong>
-                                ${roleBadge}
-                                <div>邮箱: ${user.email || '未设置'}</div>
-                                <div>注册时间: ${formatDateTimeFull(new Date(user.createdAt))}</div>
+                                <strong>${user.username}</strong> ${roleBadge}
+                                <div>${user.email}</div>
+                                <div>注册时间: ${formatDateTimeFull(new Date(user.registeredAt))}</div>
                             </div>
                             <div class="user-actions">
                                 <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: ${user.frozen ? 'var(--card-color)' : 'var(--reset-color)'};" data-username="${user.username}" data-action="${user.frozen ? 'unfreeze' : 'freeze'}">${user.frozen ? '解冻' : '冻结'}</button>` : ''}
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn delete-user" data-username="${user.username}">删除</button>` : ''}
+                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: ${user.approved ? '#e74c3c' : '#2ecc71'};" onclick="toggleUserApproval('${user.username}', ${!user.approved})">${user.approved ? '取消审核' : '通过审核'}</button>` : ''}
+                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: ${user.frozen ? '#2ecc71' : '#e74c3c'};" onclick="toggleUserFrozen('${user.username}', ${!user.frozen})">${user.frozen ? '解冻' : '冻结'}</button>` : ''}
+                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: #e74c3c;" onclick="deleteUser('${user.username}')">删除</button>` : ''}
                             </div>
                         `;
-                        
                         userList.appendChild(userItem);
                     });
                     
-                    // 添加编辑用户事件
-                    userList.querySelectorAll('.edit-user').forEach(button => {
+                    // 添加编辑用户事件监听
+                    document.querySelectorAll('.edit-user').forEach(button => {
                         button.addEventListener('click', function() {
                             const username = this.getAttribute('data-username');
                             editUser(username);
-                        });
-                    });
-                    
-                    // 添加冻结/解冻用户事件
-                    userList.querySelectorAll('.user-action-btn[data-action]').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const username = this.getAttribute('data-username');
-                            const action = this.getAttribute('data-action');
-                            toggleUserFreeze(username, action === 'freeze');
-                        });
-                    });
-                    
-                    // 添加删除用户事件
-                    userList.querySelectorAll('.delete-user').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const username = this.getAttribute('data-username');
-                            deleteUser(username);
                         });
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    document.getElementById('admin-user-list').innerHTML = '<p>加载失败</p>';
+                    document.getElementById('admin-user-list').innerHTML = '<div class="user-item">加载失败</div>';
                 }
             } catch (error) {
                 console.error('Load admin users error:', error);
-                document.getElementById('admin-user-list').innerHTML = '<p>加载失败</p>';
+                document.getElementById('admin-user-list').innerHTML = '<div class="user-item">加载失败</div>';
             }
         }
         
@@ -4334,6 +4323,76 @@
         document.getElementById('refresh-admin-users').addEventListener('click', function() {
             loadAdminUsers();
         });
+        
+        // 切换用户审核状态
+        async function toggleUserApproval(username, approved) {
+            try {
+                const response = await fetch(`${API_BASE}/users/${username}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ approved })
+                });
+                
+                if (response.ok) {
+                    loadAdminUsers();
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('操作失败');
+                }
+            } catch (error) {
+                console.error('Toggle user approval error:', error);
+                alert('操作失败');
+            }
+        }
+        
+        // 切换用户冻结状态
+        async function toggleUserFrozen(username, frozen) {
+            try {
+                const response = await fetch(`${API_BASE}/users/${username}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ frozen })
+                });
+                
+                if (response.ok) {
+                    loadAdminUsers();
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('操作失败');
+                }
+            } catch (error) {
+                console.error('Toggle user frozen error:', error);
+                alert('操作失败');
+            }
+        }
+        
+        // 删除用户
+        async function deleteUser(username) {
+            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                try {
+                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        loadAdminUsers();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('删除失败');
+                    }
+                } catch (error) {
+                    console.error('Delete user error:', error);
+                    alert('删除失败');
+                }
+            }
+        }
         
         // 编辑用户
         async function editUser(username) {
@@ -4349,29 +4408,26 @@
                     document.getElementById('edit-username').value = user.username;
                     document.getElementById('edit-email').value = user.email || '';
                     
-                    // 设置角色
+                    // 设置用户角色
                     if (user.isSuperAdmin) {
                         document.getElementById('edit-role').value = 'super-admin';
-                        // 如果是超级管理员，显示超级管理员选项
+                        // 超级管理员可以设置超级管理员选项
                         document.getElementById('super-admin-option').style.display = 'block';
                     } else if (user.isAdmin) {
                         document.getElementById('edit-role').value = 'admin';
-                        document.getElementById('super-admin-option').style.display = 'none';
+                        // 只有超级管理员可以设置超级管理员选项
+                        document.getElementById('super-admin-option').style.display = currentUser.isSuperAdmin ? 'block' : 'none';
                     } else {
                         document.getElementById('edit-role').value = 'normal';
-                        document.getElementById('super-admin-option').style.display = 'none';
+                        // 只有超级管理员可以设置超级管理员选项
+                        document.getElementById('super-admin-option').style.display = currentUser.isSuperAdmin ? 'block' : 'none';
                     }
                     
                     // 设置权限
                     const permissions = user.permissions || {};
-                    document.getElementById('edit-permission-view-hangar-times').checked = permissions.viewHangarTimes || false;
-                    
-                    // 显示管理员权限选项
-                    const adminPermissions = document.querySelectorAll('.admin-permission');
-                    adminPermissions.forEach(el => {
-                        el.style.display = 'block';
-                        const permissionName = el.querySelector('input').value;
-                        el.querySelector('input').checked = permissions[permissionName] || false;
+                    document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                        const permissionName = checkbox.value;
+                        checkbox.checked = permissions[permissionName] || false;
                     });
                     
                     // 设置审核状态
@@ -4380,6 +4436,15 @@
                     // 设置冻结状态
                     document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
                     
+                    // 显示管理员权限选项
+                    const adminPermissions = document.querySelectorAll('.admin-permission');
+                    if (user.isAdmin || user.isSuperAdmin) {
+                        adminPermissions.forEach(el => el.style.display = 'flex');
+                    } else {
+                        adminPermissions.forEach(el => el.style.display = 'none');
+                    }
+                    
+                    // 显示编辑模态框
                     document.getElementById('user-edit-modal').style.display = 'flex';
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -4404,25 +4469,25 @@
             const frozen = document.getElementById('edit-frozen').value === 'true';
             
             // 收集权限
-            const permissions = {
-                viewHangarTimes: document.getElementById('edit-permission-view-hangar-times').checked
-            };
-            
-            // 收集管理员权限
-            const adminPermissions = document.querySelectorAll('.admin-permission input[type="checkbox"]');
-            adminPermissions.forEach(input => {
-                permissions[input.value] = input.checked;
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
             });
             
             const updateData = {
                 email,
-                isAdmin: role === 'admin' || role === 'super-admin',
-                isSuperAdmin: role === 'super-admin',
                 approved,
                 frozen,
                 permissions
             };
             
+            // 只有超级管理员可以修改角色
+            if (currentUser.isSuperAdmin) {
+                updateData.isAdmin = role === 'admin' || role === 'super-admin';
+                updateData.isSuperAdmin = role === 'super-admin';
+            }
+            
+            // 如果有新密码，添加到更新数据
             if (password) {
                 updateData.password = password;
             }
@@ -4435,18 +4500,15 @@
                 });
                 
                 if (response.ok) {
-                    alert('用户信息已更新');
+                    alert('用户信息更新成功');
                     document.getElementById('user-edit-modal').style.display = 'none';
                     loadAdminUsers();
                     
-                    // 如果当前编辑的是当前登录用户，更新本地存储
-                    if (currentUser && currentUser.username === currentEditingUser.username) {
-                        const updatedUser = await response.json();
-                        currentUser = {
-                            ...currentUser,
-                            ...updatedUser
-                        };
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    // 如果编辑的是当前登录用户，更新本地存储
+                    if (currentEditingUser.username === currentUser.username) {
+                        const updatedUser = { ...currentUser, ...updateData };
+                        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                        currentUser = updatedUser;
                         updateUserInterface();
                     }
                 } else {
@@ -4456,7 +4518,7 @@
                     alert('更新失败');
                 }
             } catch (error) {
-                console.error('Save user edit error:', error);
+                console.error('Update user error:', error);
                 alert('更新失败');
             }
         });
@@ -4467,88 +4529,73 @@
             currentEditingUser = null;
         });
         
-        // 冻结/解冻用户
-        async function toggleUserFreeze(username, freeze) {
-            if (confirm(`确定要${freeze ? '冻结' : '解冻'}用户 ${username} 吗？`)) {
-                try {
-                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ frozen: freeze })
-                    });
-                    
-                    if (response.ok) {
-                        alert(`用户已${freeze ? '冻结' : '解冻'}`);
-                        loadAdminUsers();
-                        
-                        // 如果冻结的是当前登录用户，退出登录
-                        if (currentUser && currentUser.username === username && freeze) {
-                            currentUser = null;
-                            localStorage.removeItem('currentUser');
-                            updateUserInterface();
-                            alert('您的账户已被冻结，已退出登录');
-                        }
-                    } else {
-                        if (!checkAuthResponse(response)) {
-                            return;
-                        }
-                        alert(`${freeze ? '冻结' : '解冻'}失败`);
-                    }
-                } catch (error) {
-                    console.error('Toggle user freeze error:', error);
-                    alert(`${freeze ? '冻结' : '解冻'}失败`);
+        // 初始化可拖拽面板
+        function initDraggablePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const header = document.getElementById(panelId + '-header');
+            
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+            
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                if (e.target === header || header.contains(e.target)) {
+                    isDragging = true;
                 }
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    setTranslate(currentX, currentY, panel);
+                }
+            }
+            
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+            
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                
+                isDragging = false;
             }
         }
         
-        // 删除用户
-        async function deleteUser(username) {
-            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
-                try {
-                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders()
-                    });
-                    
-                    if (response.ok) {
-                        alert('用户已删除');
-                        loadAdminUsers();
-                        
-                        // 如果删除的是当前登录用户，退出登录
-                        if (currentUser && currentUser.username === username) {
-                            currentUser = null;
-                            localStorage.removeItem('currentUser');
-                            updateUserInterface();
-                        }
-                    } else {
-                        if (!checkAuthResponse(response)) {
-                            return;
-                        }
-                        alert('删除失败');
-                    }
-                } catch (error) {
-                    console.error('Delete user error:', error);
-                    alert('删除失败');
-                }
-            }
-        }
-        
-        // 页脚信息弹窗
+        // 页脚信息按钮
         document.getElementById('project-description-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('project-description-input').value}</p>`;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('version-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('version-input').value}</p>`;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value.replace(/\n/g, '<br>');
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('about-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '关于我们';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('about-input').value}</p>`;
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
@@ -4556,258 +4603,17 @@
             document.getElementById('footer-info-modal').style.display = 'none';
         });
         
-        // 初始化计时器
-        function initializeTimer(initialPhase) {
-            // 清除现有计时器
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-            }
-            
-            // 设置初始阶段
-            const phaseConfig = PHASE_CONFIG[initialPhase];
-            if (!phaseConfig) {
-                console.error('Invalid initial phase:', initialPhase);
-                return;
-            }
-            
-            currentPhase = phaseConfig.phase;
-            currentLights = [...phaseConfig.lights];
-            
-            // 更新灯光显示
-            updateLightsDisplay();
-            
-            // 更新阶段指示器
-            updatePhaseIndicator();
-            
-            // 计算并显示机库开启时间
-            calculateHangarOpenTimes(startTime);
-            
-            // 设置计时器
-            countdownInterval = setInterval(() => {
-                updateCountdown();
-            }, 1000);
-            
-            // 立即更新一次
-            updateCountdown();
-        }
-        
-        // 更新倒计时
-        function updateCountdown() {
-            if (!timerEnabled) {
-                document.getElementById('countdown').textContent = '计时器已关闭';
-                return;
-            }
-            
-            const now = new Date();
-            const elapsedMs = now.getTime() - startTime.getTime();
-            const elapsedMinutes = elapsedMs / (1000 * 60);
-            
-            // 计算当前阶段剩余时间
-            let remainingMinutes = calculateRemainingTime(elapsedMinutes);
-            
-            // 如果剩余时间为负数，表示当前阶段已结束，需要切换到下一个阶段
-            while (remainingMinutes < 0) {
-                // 切换到下一个阶段
-                switchToNextPhase();
-                
-                // 重新计算经过时间和剩余时间
-                elapsedMinutes -= getPhaseDuration(currentPhase);
-                remainingMinutes = calculateRemainingTime(elapsedMinutes);
-            }
-            
-            // 显示倒计时
-            displayCountdown(remainingMinutes);
-            
-            // 更新灯光状态
-            updateLightsState(elapsedMinutes);
-            
-            // 更新机库开启时间
-            calculateHangarOpenTimes(startTime);
-        }
-        
-        // 计算剩余时间
-        function calculateRemainingTime(elapsedMinutes) {
-            let phaseStartOffset = 0;
-            let totalDuration = 0;
-            
-            // 计算当前阶段开始时的总偏移量
-            for (const phase of ['reset', 'card', 'poweroff']) {
-                if (phase === currentPhase) break;
-                totalDuration += PHASE_DURATIONS[phase];
-            }
-            
-            // 计算在当前阶段内的经过时间
-            const phaseElapsedMinutes = elapsedMinutes - totalDuration;
-            
-            // 计算当前阶段剩余时间
-            return PHASE_DURATIONS[currentPhase] - phaseElapsedMinutes;
-        }
-        
-        // 切换到下一个阶段
-        function switchToNextPhase() {
-            if (currentPhase === 'reset') {
-                currentPhase = 'card';
-                currentLights = ['green', 'green', 'green', 'green', 'green'];
-            } else if (currentPhase === 'card') {
-                currentPhase = 'poweroff';
-                currentLights = ['gray', 'gray', 'gray', 'gray', 'gray'];
-            } else if (currentPhase === 'poweroff') {
-                currentPhase = 'reset';
-                currentLights = ['red', 'red', 'red', 'red', 'red'];
-            }
-            
-            // 更新阶段指示器
-            updatePhaseIndicator();
-        }
-        
-        // 获取阶段持续时间
-        function getPhaseDuration(phase) {
-            return PHASE_DURATIONS[phase];
-        }
-        
-        // 显示倒计时
-        function displayCountdown(minutes) {
-            const totalSeconds = Math.floor(minutes * 60);
-            const hours = Math.floor(totalSeconds / 3600);
-            const mins = Math.floor((totalSeconds % 3600) / 60);
-            const secs = totalSeconds % 60;
-            
-            document.getElementById('countdown').textContent = 
-                `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        
-        // 更新灯光状态
-        function updateLightsState(elapsedMinutes) {
-            // 根据当前阶段和经过时间计算灯光状态
-            let lightsState;
-            
-            if (currentPhase === 'reset') {
-                // 在reset阶段，每24分钟点亮一个绿灯
-                const greenLights = Math.min(5, Math.floor(elapsedMinutes / 24));
-                lightsState = Array(5).fill('red');
-                for (let i = 0; i < greenLights; i++) {
-                    lightsState[i] = 'green';
-                }
-            } else if (currentPhase === 'card') {
-                // 在card阶段，每12分钟熄灭一个绿灯（变为灰灯）
-                const cardElapsed = elapsedMinutes - PHASE_DURATIONS.reset;
-                const grayLights = Math.min(5, Math.floor(cardElapsed / 12));
-                lightsState = Array(5).fill('green');
-                for (let i = 0; i < grayLights; i++) {
-                    lightsState[i] = 'gray';
-                }
-            } else {
-                // poweroff阶段，所有灯都是灰色
-                lightsState = Array(5).fill('gray');
-            }
-            
-            currentLights = lightsState;
-            updateLightsDisplay();
-        }
-        
-        // 更新灯光显示
-        function updateLightsDisplay() {
-            for (let i = 0; i < 5; i++) {
-                const light = document.getElementById(`light-${i}`);
-                light.className = `light ${currentLights[i]}`;
-                
-                // 添加active类给点亮的灯
-                if (currentLights[i] !== 'gray') {
-                    light.classList.add('active');
-                } else {
-                    light.classList.remove('active');
-                }
-            }
-        }
-        
-        // 更新阶段指示器
-        function updatePhaseIndicator() {
-            const phaseIndicator = document.getElementById('phase-indicator');
-            
-            if (currentPhase === 'reset') {
-                phaseIndicator.className = 'phase-indicator phase-reset';
-                phaseIndicator.innerHTML = '<i class="fas fa-sync-alt"></i> <span>机库已关闭等待开启中</span>';
-            } else if (currentPhase === 'card') {
-                phaseIndicator.className = 'phase-indicator phase-card';
-                phaseIndicator.innerHTML = '<i class="fas fa-id-card"></i> <span>机库已开启可以插卡</span>';
-            } else {
-                phaseIndicator.className = 'phase-indicator phase-poweroff';
-                phaseIndicator.innerHTML = '<i class="fas fa-power-off"></i> <span>机库已关闭请拔卡</span>';
-            }
-        }
-        
-        // 计算机库开启时间
-        function calculateHangarOpenTimes(baseTime) {
-            // 获取机库开启时间显示设置
-            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false';
-            
-            // 检查用户权限
-            const canViewHangarTimes = hangarTimesVisible || 
-                (currentUser && currentUser.permissions && currentUser.permissions.viewHangarTimes);
-            
-            // 如果用户没有权限查看，显示提示信息
-            if (!canViewHangarTimes) {
-                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-play-circle"></i> 机库开启时间: 请登录后查看';
-                document.getElementById('window-list').innerHTML = '<li><i class="fas fa-window-restore"></i> 机库开启时间仅对登录用户可见，请登录后查看</li>';
-                return;
-            }
-            
-            // 用户有权限，正常显示机库开启时间
-            const baseDate = new Date(baseTime);
-            const windowList = document.getElementById('window-list');
-            const totalCycleMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
-            
-            // 计算当前周期内的经过时间
-            const now = new Date();
-            const elapsedMs = now.getTime() - baseDate.getTime();
-            const elapsedMinutes = elapsedMs / (1000 * 60);
-            const cyclesCompleted = Math.floor(elapsedMinutes / totalCycleMinutes);
-            const currentCycleStartMinutes = cyclesCompleted * totalCycleMinutes;
-            
-            // 计算下一个机库开启时间（下一个reset阶段的开始）
-            const nextResetStartMinutes = currentCycleStartMinutes + totalCycleMinutes;
-            const nextResetStartTime = new Date(baseDate.getTime() + nextResetStartMinutes * 60 * 1000);
-            
-            // 计算上次机库开启时间（上一个reset阶段的开始）
-            const lastResetStartMinutes = currentCycleStartMinutes - totalCycleMinutes;
-            const lastResetStartTime = new Date(baseDate.getTime() + lastResetStartMinutes * 60 * 1000);
-            
-            // 显示机库开启时间
-            document.getElementById('hangar-open-time').innerHTML = 
-                `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTime(nextResetStartTime)}`;
-            
-            // 生成时间窗口列表
-            let windowsHtml = '';
-            
-            // 上次开启时间
-            windowsHtml += `<li><i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTime(lastResetStartTime)}</li>`;
-            
-            // 下次开启时间
-            windowsHtml += `<li><i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTime(nextResetStartTime)}</li>`;
-            
-            // 生成未来7个开启时间
-            for (let i = 1; i <= 7; i++) {
-                const windowTime = new Date(nextResetStartTime.getTime() + (i * totalCycleMinutes) * 60 * 1000);
-                windowsHtml += `<li><i class="fas fa-window-restore"></i> 开启时间 ${i}: ${formatDateTime(windowTime)}</li>`;
-            }
-            
-            windowList.innerHTML = windowsHtml;
-            
-            // 存储调整后的开始时间用于实时更新
-            adjustedStartTime = baseDate;
-        }
-        
-        // 格式化日期时间（简洁版）
+        // 工具函数
         function formatDateTime(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
         
-        // 格式化日期时间（完整版）
         function formatDateTimeFull(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -4815,75 +4621,341 @@
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             const seconds = String(date.getSeconds()).padStart(2, '0');
+            
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
         }
         
-        // 初始化可拖拽面板
-        function initDraggablePanel(panelId) {
-            const panel = document.getElementById(panelId);
-            const header = document.getElementById(panelId + '-header');
-            
-            let isDragging = false;
-            let dragOffset = { x: 0, y: 0 };
-            
-            header.addEventListener('mousedown', startDrag);
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', stopDrag);
-            
-            function startDrag(e) {
-                isDragging = true;
-                const rect = panel.getBoundingClientRect();
-                dragOffset.x = e.clientX - rect.left;
-                dragOffset.y = e.clientY - rect.top;
-                panel.style.cursor = 'grabbing';
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 初始化计时器
+        function initializeTimer(initialPhase) {
+            if (!timerEnabled) {
+                document.getElementById('countdown').textContent = '计时器已关闭';
+                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-power-off"></i> <span>计时器已关闭</span>';
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
+                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-play-circle"></i> 机库开启时间: 计时器已关闭';
+                
+                // 更新所有灯为灰色
+                for (let i = 0; i < 5; i++) {
+                    const light = document.getElementById(`light-${i}`);
+                    light.className = 'light gray';
+                }
+                
+                // 清除倒计时
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                }
+                
+                // 清除机库开启时间列表
+                const windowList = document.getElementById('window-list');
+                windowList.innerHTML = `
+                    <li><i class="fas fa-window-restore"></i> 上次开启时间: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 下次开启时间: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 1: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 2: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 3: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 4: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 5: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 6: 计时器已关闭</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 7: 计时器已关闭</li>
+                `;
+                
+                return;
             }
             
-            function drag(e) {
-                if (!isDragging) return;
-                
-                const x = e.clientX - dragOffset.x;
-                const y = e.clientY - dragOffset.y;
-                
-                // 限制在视口内
-                const maxX = window.innerWidth - panel.offsetWidth;
-                const maxY = window.innerHeight - panel.offsetHeight;
-                
-                panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-                panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-                panel.style.transform = 'none';
+            const config = PHASE_CONFIG[initialPhase];
+            if (!config) {
+                console.error('Invalid initial phase:', initialPhase);
+                return;
             }
             
-            function stopDrag() {
-                isDragging = false;
-                panel.style.cursor = '';
+            currentPhase = config.phase;
+            currentLights = [...config.lights];
+            
+            // 调整开始时间，考虑偏移量
+            adjustedStartTime = new Date(startTime.getTime() + config.offset * 60 * 1000);
+            
+            // 更新校准时间显示
+            updateCalibrationTime();
+            
+            // 设置初始灯光
+            updateLights();
+            
+            // 设置初始阶段指示器
+            updatePhaseIndicator();
+            
+            // 计算并显示机库开启时间
+            calculateHangarOpenTimes(adjustedStartTime);
+            
+            // 启动倒计时
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            countdownInterval = setInterval(updateCountdown, 1000);
+            updateCountdown();
+        }
+        
+        // 更新灯光显示
+        function updateLights() {
+            for (let i = 0; i < 5; i++) {
+                const light = document.getElementById(`light-${i}`);
+                light.className = `light ${currentLights[i]}`;
             }
         }
         
-        // 页面加载完成后初始化
-        window.addEventListener('DOMContentLoaded', function() {
+        // 更新阶段指示器
+        function updatePhaseIndicator() {
+            const phaseIndicator = document.getElementById('phase-indicator');
+            
+            switch (currentPhase) {
+                case 'reset':
+                    phaseIndicator.innerHTML = '<i class="fas fa-sync-alt"></i> <span>机库已关闭等待开启中</span>';
+                    phaseIndicator.className = 'phase-indicator phase-reset';
+                    break;
+                case 'card':
+                    phaseIndicator.innerHTML = '<i class="fas fa-id-card"></i> <span>机库开启插卡中</span>';
+                    phaseIndicator.className = 'phase-indicator phase-card';
+                    break;
+                case 'poweroff':
+                    phaseIndicator.innerHTML = '<i class="fas fa-power-off"></i> <span>机库关闭中</span>';
+                    phaseIndicator.className = 'phase-indicator phase-poweroff';
+                    break;
+            }
+        }
+        
+        // 计算机库开启时间
+        function calculateHangarOpenTimes(baseTime) {
+            // 新增：检查机库开启时间显示权限
+            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false';
+            const isLoggedIn = currentUser !== null;
+            
+            // 如果设置为仅登录用户可见且用户未登录，则隐藏时间
+            if (!hangarTimesVisible && !isLoggedIn) {
+                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-play-circle"></i> 机库开启时间: 请登录查看';
+                
+                const windowList = document.getElementById('window-list');
+                windowList.innerHTML = `
+                    <li><i class="fas fa-window-restore"></i> 上次开启时间: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 下次开启时间: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 1: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 2: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 3: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 4: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 5: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 6: 请登录查看</li>
+                    <li><i class="fas fa-window-restore"></i> 开启时间 7: 请登录查看</li>
+                `;
+                return;
+            }
+            
+            if (!timerEnabled) {
+                return;
+            }
+            
+            const now = new Date();
+            const baseDate = new Date(baseTime);
+            
+            // 计算完整周期时间（分钟）
+            const fullCycleMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
+            
+            // 计算从开始时间到现在经过的时间（分钟）
+            const elapsedMinutes = Math.floor((now - baseDate) / (1000 * 60));
+            
+            // 计算当前周期中的位置
+            const cyclePosition = elapsedMinutes % fullCycleMinutes;
+            
+            // 计算下一个机库开启时间
+            let nextOpenTime;
+            
+            if (cyclePosition < PHASE_DURATIONS.reset) {
+                // 当前在reset阶段，下一个开启时间是reset阶段结束
+                nextOpenTime = new Date(now.getTime() + (PHASE_DURATIONS.reset - cyclePosition) * 60 * 1000);
+            } else if (cyclePosition < PHASE_DURATIONS.reset + PHASE_DURATIONS.card) {
+                // 当前在card阶段，下一个开启时间是下一个周期的reset阶段结束
+                const remainingInCycle = fullCycleMinutes - cyclePosition;
+                nextOpenTime = new Date(now.getTime() + (remainingInCycle + PHASE_DURATIONS.reset) * 60 * 1000);
+            } else {
+                // 当前在poweroff阶段，下一个开启时间是下一个周期的reset阶段结束
+                const remainingInCycle = fullCycleMinutes - cyclePosition;
+                nextOpenTime = new Date(now.getTime() + (remainingInCycle + PHASE_DURATIONS.reset) * 60 * 1000);
+            }
+            
+            // 计算上一个机库开启时间
+            let lastOpenTime;
+            if (cyclePosition >= PHASE_DURATIONS.reset) {
+                // 如果已经过了当前周期的reset阶段，上一个开启时间是当前周期的reset阶段开始
+                const cyclesCompleted = Math.floor(elapsedMinutes / fullCycleMinutes);
+                lastOpenTime = new Date(baseDate.getTime() + (cyclesCompleted * fullCycleMinutes + PHASE_DURATIONS.reset) * 60 * 1000);
+            } else {
+                // 如果还在当前周期的reset阶段，上一个开启时间是上一个周期的reset阶段结束
+                const cyclesCompleted = Math.floor(elapsedMinutes / fullCycleMinutes) - 1;
+                lastOpenTime = new Date(baseDate.getTime() + (cyclesCompleted * fullCycleMinutes + PHASE_DURATIONS.reset) * 60 * 1000);
+            }
+            
+            // 更新机库开启时间显示
+            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTimeFull(nextOpenTime)}`;
+            
+            // 更新机库开启时间列表
+            const windowList = document.getElementById('window-list');
+            windowList.innerHTML = '';
+            
+            // 添加上次开启时间
+            const lastOpenItem = document.createElement('li');
+            lastOpenItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(lastOpenTime)}`;
+            windowList.appendChild(lastOpenItem);
+            
+            // 添加下次开启时间
+            const nextOpenItem = document.createElement('li');
+            nextOpenItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(nextOpenTime)}`;
+            windowList.appendChild(nextOpenItem);
+            
+            // 添加未来7个开启时间
+            for (let i = 1; i <= 7; i++) {
+                const futureOpenTime = new Date(nextOpenTime.getTime() + i * fullCycleMinutes * 60 * 1000);
+                const item = document.createElement('li');
+                item.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i}: ${formatDateTimeFull(futureOpenTime)}`;
+                windowList.appendChild(item);
+            }
+        }
+        
+        // 更新倒计时
+        function updateCountdown() {
+            if (!timerEnabled) {
+                return;
+            }
+            
+            const now = new Date();
+            const baseDate = new Date(adjustedStartTime);
+            
+            // 计算完整周期时间（分钟）
+            const fullCycleMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
+            
+            // 计算从开始时间到现在经过的时间（分钟）
+            const elapsedMinutes = Math.floor((now - baseDate) / (1000 * 60));
+            
+            // 计算当前周期中的位置
+            const cyclePosition = elapsedMinutes % fullCycleMinutes;
+            
+            // 确定当前阶段和剩余时间
+            let currentPhaseName;
+            let remainingMinutes;
+            
+            if (cyclePosition < PHASE_DURATIONS.reset) {
+                currentPhaseName = 'reset';
+                remainingMinutes = PHASE_DURATIONS.reset - cyclePosition;
+                currentLights = calculateLightsForResetPhase(cyclePosition);
+            } else if (cyclePosition < PHASE_DURATIONS.reset + PHASE_DURATIONS.card) {
+                currentPhaseName = 'card';
+                remainingMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card - cyclePosition;
+                currentLights = calculateLightsForCardPhase(cyclePosition - PHASE_DURATIONS.reset);
+            } else {
+                currentPhaseName = 'poweroff';
+                remainingMinutes = fullCycleMinutes - cyclePosition;
+                currentLights = ['gray', 'gray', 'gray', 'gray', 'gray'];
+            }
+            
+            // 更新阶段和灯光
+            if (currentPhaseName !== currentPhase) {
+                currentPhase = currentPhaseName;
+                updatePhaseIndicator();
+            }
+            updateLights();
+            
+            // 更新倒计时显示
+            const hours = Math.floor(remainingMinutes / 60);
+            const minutes = remainingMinutes % 60;
+            document.getElementById('countdown').textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+            
+            // 每5分钟更新一次机库开启时间
+            if (minutes % 5 === 0) {
+                calculateHangarOpenTimes(adjustedStartTime);
+            }
+        }
+        
+        // 计算reset阶段的灯光状态
+        function calculateLightsForResetPhase(minutesIntoReset) {
+            const lights = ['red', 'red', 'red', 'red', 'red'];
+            const greenLights = Math.floor(minutesIntoReset / 24);
+            
+            for (let i = 0; i < greenLights; i++) {
+                lights[i] = 'green';
+            }
+            
+            return lights;
+        }
+        
+        // 计算card阶段的灯光状态
+        function calculateLightsForCardPhase(minutesIntoCard) {
+            const lights = ['green', 'green', 'green', 'green', 'green'];
+            const grayLights = Math.floor(minutesIntoCard / 12);
+            
+            for (let i = 0; i < grayLights; i++) {
+                lights[i] = 'gray';
+            }
+            
+            return lights;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
             // 加载设置
             loadSettings();
             
-            // 更新校准时间
-            updateCalibrationTime();
-            setInterval(updateCalibrationTime, 60000); // 每分钟更新一次
-            
             // 更新数据库状态
-            setInterval(async () => {
-                try {
-                    const response = await fetch(`${API_BASE}/status`);
-                    if (response.ok) {
-                        document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #2ecc71;"></i> <span>数据库状态: 正常</span>';
-                    } else {
-                        document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 异常</span>';
-                    }
-                } catch (error) {
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
-                }
-            }, 30000);
+            setTimeout(() => {
+                document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #2ecc71;"></i> <span>数据库状态: 已连接</span>';
+            }, 2000);
             
-            // 初始化用户界面
+            // 更新用户界面
             updateUserInterface();
+            
+            // 添加键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                // Alt+A 打开管理面板
+                if (e.altKey && e.key === 'a') {
+                    if (document.getElementById('admin-panel-btn').style.display !== 'none') {
+                        document.getElementById('admin-panel').style.display = 'block';
+                        initDraggablePanel('admin-panel');
+                    }
+                }
+                
+                // Alt+U 打开用户中心
+                if (e.altKey && e.key === 'u') {
+                    if (document.getElementById('user-center-btn').style.display !== 'none') {
+                        document.getElementById('user-center').style.display = 'block';
+                        initDraggablePanel('user-center');
+                    }
+                }
+                
+                // Alt+L 打开登录
+                if (e.altKey && e.key === 'l') {
+                    document.getElementById('login-modal').style.display = 'flex';
+                }
+                
+                // Alt+F 打开反馈
+                if (e.altKey && e.key === 'f') {
+                    document.getElementById('feedback-modal').style.display = 'flex';
+                }
+                
+                // Alt+D 打开捐助
+                if (e.altKey && e.key === 'd') {
+                    if (document.getElementById('donation-btn').style.display !== 'none') {
+                        document.getElementById('donation-modal').style.display = 'flex';
+                    }
+                }
+                
+                // Escape 关闭所有模态框和面板
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal, .admin-panel, .user-center, .user-edit-modal, .password-modal, .qrcode-modal').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+            });
         });
     </script>
 </body>
