@@ -6,7 +6,7 @@
     <title>星际公民行政机库计时系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 样式保持不变，与之前完全一样 */
+        /* 所有样式保持不变，与之前完全一样 */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -2309,7 +2309,6 @@
         </div>
     </div>
 
-    <!-- 修改后的用户编辑模态框 -->
     <div class="user-edit-modal" id="user-edit-modal">
         <div class="user-edit-modal-content">
             <h2><i class="fas fa-user-edit"></i> 编辑用户</h2>
@@ -2326,18 +2325,19 @@
                 <select id="edit-role">
                     <option value="normal">普通用户</option>
                     <option value="admin">管理员</option>
-                    <option value="super-admin">超级管理员</option>
+                    <!-- 超级管理员选项将在JS中动态控制显示 -->
+                    <option value="super-admin" id="super-admin-option" style="display: none;">超级管理员</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>权限设置</label>
                 <div class="permissions-grid" id="edit-permissions">
-                    <!-- 普通用户权限 - 默认显示 -->
-                    <div class="permission-item">
+                    <!-- 普通用户权限 -->
+                    <div class="permission-item" id="permission-view-hangar-times">
                         <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
                         <label for="edit-permission-view-hangar-times">机库开启时间显示</label>
                     </div>
-                    <!-- 管理员权限 - 默认隐藏 -->
+                    <!-- 管理员权限（默认隐藏） -->
                     <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-basic" value="basic">
                         <label for="edit-permission-basic">时间校准</label>
@@ -4369,7 +4369,7 @@
             }
         }
         
-        // 打开用户编辑模态框 - 修改后的函数
+        // 打开用户编辑模态框
         async function openUserEditModal(username) {
             try {
                 const response = await fetch(`${API_BASE}/users`, {
@@ -4386,40 +4386,30 @@
                         document.getElementById('edit-email').value = user.email || '';
                         
                         // 设置用户角色
+                        const editRoleSelect = document.getElementById('edit-role');
+                        const superAdminOption = document.getElementById('super-admin-option');
+                        
+                        // 控制超级管理员选项显示
+                        if (currentUser && currentUser.isSuperAdmin) {
+                            superAdminOption.style.display = 'block';
+                        } else {
+                            superAdminOption.style.display = 'none';
+                        }
+                        
                         if (user.isSuperAdmin) {
-                            document.getElementById('edit-role').value = 'super-admin';
+                            editRoleSelect.value = 'super-admin';
                             // 超级管理员角色设置为只读
-                            document.getElementById('edit-role').disabled = true;
+                            editRoleSelect.disabled = true;
                         } else if (user.isAdmin) {
-                            document.getElementById('edit-role').value = 'admin';
-                            document.getElementById('edit-role').disabled = false;
+                            editRoleSelect.value = 'admin';
+                            editRoleSelect.disabled = false;
                         } else {
-                            document.getElementById('edit-role').value = 'normal';
-                            document.getElementById('edit-role').disabled = false;
+                            editRoleSelect.value = 'normal';
+                            editRoleSelect.disabled = false;
                         }
                         
-                        // 修改1：如果当前用户不是超级管理员，隐藏超级管理员选项
-                        if (currentUser && !currentUser.isSuperAdmin) {
-                            const superAdminOption = document.querySelector('#edit-role option[value="super-admin"]');
-                            if (superAdminOption) {
-                                superAdminOption.style.display = 'none';
-                            }
-                        } else {
-                            // 如果是超级管理员，确保超级管理员选项显示
-                            const superAdminOption = document.querySelector('#edit-role option[value="super-admin"]');
-                            if (superAdminOption) {
-                                superAdminOption.style.display = 'block';
-                            }
-                        }
-                        
-                        // 修改2：根据用户角色动态显示权限选项
-                        updatePermissionDisplay(user.isSuperAdmin ? 'super-admin' : (user.isAdmin ? 'admin' : 'normal'));
-                        
-                        // 设置权限
-                        const permissions = user.permissions || {};
-                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                            checkbox.checked = permissions[checkbox.value] || false;
-                        });
+                        // 设置权限显示
+                        updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
                         
                         // 设置审核状态
                         document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
@@ -4445,37 +4435,45 @@
             }
         }
         
-        // 新增函数：根据用户角色更新权限显示
-        function updatePermissionDisplay(role) {
+        // 更新权限选项显示
+        function updatePermissionsDisplay(isAdmin, permissions) {
             const adminPermissions = document.querySelectorAll('.admin-permission');
-            const viewHangarTimesPermission = document.getElementById('edit-permission-view-hangar-times').closest('.permission-item');
+            const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
             
-            if (role === 'normal') {
-                // 普通用户：只显示"机库开启时间显示"权限，隐藏其他权限
-                adminPermissions.forEach(permission => {
-                    permission.style.display = 'none';
-                });
-                viewHangarTimesPermission.style.display = 'flex';
-            } else {
-                // 管理员或超级管理员：显示所有权限选项
+            if (isAdmin) {
+                // 管理员：显示所有权限选项并默认勾选
                 adminPermissions.forEach(permission => {
                     permission.style.display = 'flex';
                 });
                 viewHangarTimesPermission.style.display = 'flex';
                 
-                // 如果是管理员，默认勾选所有权限
-                if (role === 'admin') {
-                    document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = true;
-                    });
-                }
+                // 设置所有权限为选中状态
+                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            } else {
+                // 普通用户：只显示机库开启时间权限
+                adminPermissions.forEach(permission => {
+                    permission.style.display = 'none';
+                });
+                viewHangarTimesPermission.style.display = 'flex';
+                
+                // 只设置机库开启时间权限，其他权限取消选中
+                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                    if (checkbox.value === 'viewHangarTimes') {
+                        checkbox.checked = permissions[checkbox.value] || false;
+                    } else {
+                        checkbox.checked = false;
+                    }
+                });
             }
         }
 
         // 为角色下拉列表添加change事件
         document.getElementById('edit-role').addEventListener('change', function() {
             if (currentEditingUser) {
-                updatePermissionDisplay(this.value);
+                const isAdmin = this.value === 'admin' || this.value === 'super-admin';
+                updatePermissionsDisplay(isAdmin, currentEditingUser.permissions || {});
             }
         });
         
