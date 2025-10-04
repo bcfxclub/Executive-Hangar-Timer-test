@@ -4547,13 +4547,7 @@
         document.getElementById('cancel-user-edit').addEventListener('click', function() {
             document.getElementById('user-edit-modal').style.display = 'none';
             currentEditingUser = null;
-        });
-        
-        // 刷新用户列表
-        document.getElementById('refresh-users').addEventListener('click', function() {
-            loadUsers();
-        });
-        
+        });        
         
         // 加载用户信息
         async function loadUserInfo() {
