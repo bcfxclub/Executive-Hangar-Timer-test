@@ -2344,7 +2344,7 @@
                     <!-- 普通用户权限 -->
                     <div class="permission-item" id="permission-view-hangar-times">
                         <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-                        <label for="edit-permission-view-hangar-times">机库开启时间显示</label>
+                        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
                     </div>
                     <!-- 管理员权限（默认隐藏） -->
                     <div class="permission-item admin-permission" style="display: none;">
@@ -2484,7 +2484,7 @@
                         document.getElementById('timer-enabled').value = timerEnabled.toString();
                     }
                     
-                    // 新增：机库开启时间显示设置
+                    // 新增：机库开启时间预测显示设置
                     if (config.hangarTimesVisible !== undefined) {
                         document.getElementById('hangar-times-visible').value = config.hangarTimesVisible.toString();
                         localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
@@ -2763,7 +2763,7 @@
                 userManagementTab.style.display = 'none';
             }
             
-            // 新增：用户登录状态变化时刷新机库开启时间显示
+            // 新增：用户登录状态变化时刷新机库开启时间预测显示
             calculateHangarOpenTimes(adjustedStartTime);
         }
         
@@ -2864,7 +2864,7 @@
                     updateDonationButtonDisplay();
                     // 更新背景显示
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
-                    // 更新机库开启时间显示设置
+                    // 更新机库开启时间预测显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
                     return true;
                 } else {
@@ -3339,7 +3339,7 @@
                         updateUserInterface();
                         alert('登录成功');
                         
-                        // 新增：登录成功后刷新机库开启时间显示
+                        // 新增：登录成功后刷新机库开启时间预测显示
                         calculateHangarOpenTimes(adjustedStartTime);
                     } else {
                         alert(result.error || '用户名或密码错误');
