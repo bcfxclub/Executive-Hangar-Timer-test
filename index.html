@@ -1912,6 +1912,7 @@
             </div>
         </div>
         
+        <!-- 新增：开启时间标签 -->
         <div class="admin-tab-content" id="open-time-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-clock"></i> 开启时间设置</h3>
@@ -1929,9 +1930,6 @@
                         <option value="false">仅登录用户可见</option>
                     </select>
                 </div>
-                <button id="save-open-time-settings">
-                    <i class="fas fa-save"></i> 保存设置
-                </button>
             </div>
         </div>
         
@@ -2362,7 +2360,7 @@
                     </div>
                     <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-open-time" value="openTime">
-                        <label for="edit-permission-open-time">开启时间</label>
+                        <label for="edit-permission-open-time">开启时间管理</label>
                     </div>
                     <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-notification" value="notification">
@@ -2723,11 +2721,10 @@
                         initializeTimer(document.getElementById('initial-phase').value);
                     });
 
-                    // 添加开启时间显示设置实时保存功能
+                    // 添加机库开启时间显示实时保存功能
                     document.getElementById('hangar-times-visible').addEventListener('change', async function() {
-                        localStorage.setItem('hangarTimesVisible', this.value);
                         await saveSettings();
-                        // 刷新机库开启时间显示
+                        // 重新计算机库开启时间以更新显示
                         calculateHangarOpenTimes(adjustedStartTime);
                     });
                 } else {
@@ -3137,12 +3134,6 @@
             
             // 保存设置
             saveSettings();
-        });
-        
-        // 保存开启时间设置
-        document.getElementById('save-open-time-settings').addEventListener('click', async function() {
-            await saveSettings();
-            alert('开启时间设置已保存');
         });
         
         // 用户登录按钮
@@ -3792,6 +3783,104 @@
             }
         });
         
+        // 图片上传功能
+        document.getElementById('upload-logo').addEventListener('click', function() {
+            const fileInput = document.getElementById('logo-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logo-url').value = e.target.result;
+                updateLogoPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('upload-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('qrcode-url').value = e.target.result;
+                updateQrcodePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('upload-bg').addEventListener('click', function() {
+            const fileInput = document.getElementById('bg-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的文件');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bg-image').value = e.target.result;
+                const bgType = document.getElementById('bg-type').value;
+                updateBgPreview(e.target.result, bgType);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('upload-video').addEventListener('click', function() {
+            const fileInput = document.getElementById('video-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的视频');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('video-url').value = e.target.result;
+                updateVideoPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('upload-wechat-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('wechat-qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('wechat-qrcode-url').value = e.target.result;
+                document.getElementById('wechat-qrcode').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('upload-alipay-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('alipay-qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('alipay-qrcode-url').value = e.target.result;
+                document.getElementById('alipay-qrcode').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        
         // 加载反馈
         async function loadFeedback() {
             try {
@@ -3801,32 +3890,35 @@
                 
                 if (response.ok) {
                     const feedbackList = await response.json();
-                    const feedbackListContainer = document.getElementById('feedback-list');
+                    const feedbackListDiv = document.getElementById('feedback-list');
+                    
+                    feedbackListDiv.innerHTML = '';
                     
                     if (feedbackList.length === 0) {
-                        feedbackListContainer.innerHTML = '<div class="feedback-item">暂无反馈</div>';
+                        feedbackListDiv.innerHTML = '<div class="feedback-item">暂无反馈</div>';
                         return;
                     }
                     
-                    feedbackListContainer.innerHTML = '';
                     feedbackList.forEach(feedback => {
                         const feedbackItem = document.createElement('div');
                         feedbackItem.className = 'feedback-item';
                         
-                        let usernameHtml = '';
+                        let content = `<div class="feedback-date">${feedback.date}</div>`;
+                        
                         if (feedback.username) {
-                            usernameHtml = `<div class="feedback-username">用户: ${feedback.username}</div>`;
+                            content += `<div class="feedback-username">用户: ${feedback.username}</div>`;
                         }
                         
-                        feedbackItem.innerHTML = `
-                            <div class="feedback-date">${formatDateTimeFull(new Date(feedback.timestamp))}</div>
-                            ${usernameHtml}
-                            <div class="feedback-content">${feedback.content}</div>
-                            ${feedback.contact ? `<div class="feedback-contact">联系方式: ${feedback.contact}</div>` : ''}
-                            <button class="delete-feedback" data-id="${feedback.id}">删除</button>
-                        `;
+                        content += `<div class="feedback-content">${feedback.content}</div>`;
                         
-                        feedbackListContainer.appendChild(feedbackItem);
+                        if (feedback.contact) {
+                            content += `<div class="feedback-contact">联系方式: ${feedback.contact}</div>`;
+                        }
+                        
+                        content += `<button class="delete-feedback" data-id="${feedback.id}">删除</button>`;
+                        
+                        feedbackItem.innerHTML = content;
+                        feedbackListDiv.appendChild(feedbackItem);
                     });
                     
                     // 添加删除事件
@@ -3862,7 +3954,7 @@
                     console.error('Failed to load feedback');
                 }
             } catch (error) {
-                console.error('Load feedback error:', error);
+                console.error('Failed to load feedback:', error);
             }
         }
         
@@ -3874,26 +3966,29 @@
                 });
                 
                 if (response.ok) {
-                    const visits = await response.json();
-                    const visitsListContainer = document.getElementById('visits-list');
-                    const visitCount = document.getElementById('visit-count');
+                    const visitsData = await response.json();
+                    const visitsListDiv = document.getElementById('visits-list');
+                    const visitCountDiv = document.getElementById('visit-count');
                     
-                    visitCount.textContent = `总IP数: ${visits.length}`;
+                    visitCountDiv.textContent = `总IP数: ${visitsData.length}`;
                     
-                    if (visits.length === 0) {
-                        visitsListContainer.innerHTML = '<div class="visit-item">暂无访问记录</div>';
+                    visitsListDiv.innerHTML = '';
+                    
+                    if (visitsData.length === 0) {
+                        visitsListDiv.innerHTML = '<div class="visit-item">暂无访问记录</div>';
                         return;
                     }
                     
-                    visitsListContainer.innerHTML = '';
-                    visits.forEach(visit => {
+                    visitsData.forEach(visit => {
                         const visitItem = document.createElement('div');
                         visitItem.className = 'visit-item';
+                        
                         visitItem.innerHTML = `
                             <div class="visit-ip">${visit.ip}</div>
-                            <div class="visit-date">${formatDateTimeFull(new Date(visit.timestamp))}</div>
+                            <div class="visit-date">${visit.date}</div>
                         `;
-                        visitsListContainer.appendChild(visitItem);
+                        
+                        visitsListDiv.appendChild(visitItem);
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -3902,7 +3997,7 @@
                     console.error('Failed to load visits');
                 }
             } catch (error) {
-                console.error('Load visits error:', error);
+                console.error('Failed to load visits:', error);
             }
         }
         
@@ -3921,6 +4016,7 @@
                     });
                     
                     if (response.ok) {
+                        alert('访问记录已清除');
                         loadVisits();
                     } else {
                         if (!checkAuthResponse(response)) {
@@ -3944,14 +4040,15 @@
                 
                 if (response.ok) {
                     const users = await response.json();
-                    const userListContainer = document.getElementById('user-list');
+                    const userListDiv = document.getElementById('user-list');
+                    
+                    userListDiv.innerHTML = '';
                     
                     if (users.length === 0) {
-                        userListContainer.innerHTML = '<div class="user-item">暂无用户</div>';
+                        userListDiv.innerHTML = '<div class="user-item">暂无用户</div>';
                         return;
                     }
                     
-                    userListContainer.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
@@ -3973,54 +4070,23 @@
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <strong>${user.username}</strong> ${roleBadge}
-                                <div>${user.email}</div>
-                                <div class="visit-date">注册时间: ${formatDateTimeFull(new Date(user.registrationDate))}</div>
+                                <strong>${user.username}</strong> - ${user.email}
+                                <div>${roleBadge}</div>
                             </div>
                             <div class="user-actions">
-                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
-                                <button class="user-action-btn" style="background: var(--reset-color);" data-id="${user.id}">删除</button>
+                                <button class="user-action-btn edit-user-btn" data-id="${user.id}">编辑</button>
                             </div>
                         `;
                         
-                        userListContainer.appendChild(userItem);
+                        userListDiv.appendChild(userItem);
                     });
                     
                     // 添加编辑事件
-                    document.querySelectorAll('.edit-user').forEach(button => {
+                    document.querySelectorAll('.edit-user-btn').forEach(button => {
                         button.addEventListener('click', function() {
                             const userId = this.getAttribute('data-id');
                             editUser(userId);
                         });
-                    });
-                    
-                    // 添加删除事件
-                    document.querySelectorAll('.user-action-btn').forEach(button => {
-                        if (button.textContent === '删除') {
-                            button.addEventListener('click', async function() {
-                                const userId = this.getAttribute('data-id');
-                                if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
-                                    try {
-                                        const response = await fetch(`${API_BASE}/users/${userId}`, {
-                                            method: 'DELETE',
-                                            headers: getAuthHeaders()
-                                        });
-                                        
-                                        if (response.ok) {
-                                            loadUsers();
-                                        } else {
-                                            if (!checkAuthResponse(response)) {
-                                                return;
-                                            }
-                                            alert('删除失败');
-                                        }
-                                    } catch (error) {
-                                        console.error('Delete user error:', error);
-                                        alert('删除失败');
-                                    }
-                                }
-                            });
-                        }
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -4029,7 +4095,7 @@
                     console.error('Failed to load users');
                 }
             } catch (error) {
-                console.error('Load users error:', error);
+                console.error('Failed to load users:', error);
             }
         }
         
@@ -4062,35 +4128,37 @@
                     }
                     
                     // 设置权限
-                    const permissions = user.permissions || {};
-                    document.getElementById('edit-permission-view-hangar-times').checked = permissions.viewHangarTimes || false;
+                    document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = user.permissions && user.permissions[checkbox.value];
+                    });
                     
-                    // 管理员权限设置 - 根据当前用户权限动态显示
+                    // 设置审核状态
+                    document.getElementById('edit-approved').value = user.approved.toString();
+                    
+                    // 设置冻结状态
+                    document.getElementById('edit-frozen').value = user.frozen.toString();
+                    
+                    // 显示超级管理员选项（只有超级管理员可以看到）
+                    const superAdminOption = document.getElementById('super-admin-option');
+                    if (currentUser && currentUser.isSuperAdmin) {
+                        superAdminOption.style.display = 'block';
+                    } else {
+                        superAdminOption.style.display = 'none';
+                    }
+                    
+                    // 显示管理员权限选项
                     const adminPermissions = document.querySelectorAll('.admin-permission');
-                    if (currentUser && (currentUser.isSuperAdmin || (currentUser.permissions && currentUser.permissions.users))) {
+                    if (user.isAdmin || user.isSuperAdmin) {
                         adminPermissions.forEach(permission => {
-                            const checkbox = permission.querySelector('input[type="checkbox"]');
-                            const permissionValue = checkbox.value;
-                            checkbox.checked = permissions[permissionValue] || false;
-                            permission.style.display = 'block';
+                            permission.style.display = 'flex';
                         });
-                        
-                        // 如果是超级管理员，显示超级管理员选项
-                        if (currentUser.isSuperAdmin) {
-                            document.getElementById('super-admin-option').style.display = 'block';
-                        } else {
-                            document.getElementById('super-admin-option').style.display = 'none';
-                        }
                     } else {
                         adminPermissions.forEach(permission => {
                             permission.style.display = 'none';
                         });
                     }
                     
-                    // 设置审核和冻结状态
-                    document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
-                    document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
-                    
+                    // 显示编辑模态框
                     document.getElementById('user-edit-modal').style.display = 'flex';
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -4099,7 +4167,7 @@
                     alert('获取用户信息失败');
                 }
             } catch (error) {
-                console.error('Edit user error:', error);
+                console.error('Failed to load user:', error);
                 alert('获取用户信息失败');
             }
         }
@@ -4115,16 +4183,9 @@
             const frozen = document.getElementById('edit-frozen').value === 'true';
             
             // 收集权限
-            const permissions = {
-                viewHangarTimes: document.getElementById('edit-permission-view-hangar-times').checked
-            };
-            
-            // 收集管理员权限
-            const adminPermissions = document.querySelectorAll('.admin-permission');
-            adminPermissions.forEach(permission => {
-                const checkbox = permission.querySelector('input[type="checkbox"]');
-                const permissionValue = checkbox.value;
-                permissions[permissionValue] = checkbox.checked;
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
             });
             
             try {
@@ -4133,39 +4194,42 @@
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
                         email,
-                        isSuperAdmin: role === 'super-admin',
-                        isAdmin: role === 'admin' || role === 'super-admin',
-                        permissions,
+                        role,
                         password: password || undefined,
                         approved,
-                        frozen
+                        frozen,
+                        permissions
                     })
                 });
                 
                 if (response.ok) {
+                    alert('用户信息更新成功');
                     document.getElementById('user-edit-modal').style.display = 'none';
                     loadUsers();
-                    alert('用户信息已更新');
+                    loadAdminUsers();
                     
-                    // 如果编辑的是当前用户，更新本地存储
+                    // 如果编辑的是当前用户，更新当前用户信息
                     if (currentUser && currentUser.id === currentEditingUser.id) {
-                        const updatedUser = await response.json();
-                        currentUser = {
+                        const updatedUser = {
                             ...currentUser,
-                            ...updatedUser
+                            email,
+                            isSuperAdmin: role === 'super-admin',
+                            isAdmin: role === 'admin' || role === 'super-admin',
+                            permissions
                         };
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        currentUser = updatedUser;
+                        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
                         updateUserInterface();
                     }
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    alert('更新失败');
+                    alert('用户信息更新失败');
                 }
             } catch (error) {
-                console.error('Update user error:', error);
-                alert('更新失败');
+                console.error('Failed to update user:', error);
+                alert('用户信息更新失败');
             }
         });
         
@@ -4191,7 +4255,7 @@
                 roleText = '普通用户';
             }
             
-            document.getElementById('user-info-role').innerHTML = roleText;
+            document.getElementById('user-info-role').textContent = roleText;
         }
         
         // 更新用户信息
@@ -4204,28 +4268,22 @@
                 const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({
-                        email
-                    })
+                    body: JSON.stringify({ email })
                 });
                 
                 if (response.ok) {
-                    const updatedUser = await response.json();
-                    currentUser = {
-                        ...currentUser,
-                        ...updatedUser
-                    };
+                    alert('用户信息更新成功');
+                    currentUser.email = email;
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert('用户信息已更新');
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    alert('更新失败');
+                    alert('用户信息更新失败');
                 }
             } catch (error) {
-                console.error('Update user info error:', error);
-                alert('更新失败');
+                console.error('Failed to update user info:', error);
+                alert('用户信息更新失败');
             }
         });
         
@@ -4248,7 +4306,7 @@
             }
             
             if (newPassword !== confirmPassword) {
-                alert('两次输入的新密码不一致');
+                alert('两次输入的密码不一致');
                 return;
             }
             
@@ -4257,7 +4315,7 @@
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
-                        username: currentUser.username,
+                        userId: currentUser.id,
                         oldPassword,
                         newPassword
                     })
@@ -4280,7 +4338,7 @@
                     alert('密码修改失败');
                 }
             } catch (error) {
-                console.error('Change password error:', error);
+                console.error('Failed to change password:', error);
                 alert('密码修改失败');
             }
         });
@@ -4298,36 +4356,38 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
-                    method: 'PUT',
+                const response = await fetch(`${API_BASE}/update-security-question`, {
+                    method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({
+                        userId: currentUser.id,
                         securityQuestion,
                         securityAnswer
                     })
                 });
                 
                 if (response.ok) {
-                    const updatedUser = await response.json();
-                    currentUser = {
-                        ...currentUser,
-                        ...updatedUser
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    alert('密保设置已更新');
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密保设置更新成功');
+                        document.getElementById('user-security-question').value = '';
+                        document.getElementById('user-security-answer').value = '';
+                    } else {
+                        alert(result.error || '密保设置更新失败');
+                    }
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
-                    alert('更新失败');
+                    alert('密保设置更新失败');
                 }
             } catch (error) {
-                console.error('Update security question error:', error);
-                alert('更新失败');
+                console.error('Failed to update security question:', error);
+                alert('密保设置更新失败');
             }
         });
         
-        // 加载用户管理列表
+        // 加载管理员用户列表（用户中心）
         async function loadAdminUsers() {
             try {
                 const response = await fetch(`${API_BASE}/users`, {
@@ -4336,14 +4396,15 @@
                 
                 if (response.ok) {
                     const users = await response.json();
-                    const userListContainer = document.getElementById('admin-user-list');
+                    const adminUserListDiv = document.getElementById('admin-user-list');
+                    
+                    adminUserListDiv.innerHTML = '';
                     
                     if (users.length === 0) {
-                        userListContainer.innerHTML = '<div class="user-item">暂无用户</div>';
+                        adminUserListDiv.innerHTML = '<div class="user-item">暂无用户</div>';
                         return;
                     }
                     
-                    userListContainer.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
@@ -4365,54 +4426,23 @@
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <strong>${user.username}</strong> ${roleBadge}
-                                <div>${user.email}</div>
-                                <div class="visit-date">注册时间: ${formatDateTimeFull(new Date(user.registrationDate))}</div>
+                                <strong>${user.username}</strong> - ${user.email}
+                                <div>${roleBadge}</div>
                             </div>
                             <div class="user-actions">
-                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
-                                <button class="user-action-btn" style="background: var(--reset-color);" data-id="${user.id}">删除</button>
+                                <button class="user-action-btn edit-user-btn" data-id="${user.id}">编辑</button>
                             </div>
                         `;
                         
-                        userListContainer.appendChild(userItem);
+                        adminUserListDiv.appendChild(userItem);
                     });
                     
                     // 添加编辑事件
-                    document.querySelectorAll('.edit-user').forEach(button => {
+                    document.querySelectorAll('.edit-user-btn').forEach(button => {
                         button.addEventListener('click', function() {
                             const userId = this.getAttribute('data-id');
                             editUser(userId);
                         });
-                    });
-                    
-                    // 添加删除事件
-                    document.querySelectorAll('.user-action-btn').forEach(button => {
-                        if (button.textContent === '删除') {
-                            button.addEventListener('click', async function() {
-                                const userId = this.getAttribute('data-id');
-                                if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
-                                    try {
-                                        const response = await fetch(`${API_BASE}/users/${userId}`, {
-                                            method: 'DELETE',
-                                            headers: getAuthHeaders()
-                                        });
-                                        
-                                        if (response.ok) {
-                                            loadAdminUsers();
-                                        } else {
-                                            if (!checkAuthResponse(response)) {
-                                                return;
-                                            }
-                                            alert('删除失败');
-                                        }
-                                    } catch (error) {
-                                        console.error('Delete user error:', error);
-                                        alert('删除失败');
-                                    }
-                                }
-                            });
-                        }
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -4421,7 +4451,7 @@
                     console.error('Failed to load users');
                 }
             } catch (error) {
-                console.error('Load users error:', error);
+                console.error('Failed to load users:', error);
             }
         }
         
@@ -4433,230 +4463,24 @@
         // 页脚信息弹窗
         document.getElementById('project-description-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value.replace(/\n/g, '<br>');
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('version-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value.replace(/\n/g, '<br>');
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('about-btn').addEventListener('click', function() {
             document.getElementById('footer-modal-title').textContent = '关于我们';
-            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value.replace(/\n/g, '<br>');
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('close-footer-modal').addEventListener('click', function() {
             document.getElementById('footer-info-modal').style.display = 'none';
-        });
-        
-        // 文件上传功能
-        document.getElementById('upload-logo').addEventListener('click', async function() {
-            const fileInput = document.getElementById('logo-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('logo-url').value = result.url;
-                    updateLogoPreview(result.url);
-                    alert('Logo上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('Logo上传失败');
-                }
-            } catch (error) {
-                console.error('Upload logo error:', error);
-                alert('Logo上传失败');
-            }
-        });
-        
-        document.getElementById('upload-qrcode').addEventListener('click', async function() {
-            const fileInput = document.getElementById('qrcode-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('qrcode-url').value = result.url;
-                    updateQrcodePreview(result.url);
-                    alert('二维码上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('二维码上传失败');
-                }
-            } catch (error) {
-                console.error('Upload qrcode error:', error);
-                alert('二维码上传失败');
-            }
-        });
-        
-        document.getElementById('upload-bg').addEventListener('click', async function() {
-            const fileInput = document.getElementById('bg-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('bg-image').value = result.url;
-                    const bgType = document.getElementById('bg-type').value;
-                    updateBgPreview(result.url, bgType);
-                    alert('背景图片上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('背景图片上传失败');
-                }
-            } catch (error) {
-                console.error('Upload background error:', error);
-                alert('背景图片上传失败');
-            }
-        });
-        
-        document.getElementById('upload-video').addEventListener('click', async function() {
-            const fileInput = document.getElementById('video-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('video-url').value = result.url;
-                    updateVideoPreview(result.url);
-                    alert('背景视频上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('背景视频上传失败');
-                }
-            } catch (error) {
-                console.error('Upload video error:', error);
-                alert('背景视频上传失败');
-            }
-        });
-        
-        document.getElementById('upload-wechat-qrcode').addEventListener('click', async function() {
-            const fileInput = document.getElementById('wechat-qrcode-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('wechat-qrcode-url').value = result.url;
-                    document.getElementById('wechat-qrcode').src = result.url;
-                    alert('微信支付二维码上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('微信支付二维码上传失败');
-                }
-            } catch (error) {
-                console.error('Upload wechat qrcode error:', error);
-                alert('微信支付二维码上传失败');
-            }
-        });
-        
-        document.getElementById('upload-alipay-qrcode').addEventListener('click', async function() {
-            const fileInput = document.getElementById('alipay-qrcode-upload');
-            if (!fileInput.files.length) {
-                alert('请选择文件');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            
-            try {
-                const response = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    document.getElementById('alipay-qrcode-url').value = result.url;
-                    document.getElementById('alipay-qrcode').src = result.url;
-                    alert('支付宝二维码上传成功');
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('支付宝二维码上传失败');
-                }
-            } catch (error) {
-                console.error('Upload alipay qrcode error:', error);
-                alert('支付宝二维码上传失败');
-            }
         });
         
         // 初始化计时器
@@ -4905,77 +4729,73 @@
             return num.toString().padStart(2, '0');
         }
         
-        // 初始化拖拽功能
+        // 使面板可拖动
         function initDraggablePanel(panelId) {
             const panel = document.getElementById(panelId);
             const header = document.getElementById(panelId + '-header');
             
             let isDragging = false;
-            let currentX;
-            let currentY;
-            let initialX;
-            let initialY;
-            let xOffset = 0;
-            let yOffset = 0;
+            let dragOffsetX, dragOffsetY;
             
-            header.addEventListener('mousedown', dragStart);
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', dragEnd);
+            header.addEventListener('mousedown', startDragging);
             
-            function dragStart(e) {
-                initialX = e.clientX - xOffset;
-                initialY = e.clientY - yOffset;
+            function startDragging(e) {
+                isDragging = true;
+                dragOffsetX = e.clientX - panel.offsetLeft;
+                dragOffsetY = e.clientY - panel.offsetTop;
                 
-                if (e.target === header || header.contains(e.target)) {
-                    isDragging = true;
-                }
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('mouseup', stopDragging);
             }
             
-            function drag(e) {
-                if (isDragging) {
-                    e.preventDefault();
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
-                    
-                    xOffset = currentX;
-                    yOffset = currentY;
-                    
-                    setTranslate(currentX, currentY, panel);
-                }
+            function onDrag(e) {
+                if (!isDragging) return;
+                
+                const x = e.clientX - dragOffsetX;
+                const y = e.clientY - dragOffsetY;
+                
+                // 限制面板在视口内
+                const maxX = window.innerWidth - panel.offsetWidth;
+                const maxY = window.innerHeight - panel.offsetHeight;
+                
+                panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+                panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
             }
             
-            function setTranslate(xPos, yPos, el) {
-                el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
-            }
-            
-            function dragEnd(e) {
-                initialX = currentX;
-                initialY = currentY;
+            function stopDragging() {
                 isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('mouseup', stopDragging);
+            }
+        }
+        
+        // 数据库状态检查
+        async function checkDatabaseStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                if (response.ok) {
+                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #2ecc71;"></i> <span>数据库状态: 连接正常</span>';
+                } else {
+                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接异常</span>';
+                }
+            } catch (error) {
+                document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
             }
         }
         
         // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function() {
             // 加载设置
             loadSettings();
+            
+            // 检查数据库状态
+            checkDatabaseStatus();
             
             // 更新用户界面
             updateUserInterface();
             
-            // 添加邀请码点击事件
-            document.getElementById('invite-link').addEventListener('click', function(e) {
-                if (this.getAttribute('href') === '#') {
-                    e.preventDefault();
-                    const inviteCode = document.getElementById('invite-code').textContent;
-                    navigator.clipboard.writeText(inviteCode).then(function() {
-                        alert('邀请码已复制到剪贴板');
-                    }, function(err) {
-                        console.error('复制失败: ', err);
-                        alert('复制失败，请手动复制邀请码');
-                    });
-                }
-            });
+            // 设置定期检查数据库状态
+            setInterval(checkDatabaseStatus, 60000); // 每分钟检查一次
         });
     </script>
 </body>
