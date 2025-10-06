@@ -4695,8 +4695,8 @@
                 offsetMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + config.offset;
             }
             
-            // 调整开始时间
-            const adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
+            // 调整开始时间 - 修改为赋值给全局变量
+            adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
             
             // 更新显示
             updateDisplay(adjustedStartTime);
@@ -4811,6 +4811,34 @@
             const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
             const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
             const now = new Date();
+            
+            // 检查机库开启时间显示设置
+            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false'; // 默认为true
+            
+            // 检查用户权限
+            let canViewHangarTimes = hangarTimesVisible;
+            
+            if (!hangarTimesVisible && currentUser) {
+                // 如果全局设置为仅登录用户可见，检查用户权限
+                canViewHangarTimes = currentUser.isSuperAdmin || currentUser.isAdmin || 
+                    (currentUser.permissions && currentUser.permissions.viewHangarTimes);
+            }
+            
+            // 如果设置为仅登录用户可见且用户未登录，显示提示信息
+            if (!hangarTimesVisible && !currentUser) {
+                const loginPrompt = document.createElement('li');
+                loginPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 请登录账号查看机库开启时间`;
+                windowList.appendChild(loginPrompt);
+                return;
+            }
+            
+            // 如果用户已登录但没有查看权限
+            if (!canViewHangarTimes) {
+                const permissionPrompt = document.createElement('li');
+                permissionPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 您没有权限查看机库开启时间`;
+                windowList.appendChild(permissionPrompt);
+                return;
+            }
             
             // 计算上一个开启时间
             let previousWindowTime = new Date(firstGreenTime.getTime());
