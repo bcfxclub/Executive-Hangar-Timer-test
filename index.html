@@ -1061,24 +1061,6 @@
             margin-bottom: 10px;
         }
         
-        .donation-records {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 15px;
-        }
-        
-        .donation-record {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .donation-record:last-child {
-            border-bottom: none;
-        }
-        
         .color-picker-container {
             display: flex;
             align-items: center;
@@ -1558,7 +1540,7 @@
                 width: 100%;
             }
             
-            /* 修复手机版校准时间与状态指示文字重叠问题 */
+            /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
             .calibration-time {
                 bottom: 25px; /* 从15px调整为25px，上移10px */
             }
@@ -1808,7 +1790,7 @@
     <div class="modal" id="donation-modal">
         <div class="modal-content donation-modal-content">
             <h2><i class="fas fa-donate"></i> 支持我们</h2>
-            <p>您的捐助将帮助我们持续维护和改进系统</p>
+            <p id="donation-comment-display">您的捐助将帮助我们持续维护和改进系统</p>
             
             <div class="donation-qrcodes" id="donation-qrcodes">
                 <div class="donation-qrcode">
@@ -2091,6 +2073,10 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="donation-comment">捐助注释</label>
+                    <textarea id="donation-comment" placeholder="输入捐助注释，将显示在捐助模态框中">您的捐助将帮助我们持续维护和改进系统</textarea>
+                </div>
+                <div class="form-group">
                     <label for="wechat-qrcode-url">微信支付二维码URL</label>
                     <input type="url" id="wechat-qrcode-url" placeholder="输入微信支付二维码URL">
                     <div class="upload-group">
@@ -2197,13 +2183,13 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.2
-更新日期：2025-10-01
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.6
+更新日期：2025-10-06
 更新内容：
 在上一版基础上，做出如下修改：
-1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。用户登录界面找回密码功能重置密码按钮改为找回密码按钮，密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。
-2、直接通过网址访问api/users内email字段数据要同password字段一样过滤。
-3、保持用户登陆界面样式和布局不变。不要修改用户登录模态框的样式。
+手机版面校准时间和红灯绿灯灰灯文字重叠，将校准时间上移一点。
+调整校准时间的CSS样式，在移动端上移。
+其他所有代码逻辑和功能保持不变，只是针对手机版面的显示问题进行了优化。
 </textarea>
                 </div>
                 <div class="form-group">
@@ -2640,6 +2626,12 @@
                         updateDonationButtonDisplay();
                     }
                     
+                    // 新增：捐助注释加载
+                    if (config.donationComment) {
+                        document.getElementById('donation-comment').value = config.donationComment;
+                        document.getElementById('donation-comment-display').textContent = config.donationComment;
+                    }
+                    
                     if (config.wechatQrcodeUrl) {
                         document.getElementById('wechat-qrcode-url').value = config.wechatQrcodeUrl;
                         document.getElementById('wechat-qrcode').src = config.wechatQrcodeUrl;
@@ -2823,6 +2815,7 @@
                 calibrationTime: document.getElementById('calibration-time').textContent.replace('校准时间: ', ''),
                 apiUrl: document.getElementById('api-url').value,
                 donationEnabled: document.getElementById('donation-enabled').value === 'true',
+                donationComment: document.getElementById('donation-comment').value,
                 wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
                 alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
                 donationBtnColor: document.getElementById('donation-btn-color').value,
@@ -2855,6 +2848,8 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     // 更新机库开启时间显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    // 更新捐助注释显示
+                    document.getElementById('donation-comment-display').textContent = config.donationComment;
                     return true;
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -3152,7 +3147,6 @@
         // 捐助按钮
         document.getElementById('donation-btn').addEventListener('click', function() {
             document.getElementById('donation-modal').style.display = 'flex';
-            loadDonationRecords();
         });
         
         // 关闭后台管理面板
@@ -3577,12 +3571,16 @@
         // 保存捐助设置
         document.getElementById('save-donation-settings').addEventListener('click', function() {
             const donationEnabled = document.getElementById('donation-enabled').value === 'true';
+            const donationComment = document.getElementById('donation-comment').value;
             const wechatQrcodeUrl = document.getElementById('wechat-qrcode-url').value;
             const alipayQrcodeUrl = document.getElementById('alipay-qrcode-url').value;
             const donationBtnColor = document.getElementById('donation-btn-color').value;
             
             document.documentElement.style.setProperty('--donation-btn-bg', donationBtnColor);
             updateDonationButtonDisplay();
+            
+            // 更新捐助注释显示
+            document.getElementById('donation-comment-display').textContent = donationComment;
             
             saveSettings();
         });
@@ -3849,47 +3847,47 @@
             reader.readAsDataURL(file);
         });
         
-        // 加载反馈
+        // 加载反馈列表
         async function loadFeedback() {
             try {
                 const response = await fetch(`${API_BASE}/feedback`, {
                     headers: getAuthHeaders()
                 });
+                
                 if (response.ok) {
-                    const feedback = await response.json();
-                    const feedbackList = document.getElementById('feedback-list');
+                    const feedbackList = await response.json();
+                    const feedbackListDiv = document.getElementById('feedback-list');
+                    feedbackListDiv.innerHTML = '';
                     
-                    if (feedback.length === 0) {
-                        feedbackList.innerHTML = '<div class="feedback-item">暂无反馈</div>';
+                    if (feedbackList.length === 0) {
+                        feedbackListDiv.innerHTML = '<p class="info-text">暂无反馈</p>';
                         return;
                     }
                     
-                    feedbackList.innerHTML = '';
-                    feedback.forEach(item => {
+                    feedbackList.forEach(feedback => {
                         const feedbackItem = document.createElement('div');
                         feedbackItem.className = 'feedback-item';
                         
-                        let contactHtml = '';
-                        if (item.contact) {
-                            contactHtml = `<div class="feedback-contact">联系方式: ${item.contact}</div>`;
-                        }
-                        
-                        let usernameHtml = '';
-                        if (item.username) {
-                            usernameHtml = `<div class="feedback-username">用户: ${item.username}</div>`;
-                        }
-                        
-                        feedbackItem.innerHTML = `
-                            <div class="feedback-date">${new Date(item.timestamp).toLocaleString()}</div>
-                            ${usernameHtml}
-                            <div class="feedback-content">${item.content}</div>
-                            ${contactHtml}
-                            <button class="delete-feedback" data-id="${item.id}">删除</button>
+                        let feedbackHtml = `
+                            <div class="feedback-date">${formatDateTimeFull(new Date(feedback.timestamp))}</div>
+                            <div class="feedback-content">${escapeHtml(feedback.content)}</div>
                         `;
-                        feedbackList.appendChild(feedbackItem);
+                        
+                        if (feedback.username) {
+                            feedbackHtml += `<div class="feedback-username">用户名: ${escapeHtml(feedback.username)}</div>`;
+                        }
+                        
+                        if (feedback.contact) {
+                            feedbackHtml += `<div class="feedback-contact">联系方式: ${escapeHtml(feedback.contact)}</div>`;
+                        }
+                        
+                        feedbackHtml += `<button class="delete-feedback" data-id="${feedback.id}">删除</button>`;
+                        
+                        feedbackItem.innerHTML = feedbackHtml;
+                        feedbackListDiv.appendChild(feedbackItem);
                     });
                     
-                    // 添加删除事件监听
+                    // 添加删除按钮事件
                     document.querySelectorAll('.delete-feedback').forEach(button => {
                         button.addEventListener('click', async function() {
                             const id = this.getAttribute('data-id');
@@ -3901,7 +3899,7 @@
                                     });
                                     
                                     if (response.ok) {
-                                        alert('反馈已删除');
+                                        alert('删除成功');
                                         loadFeedback();
                                     } else {
                                         if (!checkAuthResponse(response)) {
@@ -3920,9 +3918,10 @@
                     if (!checkAuthResponse(response)) {
                         return;
                     }
+                    console.error('Failed to load feedback');
                 }
             } catch (error) {
-                console.error('Load feedback error:', error);
+                console.error('Failed to load feedback:', error);
             }
         }
         
@@ -3932,43 +3931,277 @@
                 const response = await fetch(`${API_BASE}/visits`, {
                     headers: getAuthHeaders()
                 });
+                
                 if (response.ok) {
                     const visits = await response.json();
-                    const visitsList = document.getElementById('visits-list');
-                    const visitCount = document.getElementById('visit-count');
+                    const visitsListDiv = document.getElementById('visits-list');
+                    const visitCountDiv = document.getElementById('visit-count');
                     
-                    visitCount.textContent = `总IP数: ${visits.length}`;
+                    visitCountDiv.textContent = `总IP数: ${visits.length}`;
+                    visitsListDiv.innerHTML = '';
                     
                     if (visits.length === 0) {
-                        visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
+                        visitsListDiv.innerHTML = '<p class="info-text">暂无访问记录</p>';
                         return;
                     }
                     
-                    visitsList.innerHTML = '';
-                    // 按最后访问时间倒序排列
-                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.firstVisit));
+                    // 按时间倒序排列
+                    visits.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     
                     visits.forEach(visit => {
                         const visitItem = document.createElement('div');
                         visitItem.className = 'visit-item';
                         visitItem.innerHTML = `
-                            <div><span class="visit-ip">${visit.ip}</span></div>
-                            <div class="visit-date">最后访问: ${new Date(visit.lastVisit).toLocaleString()}</div>
-                            <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
-                            <div class="visit-count">访问次数: ${visit.visitCount}</div>
+                            <div class="visit-ip">${escapeHtml(visit.ip)}</div>
+                            <div class="visit-date">${formatDateTimeFull(new Date(visit.timestamp))}</div>
                         `;
-                        visitsList.appendChild(visitItem);
+                        visitsListDiv.appendChild(visitItem);
                     });
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
+                    console.error('Failed to load visits');
                 }
             } catch (error) {
-                console.error('Load visits error:', error);
-                document.getElementById('visits-list').innerHTML = '加载访问统计失败';
+                console.error('Failed to load visits:', error);
             }
         }
+        
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    const userListDiv = document.getElementById('user-list');
+                    userListDiv.innerHTML = '';
+                    
+                    if (users.length === 0) {
+                        userListDiv.innerHTML = '<p class="info-text">暂无用户</p>';
+                        return;
+                    }
+                    
+                    users.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        
+                        let roleBadge = '';
+                        if (user.isSuperAdmin) {
+                            roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
+                        } else if (user.isAdmin) {
+                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
+                        } else if (user.approved) {
+                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
+                        }
+                        
+                        if (user.frozen) {
+                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
+                        }
+                        
+                        userItem.innerHTML = `
+                            <div class="user-info">
+                                <div><strong>${escapeHtml(user.username)}</strong> ${roleBadge}</div>
+                                <div class="user-email">${escapeHtml(user.email || '无邮箱')}</div>
+                                <div class="user-date">注册时间: ${formatDateTimeFull(new Date(user.createdAt))}</div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
+                                ${user.id !== currentUser.id ? `<button class="user-action-btn" style="background: var(--reset-color);" data-id="${user.id}">删除</button>` : ''}
+                            </div>
+                        `;
+                        
+                        userListDiv.appendChild(userItem);
+                    });
+                    
+                    // 添加编辑按钮事件
+                    document.querySelectorAll('.edit-user').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const userId = this.getAttribute('data-id');
+                            const user = users.find(u => u.id == userId);
+                            if (user) {
+                                openUserEditModal(user);
+                            }
+                        });
+                    });
+                    
+                    // 添加删除按钮事件
+                    document.querySelectorAll('.user-action-btn[style*="reset-color"]').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const userId = this.getAttribute('data-id');
+                            if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
+                                try {
+                                    const response = await fetch(`${API_BASE}/users/${userId}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders()
+                                    });
+                                    
+                                    if (response.ok) {
+                                        alert('删除成功');
+                                        loadUsers();
+                                    } else {
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('删除失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Delete user error:', error);
+                                    alert('删除失败');
+                                }
+                            }
+                        });
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load users');
+                }
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+        
+        // 打开用户编辑模态框
+        function openUserEditModal(user) {
+            currentEditingUser = user;
+            
+            document.getElementById('edit-username').value = user.username;
+            document.getElementById('edit-email').value = user.email || '';
+            document.getElementById('edit-password').value = '';
+            
+            // 设置角色
+            if (user.isSuperAdmin) {
+                document.getElementById('edit-role').value = 'super-admin';
+            } else if (user.isAdmin) {
+                document.getElementById('edit-role').value = 'admin';
+            } else {
+                document.getElementById('edit-role').value = 'normal';
+            }
+            
+            // 设置权限
+            if (user.permissions) {
+                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = user.permissions[checkbox.value] || false;
+                });
+            } else {
+                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            }
+            
+            // 设置审核状态
+            document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
+            
+            // 设置冻结状态
+            document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
+            
+            // 更新权限显示
+            updateEditPermissionsDisplay();
+            
+            document.getElementById('user-edit-modal').style.display = 'flex';
+        }
+        
+        // 更新编辑权限显示
+        function updateEditPermissionsDisplay() {
+            const role = document.getElementById('edit-role').value;
+            const adminPermissions = document.querySelectorAll('.admin-permission');
+            
+            if (role === 'normal') {
+                // 普通用户只显示普通权限
+                adminPermissions.forEach(permission => {
+                    permission.style.display = 'none';
+                });
+                document.getElementById('permission-view-hangar-times').style.display = 'flex';
+            } else {
+                // 管理员和超级管理员显示所有权限
+                adminPermissions.forEach(permission => {
+                    permission.style.display = 'flex';
+                });
+                document.getElementById('permission-view-hangar-times').style.display = 'flex';
+            }
+            
+            // 超级管理员选项控制
+            if (currentUser && currentUser.isSuperAdmin) {
+                document.getElementById('super-admin-option').style.display = 'block';
+            } else {
+                document.getElementById('super-admin-option').style.display = 'none';
+            }
+        }
+        
+        // 用户编辑模态框角色更改事件
+        document.getElementById('edit-role').addEventListener('change', function() {
+            updateEditPermissionsDisplay();
+        });
+        
+        // 保存用户编辑
+        document.getElementById('save-user-edit').addEventListener('click', async function() {
+            const userData = {
+                email: document.getElementById('edit-email').value,
+                role: document.getElementById('edit-role').value,
+                password: document.getElementById('edit-password').value || null,
+                approved: document.getElementById('edit-approved').value === 'true',
+                frozen: document.getElementById('edit-frozen').value === 'true'
+            };
+            
+            // 收集权限
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
+            });
+            
+            userData.permissions = permissions;
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentEditingUser.id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(userData)
+                });
+                
+                if (response.ok) {
+                    alert('用户信息更新成功');
+                    document.getElementById('user-edit-modal').style.display = 'none';
+                    loadUsers();
+                    
+                    // 如果编辑的是当前用户，更新本地存储
+                    if (currentEditingUser.id === currentUser.id) {
+                        const updatedUser = await response.json();
+                        currentUser = {
+                            ...currentUser,
+                            ...updatedUser
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        updateUserInterface();
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新失败');
+                }
+            } catch (error) {
+                console.error('Update user error:', error);
+                alert('更新失败');
+            }
+        });
+        
+        // 取消用户编辑
+        document.getElementById('cancel-user-edit').addEventListener('click', function() {
+            document.getElementById('user-edit-modal').style.display = 'none';
+            currentEditingUser = null;
+        });
+        
+        // 刷新访问统计
+        document.getElementById('refresh-visits').addEventListener('click', function() {
+            loadVisits();
+        });
         
         // 清除访问记录
         document.getElementById('clear-visits').addEventListener('click', async function() {
@@ -3995,196 +4228,36 @@
             }
         });
         
-        // 刷新访问统计
-        document.getElementById('refresh-visits').addEventListener('click', function() {
-            loadVisits();
+        // 刷新用户列表
+        document.getElementById('refresh-users').addEventListener('click', function() {
+            loadUsers();
         });
         
-        // 加载用户列表
-        async function loadUsers() {
-            try {
-                const response = await fetch(`${API_BASE}/users`, {
-                    headers: getAuthHeaders()
-                });
-                if (response.ok) {
-                    const users = await response.json();
-                    const userList = document.getElementById('user-list');
-                    
-                    if (users.length === 0) {
-                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
-                        return;
-                    }
-                    
-                    userList.innerHTML = '';
-                    users.forEach(user => {
-                        const userItem = document.createElement('div');
-                        userItem.className = 'user-item';
-                        
-                        let roleBadge = '';
-                        if (user.isSuperAdmin) {
-                            roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
-                        } else if (user.isAdmin) {
-                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
-                        } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
-                        } else {
-                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
-                        }
-                        
-                        if (user.frozen) {
-                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
-                        }
-                        
-                        userItem.innerHTML = `
-                            <div class="user-info">
-                                <div><strong>${user.username}</strong> ${roleBadge}</div>
-                                <div class="visit-date">邮箱: ${user.email}</div>
-                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
-                            </div>
-                            <div class="user-actions">
-                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                                <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                                ${user.frozen ? 
-                                    `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                                    `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
-                                }
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
-                            </div>
-                        `;
-                        userList.appendChild(userItem);
-                    });
-                    
-                    // 添加审核用户事件监听
-                    document.querySelectorAll('.approve-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ approved: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户审核通过');
-                                        loadUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Approve user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加编辑用户事件监听
-                    document.querySelectorAll('.edit-user').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const username = this.getAttribute('data-username');
-                            openUserEditModal(username);
-                        });
-                    });
-                    
-                    // 添加冻结用户事件监听
-                    document.querySelectorAll('.freeze-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要冻结用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已冻结');
-                                        loadUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Freeze user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加解冻用户事件监听
-                    document.querySelectorAll('.unfreeze-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要解冻用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: false })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已解冻');
-                                        loadUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Unfreeze user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加删除用户事件监听
-                    document.querySelectorAll('.user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'DELETE',
-                                        headers: getAuthHeaders()
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已删除');
-                                        loadUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('删除失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Delete user error:', error);
-                                    alert('删除失败');
-                                }
-                            }
-                        });
-                    });
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('Load users error:', error);
-                document.getElementById('user-list').innerHTML = '加载用户列表失败';
+        // 加载用户信息
+        function loadUserInfo() {
+            if (!currentUser) return;
+            
+            document.getElementById('user-info-username').value = currentUser.username;
+            document.getElementById('user-info-email').value = currentUser.email || '';
+            
+            let roleText = '';
+            if (currentUser.isSuperAdmin) {
+                roleText = '超级管理员';
+            } else if (currentUser.isAdmin) {
+                roleText = '管理员';
+            } else {
+                roleText = '普通用户';
             }
+            
+            if (!currentUser.approved) {
+                roleText += ' (待审核)';
+            }
+            
+            if (currentUser.frozen) {
+                roleText += ' (已冻结)';
+            }
+            
+            document.getElementById('user-info-role').textContent = roleText;
         }
         
         // 加载管理员用户列表
@@ -4193,16 +4266,17 @@
                 const response = await fetch(`${API_BASE}/users`, {
                     headers: getAuthHeaders()
                 });
+                
                 if (response.ok) {
                     const users = await response.json();
-                    const userList = document.getElementById('admin-user-list');
+                    const userListDiv = document.getElementById('admin-user-list');
+                    userListDiv.innerHTML = '';
                     
                     if (users.length === 0) {
-                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
+                        userListDiv.innerHTML = '<p class="info-text">暂无用户</p>';
                         return;
                     }
                     
-                    userList.innerHTML = '';
                     users.forEach(user => {
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item';
@@ -4213,7 +4287,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -4224,131 +4298,43 @@
                         
                         userItem.innerHTML = `
                             <div class="user-info">
-                                <div><strong>${user.username}</strong> ${roleBadge}</div>
-                                <div class="visit-date">邮箱: ${user.email}</div>
-                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
+                                <div><strong>${escapeHtml(user.username)}</strong> ${roleBadge}</div>
+                                <div class="user-email">${escapeHtml(user.email || '无邮箱')}</div>
+                                <div class="user-date">注册时间: ${formatDateTimeFull(new Date(user.createdAt))}</div>
                             </div>
                             <div class="user-actions">
-                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                                <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                                ${user.frozen ? 
-                                    `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                                    `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
-                                }
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
+                                ${user.id !== currentUser.id ? `<button class="user-action-btn" style="background: var(--reset-color);" data-id="${user.id}">删除</button>` : ''}
                             </div>
                         `;
-                        userList.appendChild(userItem);
+                        
+                        userListDiv.appendChild(userItem);
                     });
                     
-                    // 添加审核用户事件监听
-                    document.querySelectorAll('#admin-user-list .approve-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ approved: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户审核通过');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Approve user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加编辑用户事件监听
+                    // 添加编辑按钮事件
                     document.querySelectorAll('#admin-user-list .edit-user').forEach(button => {
                         button.addEventListener('click', function() {
-                            const username = this.getAttribute('data-username');
-                            openUserEditModal(username);
-                        });
-                    });
-                    
-                    // 添加冻结用户事件监听
-                    document.querySelectorAll('#admin-user-list .freeze-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要冻结用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已冻结');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Freeze user error:', error);
-                                    alert('操作失败');
-                                }
+                            const userId = this.getAttribute('data-id');
+                            const user = users.find(u => u.id == userId);
+                            if (user) {
+                                openUserEditModal(user);
                             }
                         });
                     });
                     
-                    // 添加解冻用户事件监听
-                    document.querySelectorAll('#admin-user-list .unfreeze-user').forEach(button => {
+                    // 添加删除按钮事件
+                    document.querySelectorAll('#admin-user-list .user-action-btn[style*="reset-color"]').forEach(button => {
                         button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要解冻用户 ${username} 吗？`)) {
+                            const userId = this.getAttribute('data-id');
+                            if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
                                 try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: false })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已解冻');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Unfreeze user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加删除用户事件监听
-                    document.querySelectorAll('#admin-user-list .user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
+                                    const response = await fetch(`${API_BASE}/users/${userId}`, {
                                         method: 'DELETE',
                                         headers: getAuthHeaders()
                                     });
                                     
                                     if (response.ok) {
-                                        alert('用户已删除');
+                                        alert('删除成功');
                                         loadAdminUsers();
                                     } else {
                                         if (!checkAuthResponse(response)) {
@@ -4367,264 +4353,37 @@
                     if (!checkAuthResponse(response)) {
                         return;
                     }
+                    console.error('Failed to load users');
                 }
             } catch (error) {
-                console.error('Load admin users error:', error);
-                document.getElementById('admin-user-list').innerHTML = '加载用户列表失败';
+                console.error('Failed to load users:', error);
             }
         }
-        
-        // 打开用户编辑模态框
-        async function openUserEditModal(username) {
-            try {
-                const response = await fetch(`${API_BASE}/users`, {
-                    headers: getAuthHeaders()
-                });
-                if (response.ok) {
-                    const users = await response.json();
-                    const user = users.find(u => u.username === username);
-                    
-                    if (user) {
-                        currentEditingUser = user;
-                        
-                        document.getElementById('edit-username').value = user.username;
-                        document.getElementById('edit-email').value = user.email || '';
-                        
-                        // 设置用户角色
-                        const editRoleSelect = document.getElementById('edit-role');
-                        const superAdminOption = document.getElementById('super-admin-option');
-                        
-                        // 控制超级管理员选项显示
-                        if (currentUser && currentUser.isSuperAdmin) {
-                            superAdminOption.style.display = 'block';
-                        } else {
-                            superAdminOption.style.display = 'none';
-                        }
-                        
-                        if (user.isSuperAdmin) {
-                            editRoleSelect.value = 'super-admin';
-                            // 超级管理员角色设置为只读
-                            editRoleSelect.disabled = true;
-                        } else if (user.isAdmin) {
-                            editRoleSelect.value = 'admin';
-                            editRoleSelect.disabled = false;
-                        } else {
-                            editRoleSelect.value = 'normal';
-                            editRoleSelect.disabled = false;
-                        }
-                        
-                        // 设置权限显示
-                        updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
-                        
-                        // 设置审核状态
-                        document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
-                        
-                        // 设置冻结状态
-                        document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
-                        
-                        // 清空密码字段
-                        document.getElementById('edit-password').value = '';
-                        
-                        document.getElementById('user-edit-modal').style.display = 'flex';
-                    } else {
-                        alert('用户不存在');
-                    }
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                }
-            } catch (error) {
-                console.error('Open user edit modal error:', error);
-                alert('加载用户信息失败');
-            }
-        }
-        
-        // 更新权限选项显示
-        function updatePermissionsDisplay(isAdmin, permissions) {
-            const adminPermissions = document.querySelectorAll('.admin-permission');
-            const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
-            
-            if (isAdmin) {
-                // 管理员：显示所有权限选项并默认勾选
-                adminPermissions.forEach(permission => {
-                    permission.style.display = 'flex';
-                });
-                viewHangarTimesPermission.style.display = 'flex';
-                
-                // 设置所有权限为选中状态
-                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.checked = true;
-                });
-            } else {
-                // 普通用户：只显示机库开启时间权限
-                adminPermissions.forEach(permission => {
-                    permission.style.display = 'none';
-                });
-                viewHangarTimesPermission.style.display = 'flex';
-                
-                // 只设置机库开启时间权限，其他权限取消选中
-                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    if (checkbox.value === 'viewHangarTimes') {
-                        checkbox.checked = permissions[checkbox.value] || false;
-                    } else {
-                        checkbox.checked = false;
-                    }
-                });
-            }
-        }
-
-        // 为角色下拉列表添加change事件
-        document.getElementById('edit-role').addEventListener('change', function() {
-            if (currentEditingUser) {
-                const isAdmin = this.value === 'admin' || this.value === 'super-admin';
-                updatePermissionsDisplay(isAdmin, currentEditingUser.permissions || {});
-            }
-        });
-        
-        // 保存用户编辑
-        document.getElementById('save-user-edit').addEventListener('click', async function() {
-            if (!currentEditingUser) return;
-            
-            const email = document.getElementById('edit-email').value;
-            const role = document.getElementById('edit-role').value;
-            const password = document.getElementById('edit-password').value;
-            const approved = document.getElementById('edit-approved').value === 'true';
-            const frozen = document.getElementById('edit-frozen').value === 'true';
-            
-            // 收集权限设置
-            const permissions = {};
-            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                permissions[checkbox.value] = checkbox.checked;
-            });
-            
-            const updateData = {
-                email,
-                approved,
-                frozen,
-                permissions
-            };
-            
-            // 设置角色
-            if (role === 'super-admin') {
-                updateData.isSuperAdmin = true;
-                updateData.isAdmin = true;
-            } else if (role === 'admin') {
-                updateData.isSuperAdmin = false;
-                updateData.isAdmin = true;
-            } else {
-                updateData.isSuperAdmin = false;
-                updateData.isAdmin = false;
-            }
-            
-            // 如果有新密码，添加密码字段
-            if (password) {
-                if (password.length < 4) {
-                    alert('密码长度至少4位');
-                    return;
-                }
-                updateData.password = password;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/users/${currentEditingUser.username}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(updateData)
-                });
-                
-                if (response.ok) {
-                    alert('用户信息已更新');
-                    document.getElementById('user-edit-modal').style.display = 'none';
-                    currentEditingUser = null;
-                    
-                    // 重新加载用户列表
-                    loadUsers();
-                    loadAdminUsers();
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Save user edit error:', error);
-                alert('更新失败');
-            }
-        });
-        
-        // 取消用户编辑
-        document.getElementById('cancel-user-edit').addEventListener('click', function() {
-            document.getElementById('user-edit-modal').style.display = 'none';
-            currentEditingUser = null;
-        });
-        
-        // 刷新用户列表
-        document.getElementById('refresh-users').addEventListener('click', function() {
-            loadUsers();
-        });
         
         // 刷新管理员用户列表
         document.getElementById('refresh-admin-users').addEventListener('click', function() {
             loadAdminUsers();
         });
         
-        // 加载用户信息
-        async function loadUserInfo() {
-            if (currentUser) {
-                document.getElementById('user-info-username').value = currentUser.username;
-                document.getElementById('user-info-email').value = currentUser.email || '';
-                
-                let roleText = '';
-                if (currentUser.isSuperAdmin) {
-                    roleText = '<span class="user-role-badge user-super-admin">超级管理员</span>';
-                } else if (currentUser.isAdmin) {
-                    roleText = '<span class="user-role-badge user-admin">管理员</span>';
-                } else {
-                    roleText = '<span class="user-role-badge user-normal">普通用户</span>';
-                }
-                document.getElementById('user-info-role').innerHTML = roleText;
-                
-                // 加载密保设置
-                try {
-                    const response = await fetch(`${API_BASE}/users`, {
-                        headers: getAuthHeaders()
-                    });
-                    if (response.ok) {
-                        const users = await response.json();
-                        const user = users.find(u => u.username === currentUser.username);
-                        
-                        if (user) {
-                            document.getElementById('user-security-question').value = user.securityQuestion || '';
-                            // 注意：密保答案不显示，只允许修改
-                        }
-                    }
-                } catch (error) {
-                    console.error('Load user security question error:', error);
-                }
-            }
-        }
-        
         // 更新用户信息
         document.getElementById('update-user-info').addEventListener('click', async function() {
             const email = document.getElementById('user-info-email').value;
             
-            if (!email) {
-                alert('请输入邮箱');
-                return;
-            }
-            
             try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
+                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ email })
                 });
                 
                 if (response.ok) {
-                    alert('用户信息已更新');
-                    currentUser.email = email;
+                    const updatedUser = await response.json();
+                    currentUser = {
+                        ...currentUser,
+                        ...updatedUser
+                    };
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    alert('用户信息更新成功');
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
@@ -4633,41 +4392,6 @@
                 }
             } catch (error) {
                 console.error('Update user info error:', error);
-                alert('更新失败');
-            }
-        });
-        
-        // 更新密保设置
-        document.getElementById('update-security-question').addEventListener('click', async function() {
-            const securityQuestion = document.getElementById('user-security-question').value;
-            const securityAnswer = document.getElementById('user-security-answer').value;
-            
-            if (!securityQuestion || !securityAnswer) {
-                alert('请选择密保问题并填写答案');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/users/${currentUser.username}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ 
-                        securityQuestion,
-                        securityAnswer 
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('密保设置已更新');
-                    document.getElementById('user-security-answer').value = '';
-                } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
-                    alert('更新失败');
-                }
-            } catch (error) {
-                console.error('Update security question error:', error);
                 alert('更新失败');
             }
         });
@@ -4683,26 +4407,24 @@
                 return;
             }
             
-            if (newPassword !== confirmPassword) {
-                alert('新密码和确认密码不一致');
+            if (newPassword.length < 4) {
+                alert('新密码长度至少4位');
                 return;
             }
             
-            if (newPassword.length < 4) {
-                alert('密码长度至少4位');
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致');
                 return;
             }
             
             try {
                 const response = await fetch(`${API_BASE}/change-password`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify({ 
-                        username: currentUser.username, 
-                        oldPassword, 
-                        newPassword 
+                        username: currentUser.username,
+                        oldPassword,
+                        newPassword
                     })
                 });
                 
@@ -4717,6 +4439,9 @@
                         alert(result.error || '密码修改失败');
                     }
                 } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                     alert('密码修改失败');
                 }
             } catch (error) {
@@ -4725,384 +4450,64 @@
             }
         });
         
-        // 加载捐助记录
-        async function loadDonationRecords() {
+        // 更新密保设置
+        document.getElementById('update-security-question').addEventListener('click', async function() {
+            const securityQuestion = document.getElementById('user-security-question').value;
+            const securityAnswer = document.getElementById('user-security-answer').value;
+            
+            if (!securityQuestion || !securityAnswer) {
+                alert('请选择密保问题并填写答案');
+                return;
+            }
+            
             try {
-                const response = await fetch(`${API_BASE}/donations`, {
-                    headers: getAuthHeaders()
+                const response = await fetch(`${API_BASE}/update-security`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ 
+                        username: currentUser.username,
+                        securityQuestion,
+                        securityAnswer
+                    })
                 });
+                
                 if (response.ok) {
-                    const donations = await response.json();
-                    const donationList = document.getElementById('donation-list');
-                    
-                    if (donations.length === 0) {
-                        donationList.innerHTML = '<div class="donation-record">暂无捐助记录</div>';
-                        return;
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密保设置更新成功');
+                        document.getElementById('user-security-question').value = '';
+                        document.getElementById('user-security-answer').value = '';
+                    } else {
+                        alert(result.error || '密保设置更新失败');
                     }
-                    
-                    donationList.innerHTML = '';
-                    donations.forEach(item => {
-                        const donationRecord = document.createElement('div');
-                        donationRecord.className = 'donation-record';
-                        donationRecord.innerHTML = `
-                            <div><strong>${item.name || '匿名用户'}</strong> 捐助了 <strong>${item.amount}元</strong></div>
-                            <div class="feedback-date">${new Date(item.timestamp).toLocaleString()}</div>
-                            ${item.message ? `<div>留言: ${item.message}</div>` : ''}
-                        `;
-                        donationList.appendChild(donationRecord);
-                    });
                 } else {
                     if (!checkAuthResponse(response)) {
                         return;
                     }
+                    alert('密保设置更新失败');
                 }
             } catch (error) {
-                console.error('Load donations error:', error);
+                console.error('Update security error:', error);
+                alert('密保设置更新失败');
             }
-        }
+        });
         
-        // 初始化计时器
-        function initializeTimer(initialPhaseKey) {
-            clearInterval(countdownInterval);
-            
-            // 检查计时器是否启用
-            if (!timerEnabled) {
-                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-pause"></i> <span>计时器已关闭</span>';
-                document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
-                document.getElementById('countdown').textContent = '00:00:00';
-                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-pause"></i> 计时器已关闭';
-                
-                // 将所有灯设置为灰色
-                for (let i = 0; i < 5; i++) {
-                    const lightElement = document.getElementById(`light-${i}`);
-                    lightElement.className = 'light gray';
-                }
-                
-                return;
-            }
-            
-            const config = PHASE_CONFIG[initialPhaseKey];
-            currentPhase = config.phase;
-            currentLights = [...config.lights];
-            
-            // 计算偏移时间（分钟）
-            let offsetMinutes = config.offset;
-            
-            // 根据阶段调整偏移
-            if (config.phase === 'reset') {
-                offsetMinutes = config.offset;
-            } else if (config.phase === 'card') {
-                offsetMinutes = PHASE_DURATIONS.reset + config.offset;
-            } else if (config.phase === 'poweroff') {
-                offsetMinutes = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + config.offset;
-            }
-            
-            // 调整开始时间 - 修改为赋值给全局变量
-            adjustedStartTime = new Date(startTime.getTime() - offsetMinutes * 60 * 1000);
-            
-            // 更新显示
-            updateDisplay(adjustedStartTime);
-            
-            // 计算并显示机库开启时间
-            calculateHangarOpenTimes(adjustedStartTime);
-            
-            // 启动计时器
-            countdownInterval = setInterval(function() {
-                updateDisplay(adjustedStartTime);
-            }, 1000);
-        }
-        
-        // 更新显示
-        function updateDisplay(adjustedStartTime) {
-            // 如果计时器已关闭，不更新显示
-            if (!timerEnabled) return;
-            
-            const now = new Date();
-            const elapsedMs = now.getTime() - adjustedStartTime.getTime();
-            const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
-            
-            // 计算当前周期内的经过时间
-            const cycleElapsedMs = elapsedMs % totalCycleMs;
-            
-            // 确定当前阶段和剩余时间
-            let phaseTimeRemaining;
-            let phaseName;
-            let phaseIcon;
-            
-            // 计算机库开启时间
-            const currentCycleStart = new Date(now.getTime() - cycleElapsedMs);
-            const currentHangarOpenTime = new Date(currentCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
-            
-            if (cycleElapsedMs < PHASE_DURATIONS.reset * 60 * 1000) {
-                // 重置阶段 - 机库已关闭等待开启中
-                currentPhase = 'reset';
-                phaseName = '机库已关闭等待开启中';
-                phaseIcon = 'fas fa-sync-alt';
-                phaseTimeRemaining = PHASE_DURATIONS.reset * 60 * 1000 - cycleElapsedMs;
-                
-                // 计算灯的状态（每24分钟变化一次）
-                const lightChangeInterval = 24 * 60 * 1000;
-                const lightsChanged = Math.floor(cycleElapsedMs / lightChangeInterval);
-                
-                currentLights = Array(5).fill('red');
-                for (let i = 0; i < Math.min(lightsChanged, 5); i++) {
-                    currentLights[i] = 'green';
-                }
-                
-            } else if (cycleElapsedMs < (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000) {
-                // 插卡阶段 - 机库开启中可插卡
-                currentPhase = 'card';
-                phaseName = '机库开启中可插卡';
-                phaseIcon = 'fas fa-credit-card';
-                phaseTimeRemaining = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000 - cycleElapsedMs;
-                
-                // 计算灯的状态（每12分钟变化一次）
-                const cardPhaseElapsed = cycleElapsedMs - PHASE_DURATIONS.reset * 60 * 1000;
-                const lightChangeInterval = 12 * 60 * 1000;
-                const lightsChanged = Math.floor(cardPhaseElapsed / lightChangeInterval);
-                
-                currentLights = Array(5).fill('green');
-                for (let i = 0; i < Math.min(lightsChanged, 5); i++) {
-                    currentLights[i] = 'gray';
-                }
-                
-            } else {
-                // 断电阶段 - 机库关闭倒计时中
-                currentPhase = 'poweroff';
-                phaseName = '机库关闭倒计时中';
-                phaseIcon = 'fas fa-power-off';
-                phaseTimeRemaining = totalCycleMs - cycleElapsedMs;
-                
-                currentLights = Array(5).fill('gray');
-            }
-            
-            // 更新阶段指示器
-            const phaseIndicator = document.getElementById('phase-indicator');
-            phaseIndicator.innerHTML = `<i class="${phaseIcon}"></i> <span>${phaseName}</span>`;
-            phaseIndicator.className = 'phase-indicator';
-            phaseIndicator.classList.add(`phase-${currentPhase}`);
-            
-            // 更新倒计时显示
-            const countdownElement = document.getElementById('countdown');
-            countdownElement.textContent = formatTimeRemaining(phaseTimeRemaining);
-            
-            // 更新灯的状态
-            updateLightsDisplay();
-        }
-        
-        // 更新灯的状态显示
-        function updateLightsDisplay() {
-            for (let i = 0; i < 5; i++) {
-                const lightElement = document.getElementById(`light-${i}`);
-                lightElement.className = 'light';
-                lightElement.classList.add(currentLights[i]);
-                
-                // 移除所有活动状态，然后为当前灯添加活动状态
-                if (currentLights[i] !== 'gray') {
-                    lightElement.classList.add('active');
-                }
-            }
-        }
-        
-        // 计算机库开启时间
-        function calculateHangarOpenTimes(adjustedStartTime) {
-            const windowList = document.getElementById('window-list');
-            windowList.innerHTML = '';
-            
-            const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
-            const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-            const now = new Date();
-            
-            // 检查机库开启时间显示设置
-            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false'; // 默认为true
-            
-            // 检查用户权限
-            let canViewHangarTimes = hangarTimesVisible;
-            
-            if (!hangarTimesVisible && currentUser) {
-                // 如果全局设置为仅登录用户可见，检查用户权限
-                canViewHangarTimes = currentUser.isSuperAdmin || currentUser.isAdmin || 
-                    (currentUser.permissions && currentUser.permissions.viewHangarTimes);
-            }
-            
-            // 如果设置为仅登录用户可见且用户未登录，显示提示信息
-            if (!hangarTimesVisible && !currentUser) {
-                const loginPrompt = document.createElement('li');
-                loginPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 请登录账号查看机库开启时间`;
-                windowList.appendChild(loginPrompt);
-                return;
-            }
-            
-            // 如果用户已登录但没有查看权限
-            if (!canViewHangarTimes) {
-                const permissionPrompt = document.createElement('li');
-                permissionPrompt.innerHTML = `<i class="fas fa-info-circle"></i> 您没有权限查看机库开启时间`;
-                windowList.appendChild(permissionPrompt);
-                return;
-            }
-            
-            // 计算上一个开启时间
-            let previousWindowTime = new Date(firstGreenTime.getTime());
-            while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
-                previousWindowTime = new Date(previousWindowTime.getTime() + totalCycleMs);
-            }
-            
-            // 如果当前时间已经超过了第一个开启时间，则显示上一个开启时间
-            if (now.getTime() > firstGreenTime.getTime()) {
-                const prevItem = document.createElement('li');
-                prevItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
-                windowList.appendChild(prevItem);
-            }
-            
-            // 生成后续的8个机库开启时间节点
-            for (let i = 0; i < 8; i++) {
-                const windowTime = new Date(previousWindowTime.getTime() + (i + 1) * totalCycleMs);
-                const listItem = document.createElement('li');
-                
-                if (i === 0) {
-                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
-                } else {
-                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
-                }
-                
-                windowList.appendChild(listItem);
-            }
-        }
-        
-        // 格式化剩余时间
-        function formatTimeRemaining(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
-            const seconds = totalSeconds % 60;
-            
-            return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
-        }
-        
-        // 格式化日期时间（用于输入框）
-        function formatDateTime(date) {
-            const year = date.getFullYear();
-            const month = padZero(date.getMonth() + 1);
-            const day = padZero(date.getDate());
-            const hours = padZero(date.getHours());
-            const minutes = padZero(date.getMinutes());
-            
-            return `${year}-${month}-${day}T${hours}:${minutes}`;
-        }
-        
-        // 格式化完整日期时间（用于显示）
-        function formatDateTimeFull(date) {
-            const year = date.getFullYear();
-            const month = padZero(date.getMonth() + 1);
-            const day = padZero(date.getDate());
-            const hours = padZero(date.getHours());
-            const minutes = padZero(date.getMinutes());
-            
-            return `${year}-${month}-${day} ${hours}:${minutes}`;
-        }
-        
-        // 补零函数
-        function padZero(num) {
-            return num.toString().padStart(2, '0');
-        }
-        
-        // 初始化可拖拽面板
-        function initDraggablePanel(panelId) {
-            const panel = document.getElementById(panelId);
-            const header = panel.querySelector('.admin-panel-header, .user-center-header');
-            
-            let isDragging = false;
-            let currentX;
-            let currentY;
-            let initialX;
-            let initialY;
-            let xOffset = 0;
-            let yOffset = 0;
-            
-            header.addEventListener("mousedown", dragStart);
-            document.addEventListener("mouseup", dragEnd);
-            document.addEventListener("mousemove", drag);
-            
-            function dragStart(e) {
-                initialX = e.clientX - xOffset;
-                initialY = e.clientY - yOffset;
-                
-                if (e.target === header || e.target.parentNode === header) {
-                    isDragging = true;
-                }
-            }
-            
-            function dragEnd(e) {
-                initialX = currentX;
-                initialY = currentY;
-                
-                isDragging = false;
-            }
-            
-            function drag(e) {
-                if (isDragging) {
-                    e.preventDefault();
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
-                    
-                    xOffset = currentX;
-                    yOffset = currentY;
-                    
-                    setTranslate(currentX, currentY, panel);
-                }
-            }
-            
-            function setTranslate(xPos, yPos, el) {
-                el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
-            }
-        }
-        
-        // 检查数据库状态
-        async function checkDbStatus() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                
-                const response = await fetch(`${API_BASE}/status`, {
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (response.ok) {
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database"></i> <span>数据库状态: 正常</span>';
-                } else {
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 服务器错误</span>';
-                }
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接超时</span>';
-                } else {
-                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
-                }
-            }
-        }
-        
-        // 页脚信息点击事件
+        // 页脚信息按钮点击事件
         document.getElementById('project-description-btn').addEventListener('click', function() {
-            const content = document.getElementById('project-description-input').value || '暂无项目介绍';
             document.getElementById('footer-modal-title').textContent = '项目介绍';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('project-description-input').value.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('version-btn').addEventListener('click', function() {
-            const content = document.getElementById('version-input').value || '暂无版本信息';
             document.getElementById('footer-modal-title').textContent = '版本更新';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('version-input').value.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
         document.getElementById('about-btn').addEventListener('click', function() {
-            const content = document.getElementById('about-input').value || '暂无关于信息';
-            document.getElementById('footer-modal-title').textContent = '关于本网站';
-            document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+            document.getElementById('footer-modal-title').textContent = '关于我们';
+            document.getElementById('footer-modal-content').innerHTML = `<p>${document.getElementById('about-input').value.replace(/\n/g, '<br>')}</p>`;
             document.getElementById('footer-info-modal').style.display = 'flex';
         });
         
@@ -5110,56 +4515,304 @@
             document.getElementById('footer-info-modal').style.display = 'none';
         });
         
-        // 自动检测文本中的链接并使其可点击
-        function autoLinkify() {
-            // 获取所有文本节点并检测URL
-            const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
+        // 初始化计时器
+        function initializeTimer(initialPhase) {
+            const phaseConfig = PHASE_CONFIG[initialPhase];
+            if (!phaseConfig) {
+                console.error('Invalid initial phase:', initialPhase);
+                return;
+            }
             
-            let node;
-            while (node = walker.nextNode()) {
-                const text = node.nodeValue;
-                const urlRegex = /(https?:\/\/[^\s]+)/g;
+            // 更新全局变量
+            currentPhase = phaseConfig.phase;
+            currentLights = [...phaseConfig.lights];
+            
+            // 计算调整后的开始时间
+            const totalOffsetMinutes = phaseConfig.offset;
+            adjustedStartTime = new Date(startTime.getTime() - totalOffsetMinutes * 60000);
+            
+            // 更新灯光显示
+            updateLightsDisplay();
+            
+            // 更新阶段指示器
+            updatePhaseIndicator();
+            
+            // 开始倒计时
+            startCountdown();
+            
+            // 计算机库开启时间
+            calculateHangarOpenTimes(adjustedStartTime);
+            
+            // 更新校准时间显示
+            updateCalibrationTime();
+        }
+        
+        // 更新灯光显示
+        function updateLightsDisplay() {
+            const lightsContainer = document.getElementById('lights-container');
+            lightsContainer.innerHTML = '';
+            
+            currentLights.forEach((light, index) => {
+                const lightDiv = document.createElement('div');
+                lightDiv.className = `light ${light} active`;
+                lightDiv.id = `light-${index}`;
+                lightsContainer.appendChild(lightDiv);
+            });
+        }
+        
+        // 更新阶段指示器
+        function updatePhaseIndicator() {
+            const phaseIndicator = document.getElementById('phase-indicator');
+            
+            // 移除所有类
+            phaseIndicator.className = 'phase-indicator';
+            
+            // 添加阶段相关类
+            if (currentPhase === 'reset') {
+                phaseIndicator.classList.add('phase-reset');
+                phaseIndicator.innerHTML = '<i class="fas fa-sync-alt"></i> <span>机库已关闭等待开启中</span>';
+            } else if (currentPhase === 'card') {
+                phaseIndicator.classList.add('phase-card');
+                phaseIndicator.innerHTML = '<i class="fas fa-id-card"></i> <span>机库开启中，可以插卡开启机库大门</span>';
+            } else if (currentPhase === 'poweroff') {
+                phaseIndicator.classList.add('phase-poweroff');
+                phaseIndicator.innerHTML = '<i class="fas fa-power-off"></i> <span>机库即将关闭</span>';
+            }
+        }
+        
+        // 开始倒计时
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 立即更新一次
+            updateCountdown();
+            
+            // 每秒更新一次
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        // 更新倒计时
+        function updateCountdown() {
+            if (!timerEnabled) {
+                document.getElementById('countdown').textContent = '计时器已暂停';
+                return;
+            }
+            
+            const now = new Date();
+            const elapsedMs = now.getTime() - adjustedStartTime.getTime();
+            const elapsedMinutes = Math.floor(elapsedMs / 60000);
+            
+            const phaseDuration = PHASE_DURATIONS[currentPhase];
+            const remainingMinutes = phaseDuration - (elapsedMinutes % phaseDuration);
+            
+            // 格式化倒计时显示
+            const hours = Math.floor(remainingMinutes / 60);
+            const minutes = remainingMinutes % 60;
+            const seconds = 60 - (Math.floor(elapsedMs / 1000) % 60);
+            
+            const countdownText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('countdown').textContent = countdownText;
+            
+            // 检查是否需要切换到下一个阶段
+            if (remainingMinutes <= 0) {
+                advanceToNextPhase();
+            }
+            
+            // 更新机库开启时间显示
+            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTime(getNextHangarOpenTime())}`;
+        }
+        
+        // 推进到下一个阶段
+        function advanceToNextPhase() {
+            if (currentPhase === 'reset') {
+                currentPhase = 'card';
+                currentLights = ['green', 'green', 'green', 'green', 'green'];
+            } else if (currentPhase === 'card') {
+                currentPhase = 'poweroff';
+                currentLights = ['gray', 'gray', 'gray', 'gray', 'gray'];
+            } else if (currentPhase === 'poweroff') {
+                currentPhase = 'reset';
+                currentLights = ['red', 'red', 'red', 'red', 'red'];
+            }
+            
+            // 更新显示
+            updateLightsDisplay();
+            updatePhaseIndicator();
+            
+            // 重新计算调整后的开始时间
+            const phaseDuration = PHASE_DURATIONS[currentPhase];
+            adjustedStartTime = new Date(adjustedStartTime.getTime() + phaseDuration * 60000);
+            
+            // 计算机库开启时间
+            calculateHangarOpenTimes(adjustedStartTime);
+        }
+        
+        // 计算机库开启时间
+        function calculateHangarOpenTimes(adjustedStart) {
+            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false';
+            
+            // 如果设置了仅登录用户可见且用户未登录，则不显示
+            if (!hangarTimesVisible && !currentUser) {
+                document.getElementById('card-windows').style.display = 'none';
+                return;
+            }
+            
+            document.getElementById('card-windows').style.display = 'block';
+            
+            const windowList = document.getElementById('window-list');
+            windowList.innerHTML = '';
+            
+            // 计算最近一次的机库开启时间
+            const now = new Date();
+            const elapsedMs = now.getTime() - adjustedStart.getTime();
+            const elapsedMinutes = Math.floor(elapsedMs / 60000);
+            
+            // 计算上一个完整的周期
+            const fullCycleDuration = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
+            const completedCycles = Math.floor(elapsedMinutes / fullCycleDuration);
+            const lastCycleEnd = new Date(adjustedStart.getTime() + completedCycles * fullCycleDuration * 60000);
+            
+            // 上次开启时间
+            const lastOpenTime = new Date(lastCycleEnd.getTime() - (PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60000);
+            addWindowListItem(`上次开启时间: ${formatDateTimeFull(lastOpenTime)}`);
+            
+            // 下次开启时间
+            const nextOpenTime = new Date(lastCycleEnd.getTime() + PHASE_DURATIONS.reset * 60000);
+            addWindowListItem(`下次开启时间: ${formatDateTimeFull(nextOpenTime)}`);
+            
+            // 计算未来的7次机库开启时间
+            for (let i = 1; i <= 7; i++) {
+                const openTime = new Date(nextOpenTime.getTime() + (i - 1) * fullCycleDuration * 60000);
+                addWindowListItem(`开启时间 ${i}: ${formatDateTimeFull(openTime)}`);
+            }
+        }
+        
+        // 添加机库开启时间列表项
+        function addWindowListItem(text) {
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="fas fa-window-restore"></i> ${text}`;
+            document.getElementById('window-list').appendChild(li);
+        }
+        
+        // 获取下一个机库开启时间
+        function getNextHangarOpenTime() {
+            const now = new Date();
+            const elapsedMs = now.getTime() - adjustedStartTime.getTime();
+            const elapsedMinutes = Math.floor(elapsedMs / 60000);
+            
+            // 计算完整周期
+            const fullCycleDuration = PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff;
+            
+            // 计算下一个机库开启时间
+            if (currentPhase === 'reset') {
+                // 当前在reset阶段，下一个开启时间是当前阶段结束
+                const remainingResetMinutes = PHASE_DURATIONS.reset - (elapsedMinutes % PHASE_DURATIONS.reset);
+                return new Date(now.getTime() + remainingResetMinutes * 60000);
+            } else {
+                // 当前在card或poweroff阶段，下一个开启时间是下一个周期的reset阶段结束
+                const currentCycleElapsed = elapsedMinutes % fullCycleDuration;
+                const remainingCycleMinutes = fullCycleDuration - currentCycleElapsed;
+                const remainingResetMinutes = PHASE_DURATIONS.reset;
+                return new Date(now.getTime() + (remainingCycleMinutes + remainingResetMinutes) * 60000);
+            }
+        }
+        
+        // 格式化日期时间（用于datetime-local输入）
+        function formatDateTime(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+        
+        // 格式化完整日期时间
+        function formatDateTimeFull(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 初始化可拖拽面板
+        function initDraggablePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const header = document.getElementById(panelId + '-header');
+            
+            let isDragging = false;
+            let dragOffsetX = 0;
+            let dragOffsetY = 0;
+            
+            header.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            
+            function startDrag(e) {
+                isDragging = true;
+                const rect = panel.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                panel.style.cursor = 'grabbing';
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
                 
-                if (urlRegex.test(text)) {
-                    const parent = node.parentNode;
-                    if (parent && parent.nodeName !== 'A' && parent.nodeName !== 'SCRIPT' && parent.nodeName !== 'STYLE') {
-                        const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
-                        const newElement = document.createElement('span');
-                        newElement.innerHTML = newHtml;
-                        parent.replaceChild(newElement, node);
+                const x = e.clientX - dragOffsetX;
+                const y = e.clientY - dragOffsetY;
+                
+                // 限制在视口内
+                const maxX = window.innerWidth - panel.offsetWidth;
+                const maxY = window.innerHeight - panel.offsetHeight;
+                
+                panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+                panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+                panel.style.transform = 'none';
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                panel.style.cursor = 'grab';
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载设置
+            loadSettings();
+            
+            // 更新用户界面状态
+            updateUserInterface();
+            
+            // 设置数据库状态检查
+            setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/status`);
+                    if (response.ok) {
+                        document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #2ecc71;"></i> <span>数据库状态: 正常</span>';
+                    } else {
+                        document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
                     }
+                } catch (error) {
+                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
                 }
-            }
-        }
-        
-        // 记录访问
-        async function recordVisit() {
-            try {
-                await fetch(`${API_BASE}/visits`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            } catch (error) {
-                console.error('Failed to record visit:', error);
-            }
-        }
-        
-        // 初始加载设置
-        document.getElementById('api-url').value = API_BASE;
-        loadSettings();
-        checkDbStatus();
-        autoLinkify();
-        recordVisit();
-        
-        // 每1分钟检查一次数据库状态
-        setInterval(checkDbStatus, 1 * 60 * 1000);
+            }, 30000); // 每30秒检查一次
+        });
     </script>
 </body>
 </html>
