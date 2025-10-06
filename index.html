@@ -1061,24 +1061,6 @@
             margin-bottom: 10px;
         }
         
-        .donation-records {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
-            margin-top: 15px;
-        }
-        
-        .donation-record {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .donation-record:last-child {
-            border-bottom: none;
-        }
-        
         .color-picker-container {
             display: flex;
             align-items: center;
@@ -1808,7 +1790,8 @@
     <div class="modal" id="donation-modal">
         <div class="modal-content donation-modal-content">
             <h2><i class="fas fa-donate"></i> 支持我们</h2>
-            <p id="donation-note-display">您的捐助将帮助我们持续维护和改进系统</p>
+            <!-- 修改：使用动态注释信息 -->
+            <p id="donation-modal-comment">您的捐助将帮助我们持续维护和改进系统</p>
             
             <div class="donation-qrcodes" id="donation-qrcodes">
                 <div class="donation-qrcode">
@@ -1820,6 +1803,8 @@
                     <p>支付宝</p>
                 </div>
             </div>
+            
+            <!-- 删除捐助记录部分 -->
             
             <div class="modal-buttons">
                 <button class="cancel-btn" id="close-donation-modal">关闭</button>
@@ -2090,10 +2075,10 @@
                         <option value="false">关闭</option>
                     </select>
                 </div>
-                <!-- 新增：捐助注释设置 -->
+                <!-- 新增：捐助注释信息 -->
                 <div class="form-group">
-                    <label for="donation-note">捐助注释</label>
-                    <textarea id="donation-note" placeholder="输入捐助功能的说明文字" rows="3">您的捐助将帮助我们持续维护和改进系统</textarea>
+                    <label for="donation-comment">捐助注释信息</label>
+                    <textarea id="donation-comment" placeholder="输入捐助注释信息，将显示在捐助弹窗中" rows="3">您的捐助将帮助我们持续维护和改进系统</textarea>
                 </div>
                 <div class="form-group">
                     <label for="wechat-qrcode-url">微信支付二维码URL</label>
@@ -2645,10 +2630,10 @@
                         updateDonationButtonDisplay();
                     }
                     
-                    // 新增：加载捐助注释
-                    if (config.donationNote) {
-                        document.getElementById('donation-note').value = config.donationNote;
-                        document.getElementById('donation-note-display').textContent = config.donationNote;
+                    // 新增：捐助注释信息
+                    if (config.donationComment) {
+                        document.getElementById('donation-comment').value = config.donationComment;
+                        document.getElementById('donation-modal-comment').textContent = config.donationComment;
                     }
                     
                     if (config.wechatQrcodeUrl) {
@@ -2834,7 +2819,7 @@
                 calibrationTime: document.getElementById('calibration-time').textContent.replace('校准时间: ', ''),
                 apiUrl: document.getElementById('api-url').value,
                 donationEnabled: document.getElementById('donation-enabled').value === 'true',
-                donationNote: document.getElementById('donation-note').value,
+                donationComment: document.getElementById('donation-comment').value,
                 wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
                 alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
                 donationBtnColor: document.getElementById('donation-btn-color').value,
@@ -2867,6 +2852,8 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     // 更新机库开启时间显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    // 更新捐助注释信息
+                    document.getElementById('donation-modal-comment').textContent = config.donationComment;
                     return true;
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -3588,13 +3575,13 @@
         // 保存捐助设置
         document.getElementById('save-donation-settings').addEventListener('click', function() {
             const donationEnabled = document.getElementById('donation-enabled').value === 'true';
-            const donationNote = document.getElementById('donation-note').value;
+            const donationComment = document.getElementById('donation-comment').value;
             const wechatQrcodeUrl = document.getElementById('wechat-qrcode-url').value;
             const alipayQrcodeUrl = document.getElementById('alipay-qrcode-url').value;
             const donationBtnColor = document.getElementById('donation-btn-color').value;
             
-            // 更新捐助注释显示
-            document.getElementById('donation-note-display').textContent = donationNote;
+            // 更新捐助模态框中的注释
+            document.getElementById('donation-modal-comment').textContent = donationComment;
             
             document.documentElement.style.setProperty('--donation-btn-bg', donationBtnColor);
             updateDonationButtonDisplay();
