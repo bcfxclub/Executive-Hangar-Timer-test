@@ -1870,19 +1870,18 @@
             <button class="cancel-btn" id="close-admin-panel">关闭管理面板</button>
         </div>
         
-<!-- 在 admin-tabs 中添加新的时间开放控制标签 -->
-<div class="admin-tabs">
-    <div class="admin-tab active" data-tab="basic">时间校准</div>
-    <div class="admin-tab" data-tab="time-control">时间开放控制</div>
-    <div class="admin-tab" data-tab="notification">通知管理</div>
-    <div class="admin-tab" data-tab="appearance">外观设置</div>
-    <div class="admin-tab" data-tab="donation">捐助设置</div>
-    <div class="admin-tab" data-tab="data">数据管理</div>
-    <div class="admin-tab" data-tab="feedback">反馈管理</div>
-    <div class="admin-tab" data-tab="visits">访问统计</div>
-    <div class="admin-tab" data-tab="users">用户管理</div>
-    <div class="admin-tab" data-tab="footer">页脚信息</div>
-</div>
+        <div class="admin-tabs">
+            <div class="admin-tab active" data-tab="basic">时间校准</div>
+            <div class="admin-tab" data-tab="time-control">时间开放控制</div> <!-- 新增标签 -->
+            <div class="admin-tab" data-tab="notification">通知管理</div>
+            <div class="admin-tab" data-tab="appearance">外观设置</div>
+            <div class="admin-tab" data-tab="donation">捐助设置</div>
+            <div class="admin-tab" data-tab="data">数据管理</div>
+            <div class="admin-tab" data-tab="feedback">反馈管理</div>
+            <div class="admin-tab" data-tab="visits">访问统计</div>
+            <div class="admin-tab" data-tab="users">用户管理</div>
+            <div class="admin-tab" data-tab="footer">页脚信息</div>
+        </div>
         
         <div class="admin-tab-content active" id="basic-tab">
             <div class="admin-card">
@@ -1907,6 +1906,23 @@
                         <option value="5-gray">5灰灯</option>
                     </select>
                 </div>
+                <button id="update-timer">
+                    <i class="fas fa-sync"></i> 更新计时器
+                </button>
+            </div>
+        </div>
+        
+        <!-- 新增的时间开放控制标签内容 -->
+        <div class="admin-tab-content" id="time-control-tab">
+            <div class="admin-card">
+                <h3><i class="fas fa-eye"></i> 时间开放控制</h3>
+                <div class="form-group">
+                    <label for="hangar-times-visible"><i class="fas fa-users"></i> 机库开启时间预测开放</label>
+                    <select id="hangar-times-visible">
+                        <option value="true">所有人可见</option>
+                        <option value="false">仅登录用户可见</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="timer-enabled"><i class="fas fa-power-off"></i> 计时器状态</label>
                     <select id="timer-enabled">
@@ -1914,32 +1930,12 @@
                         <option value="false">关闭</option>
                     </select>
                 </div>
-                </div>
-                <button id="update-timer">
-                    <i class="fas fa-sync"></i> 更新计时器
+                <button id="save-time-control">
+                    <i class="fas fa-save"></i> 保存设置
                 </button>
             </div>
         </div>
-
-
-<!-- 新增时间开放控制标签内容 -->
-       <div class="admin-tab-content" id="time-control-tab">
-          <div class="admin-card">
-            <h3><i class="fas fa-eye"></i> 时间开放控制</h3>
-             <div class="form-group">
-            <label for="hangar-times-visible">机库开启时间预测开放</label>
-            <select id="hangar-times-visible">
-                <option value="true">所有人可见</option>
-                <option value="false">仅登录用户可见</option>
-            </select>
-             <div class="info-text">
-               <p><i class="fas fa-info-circle"></i> 设置为"仅登录用户可见"时，只有拥有相应权限的用户才能查看机库开启时间预测。</p>
-             </div>
-             <button id="save-time-control">
-             <i class="fas fa-save"></i> 保存设置
-             </button>
-            </div>
-        </div>      
+        
         <div class="admin-tab-content" id="notification-tab">
             <div class="admin-card">
                 <h3><i class="fas fa-bell"></i> 通知管理</h3>
@@ -1960,7 +1956,7 @@
                     <i class="fas fa-save"></i> 更新通知
                 </button>
             </div>
-
+        </div>
         
         <div class="admin-tab-content" id="appearance-tab">
             <div class="admin-card">
@@ -2354,55 +2350,54 @@
             </div>
             <div class="form-group">
                 <label>权限设置</label>
-<!-- 在用户编辑模态框的权限网格中添加时间开放控制权限 -->
-<div class="permissions-grid" id="edit-permissions">
-    <!-- 普通用户权限 -->
-    <div class="permission-item" id="permission-view-hangar-times">
-        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
-    </div>
-    <!-- 管理员权限（默认隐藏） -->
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-basic" value="basic">
-        <label for="edit-permission-basic">时间校准</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-time-control" value="timeControl">
-        <label for="edit-permission-time-control">时间开放控制</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-notification" value="notification">
-        <label for="edit-permission-notification">通知管理</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-appearance" value="appearance">
-        <label for="edit-permission-appearance">外观设置</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-donation" value="donation">
-        <label for="edit-permission-donation">捐助设置</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-data" value="data">
-        <label for="edit-permission-data">数据管理</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-feedback" value="feedback">
-        <label for="edit-permission-feedback">反馈管理</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-visits" value="visits">
-        <label for="edit-permission-visits">访问统计</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-users" value="users">
-        <label for="edit-permission-users">用户管理</label>
-    </div>
-    <div class="permission-item admin-permission" style="display: none;">
-        <input type="checkbox" id="edit-permission-footer" value="footer">
-        <label for="edit-permission-footer">页脚信息</label>
-    </div>
-</div>
+                <div class="permissions-grid" id="edit-permissions">
+                    <!-- 普通用户权限 -->
+                    <div class="permission-item" id="permission-view-hangar-times">
+                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
+                        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
+                    </div>
+                    <!-- 管理员权限（默认隐藏） -->
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-basic" value="basic">
+                        <label for="edit-permission-basic">时间校准</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-time-control" value="timeControl">
+                        <label for="edit-permission-time-control">时间开放控制</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-notification" value="notification">
+                        <label for="edit-permission-notification">通知管理</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-appearance" value="appearance">
+                        <label for="edit-permission-appearance">外观设置</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-donation" value="donation">
+                        <label for="edit-permission-donation">捐助设置</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-data" value="data">
+                        <label for="edit-permission-data">数据管理</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-feedback" value="feedback">
+                        <label for="edit-permission-feedback">反馈管理</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-visits" value="visits">
+                        <label for="edit-permission-visits">访问统计</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-users" value="users">
+                        <label for="edit-permission-users">用户管理</label>
+                    </div>
+                    <div class="permission-item admin-permission" style="display: none;">
+                        <input type="checkbox" id="edit-permission-footer" value="footer">
+                        <label for="edit-permission-footer">页脚信息</label>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="edit-password">重置密码</label>
@@ -3134,6 +3129,11 @@
             initializeTimer(initialPhase);
             
             // 保存设置
+            saveSettings();
+        });
+        
+        // 添加时间开放控制的保存事件监听
+        document.getElementById('save-time-control').addEventListener('click', function() {
             saveSettings();
         });
         
@@ -4479,15 +4479,15 @@
             const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
             
             if (isAdmin) {
-                // 管理员：显示所有权限选项并默认勾选
+                // 管理员：显示所有权限选项
                 adminPermissions.forEach(permission => {
                     permission.style.display = 'flex';
                 });
                 viewHangarTimesPermission.style.display = 'flex';
                 
-                // 设置所有权限为选中状态
+                // 设置权限选中状态
                 document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.checked = true;
+                    checkbox.checked = permissions[checkbox.value] || false;
                 });
             } else {
                 // 普通用户：只显示机库开启时间权限
