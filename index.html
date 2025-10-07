@@ -1872,7 +1872,7 @@
         
         <div class="admin-tabs">
             <div class="admin-tab active" data-tab="basic">时间校准</div>
-            <div class="admin-tab" data-tab="time-control">时间开放控制</div> <!-- 新增标签 -->
+            <div class="admin-tab" data-tab="time-control">时间开放控制</div>
             <div class="admin-tab" data-tab="notification">通知管理</div>
             <div class="admin-tab" data-tab="appearance">外观设置</div>
             <div class="admin-tab" data-tab="donation">捐助设置</div>
@@ -1906,29 +1906,32 @@
                         <option value="5-gray">5灰灯</option>
                     </select>
                 </div>
-                <button id="update-timer">
-                    <i class="fas fa-sync"></i> 更新计时器
-                </button>
-            </div>
-        </div>
-        
-        <!-- 新增的时间开放控制标签内容 -->
-        <div class="admin-tab-content" id="time-control-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-eye"></i> 时间开放控制</h3>
-                <div class="form-group">
-                    <label for="hangar-times-visible"><i class="fas fa-users"></i> 机库开启时间预测开放</label>
-                    <select id="hangar-times-visible">
-                        <option value="true">所有人可见</option>
-                        <option value="false">仅登录用户可见</option>
-                    </select>
-                </div>
                 <div class="form-group">
                     <label for="timer-enabled"><i class="fas fa-power-off"></i> 计时器状态</label>
                     <select id="timer-enabled">
                         <option value="true">开启</option>
                         <option value="false">关闭</option>
                     </select>
+                </div>
+                <button id="update-timer">
+                    <i class="fas fa-sync"></i> 更新计时器
+                </button>
+            </div>
+        </div>
+        
+        <!-- 新增时间开放控制标签 -->
+        <div class="admin-tab-content" id="time-control-tab">
+            <div class="admin-card">
+                <h3><i class="fas fa-eye"></i> 时间开放控制</h3>
+                <div class="form-group">
+                    <label for="hangar-times-visible"><i class="fas fa-calendar-check"></i> 机库开启时间预测开放</label>
+                    <select id="hangar-times-visible">
+                        <option value="true">所有人可见</option>
+                        <option value="false">仅登录用户可见</option>
+                    </select>
+                </div>
+                <div class="info-text">
+                    <p><i class="fas fa-info-circle"></i> 设置为"仅登录用户可见"时，只有拥有相应权限的用户才能查看机库开启时间预测。</p>
                 </div>
                 <button id="save-time-control">
                     <i class="fas fa-save"></i> 保存设置
@@ -3132,11 +3135,6 @@
             saveSettings();
         });
         
-        // 添加时间开放控制的保存事件监听
-        document.getElementById('save-time-control').addEventListener('click', function() {
-            saveSettings();
-        });
-        
         // 用户登录按钮
         document.getElementById('user-login-btn').addEventListener('click', function() {
             if (currentUser) {
@@ -3537,6 +3535,24 @@
             const link = document.getElementById('notification-link').value;
             updateNotificationDisplay(notification, link);
             saveSettings();
+        });
+        
+        // 保存时间开放控制设置
+        document.getElementById('save-time-control').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 为机库开启时间预测开放控件添加实时保存功能
+        document.getElementById('hangar-times-visible').addEventListener('change', function() {
+            // 实时保存设置
+            saveSettings().then(success => {
+                if (success) {
+                    // 更新显示状态
+                    localStorage.setItem('hangarTimesVisible', this.value);
+                    // 重新计算机库开启时间
+                    calculateHangarOpenTimes(adjustedStartTime);
+                }
+            });
         });
         
         // 保存外观设置
@@ -4479,15 +4495,15 @@
             const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
             
             if (isAdmin) {
-                // 管理员：显示所有权限选项
+                // 管理员：显示所有权限选项并默认勾选
                 adminPermissions.forEach(permission => {
                     permission.style.display = 'flex';
                 });
                 viewHangarTimesPermission.style.display = 'flex';
                 
-                // 设置权限选中状态
+                // 设置所有权限为选中状态
                 document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.checked = permissions[checkbox.value] || false;
+                    checkbox.checked = true;
                 });
             } else {
                 // 普通用户：只显示机库开启时间权限
