@@ -2354,50 +2354,55 @@
             </div>
             <div class="form-group">
                 <label>权限设置</label>
-                <div class="permissions-grid" id="edit-permissions">
-                    <!-- 普通用户权限 -->
-                    <div class="permission-item" id="permission-view-hangar-times">
-                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-                        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
-                    </div>
-                    <!-- 管理员权限（默认隐藏） -->
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-basic" value="basic">
-                        <label for="edit-permission-basic">时间校准</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-notification" value="notification">
-                        <label for="edit-permission-notification">通知管理</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-appearance" value="appearance">
-                        <label for="edit-permission-appearance">外观设置</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-donation" value="donation">
-                        <label for="edit-permission-donation">捐助设置</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-data" value="data">
-                        <label for="edit-permission-data">数据管理</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-feedback" value="feedback">
-                        <label for="edit-permission-feedback">反馈管理</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-visits" value="visits">
-                        <label for="edit-permission-visits">访问统计</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-users" value="users">
-                        <label for="edit-permission-users">用户管理</label>
-                    </div>
-                    <div class="permission-item admin-permission" style="display: none;">
-                        <input type="checkbox" id="edit-permission-footer" value="footer">
-                        <label for="edit-permission-footer">页脚信息</label>
-                    </div>
-                </div>
+<!-- 在用户编辑模态框的权限网格中添加时间开放控制权限 -->
+<div class="permissions-grid" id="edit-permissions">
+    <!-- 普通用户权限 -->
+    <div class="permission-item" id="permission-view-hangar-times">
+        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
+        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
+    </div>
+    <!-- 管理员权限（默认隐藏） -->
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-basic" value="basic">
+        <label for="edit-permission-basic">时间校准</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-time-control" value="timeControl">
+        <label for="edit-permission-time-control">时间开放控制</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-notification" value="notification">
+        <label for="edit-permission-notification">通知管理</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-appearance" value="appearance">
+        <label for="edit-permission-appearance">外观设置</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-donation" value="donation">
+        <label for="edit-permission-donation">捐助设置</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-data" value="data">
+        <label for="edit-permission-data">数据管理</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-feedback" value="feedback">
+        <label for="edit-permission-feedback">反馈管理</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-visits" value="visits">
+        <label for="edit-permission-visits">访问统计</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-users" value="users">
+        <label for="edit-permission-users">用户管理</label>
+    </div>
+    <div class="permission-item admin-permission" style="display: none;">
+        <input type="checkbox" id="edit-permission-footer" value="footer">
+        <label for="edit-permission-footer">页脚信息</label>
+    </div>
+</div>
             </div>
             <div class="form-group">
                 <label for="edit-password">重置密码</label>
