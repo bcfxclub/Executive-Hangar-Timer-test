@@ -4759,7 +4759,7 @@
             }
         });
         
-        // 初始化计时器
+// 初始化计时器
         function initializeTimer(initialPhaseKey) {
             clearInterval(countdownInterval);
             
@@ -4775,6 +4775,9 @@
                     const lightElement = document.getElementById(`light-${i}`);
                     lightElement.className = 'light gray';
                 }
+                
+                // 修复：计时器关闭时也要更新机库开启时间预测显示
+                calculateHangarOpenTimes(new Date());
                 
                 return;
             }
