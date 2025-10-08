@@ -4930,44 +4930,31 @@
                 return;
             }
             
-            // 正常显示机库开启时间预测
-            const cycleDuration = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000; // 完整周期时长（毫秒）
-            const resetDuration = PHASE_DURATIONS.reset * 60 * 1000; // 重置阶段时长（毫秒）
+            // 计算上一个开启时间
+            let previousWindowTime = new Date(firstGreenTime.getTime());
+            while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
+                previousWindowTime = new Date(previousWindowTime.getTime() + totalCycleMs);
+            }
             
-            // 计算上一个周期的开始时间
-            const now = new Date();
-            const elapsed = now.getTime() - baseTime.getTime();
-            const cyclesCompleted = Math.floor(elapsed / cycleDuration);
-            const lastCycleStart = new Date(baseTime.getTime() + cyclesCompleted * cycleDuration);
+            // 如果当前时间已经超过了第一个开启时间，则显示上一个开启时间
+            if (now.getTime() > firstGreenTime.getTime()) {
+                const prevItem = document.createElement('li');
+                prevItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
+                windowList.appendChild(prevItem);
+            }
             
-            // 计算下一个周期的开始时间
-            const nextCycleStart = new Date(lastCycleStart.getTime() + cycleDuration);
-            
-            // 计算上一个开启时间（上一个周期的重置阶段结束时间）
-            const lastOpenTime = new Date(lastCycleStart.getTime() + resetDuration);
-            
-            // 计算下一个开启时间（下一个周期的重置阶段结束时间）
-            const nextOpenTime = new Date(nextCycleStart.getTime() + resetDuration);
-            
-            // 清空列表
-            windowList.innerHTML = '';
-            
-            // 添加上次开启时间
-            const lastOpenItem = document.createElement('li');
-            lastOpenItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(lastOpenTime)}`;
-            windowList.appendChild(lastOpenItem);
-            
-            // 添加下次开启时间
-            const nextOpenItem = document.createElement('li');
-            nextOpenItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(nextOpenTime)}`;
-            windowList.appendChild(nextOpenItem);
-            
-            // 添加未来7个开启时间
-            for (let i = 1; i <= 7; i++) {
-                const futureOpenTime = new Date(nextOpenTime.getTime() + i * cycleDuration);
-                const futureItem = document.createElement('li');
-                futureItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i}: ${formatDateTimeFull(futureOpenTime)}`;
-                windowList.appendChild(futureItem);
+            // 生成后续的8个机库开启时间预测节点
+            for (let i = 0; i < 8; i++) {
+                const windowTime = new Date(previousWindowTime.getTime() + (i + 1) * totalCycleMs);
+                const listItem = document.createElement('li');
+                
+                if (i === 0) {
+                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
+                } else {
+                    listItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
+                }
+                
+                windowList.appendChild(listItem);
             }
         }
         
