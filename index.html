@@ -1995,7 +1995,7 @@
                     <label for="hangar-times-visible"><i class="fas fa-users"></i> 机库开启时间预测开放</label>
                     <select id="hangar-times-visible">
                         <option value="true">所有人可见</option>
-                        <option value="false">仅登录用户可见</option>
+                        <option value="false">仅注册授权用户可见</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -3549,7 +3549,7 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        alert('注册成功，请扫码添加QQ群，联系管理员审核');
+                        alert('注册成功，请扫码添加QQ群，直接联系管理员审核，请不要泄露个人信息。');
                         document.getElementById('login-modal').style.display = 'none';
                         document.getElementById('register-username').value = '';
                         document.getElementById('register-password').value = '';
