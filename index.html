@@ -2565,6 +2565,8 @@
         let timerEnabled = true;
         let donationEnabled = false;
         let currentEditingUser = null;
+        let usageTimer = null; // 新增：使用时间计时器
+        let loginTime = null; // 新增：登录时间
         
         // 新增：全局变量用于存储调整后的开始时间
         let adjustedStartTime = new Date();
@@ -2594,7 +2596,139 @@
             }
             return true;
         }
+
+        // 新增：开始使用时间计时
+        async function startUsageTimer() {
+            if (!currentUser) return;
+            
+            // 检查用户是否有限时预测显示权限
+            if (!currentUser.permissions || !currentUser.permissions.timeLimitedView) {
+                return;
+            }
+            
+            loginTime = new Date();
+            
+            // 获取用户今日使用情况
+            try {
+                const response = await fetch(`${API_BASE}/usage`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const usageData = await response.json();
+                    const today = new Date().toDateString();
+                    
+                    // 如果上次使用不是今天，重置使用时间
+                    if (usageData.lastUsageDate !== today) {
+                        await resetDailyUsage();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to get usage data:', error);
+            }
+            
+            // 每分钟更新一次使用时间
+            usageTimer = setInterval(async () => {
+                await updateUsageTime();
+            }, 60000); // 每分钟更新一次
+        }
         
+        // 新增：停止使用时间计时
+        async function stopUsageTimer() {
+            if (usageTimer) {
+                clearInterval(usageTimer);
+                usageTimer = null;
+            }
+            
+            // 更新最后一次使用时间
+            await updateUsageTime();
+        }
+        
+        // 新增：更新使用时间
+        async function updateUsageTime() {
+            if (!currentUser || !loginTime) return;
+            
+            try {
+                const currentTime = new Date();
+                const usedSeconds = Math.floor((currentTime - loginTime) / 1000);
+                
+                const response = await fetch(`${API_BASE}/usage`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        seconds: usedSeconds
+                    })
+                });
+                
+                if (response.ok) {
+                    // 更新本地用户信息中的使用时间
+                    const result = await response.json();
+                    if (currentUser.usage) {
+                        currentUser.usage.dailyUsage = result.dailyUsage;
+                        currentUser.usage.lastUsageDate = result.lastUsageDate;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update usage time:', error);
+            }
+        }
+        
+        // 新增：重置每日使用时间
+        async function resetDailyUsage() {
+            try {
+                const response = await fetch(`${API_BASE}/usage/reset`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (currentUser.usage) {
+                        currentUser.usage.dailyUsage = 0;
+                        currentUser.usage.lastUsageDate = result.lastUsageDate;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
+                    loginTime = new Date(); // 重置登录时间
+                }
+            } catch (error) {
+                console.error('Failed to reset daily usage:', error);
+            }
+        }
+        
+        // 新增：检查限时预测显示权限
+        function canViewTimeLimitedHangarTimes() {
+            if (!currentUser || !currentUser.permissions) return false;
+            
+            // 如果用户有捐助用户预测显示权限，直接返回true（优先级更高）
+            if (currentUser.permissions.viewHangarTimes) {
+                return true;
+            }
+            
+            // 检查限时预测显示权限
+            if (currentUser.permissions.timeLimitedView) {
+                // 获取配置中的限时小时数
+                const timeLimitedHours = parseInt(localStorage.getItem('timeLimitedViewHours') || '1');
+                const maxSeconds = timeLimitedHours * 3600;
+                
+                // 检查今日使用时间
+                const today = new Date().toDateString();
+                const dailyUsage = currentUser.usage?.dailyUsage || 0;
+                const lastUsageDate = currentUser.usage?.lastUsageDate;
+                
+                // 如果上次使用不是今天，可以查看
+                if (lastUsageDate !== today) {
+                    return true;
+                }
+                
+                // 如果今日使用时间未超限，可以查看
+                return dailyUsage < maxSeconds;
+            }
+            
+            return false;
+        }
+
         // 从API加载设置
         async function loadSettings() {
             try {
@@ -2625,7 +2759,15 @@
                         timerEnabled = config.timerEnabled;
                         document.getElementById('timer-enabled').value = timerEnabled.toString();
                     }
-                    
+                    // 新增：加载限时预测显示小时数
+                    if (config.timeLimitedViewHours !== undefined) {
+                        document.getElementById('time-limited-view-hours').value = config.timeLimitedViewHours;
+                        localStorage.setItem('timeLimitedViewHours', config.timeLimitedViewHours.toString());
+                    } else {
+                        // 默认值为1小时
+                        document.getElementById('time-limited-view-hours').value = '1';
+                        localStorage.setItem('timeLimitedViewHours', '1');
+                    }                    
                     // 新增：捐助用户预测显示设置
                     if (config.hangarTimesVisible !== undefined) {
                         document.getElementById('hangar-times-visible').value = config.hangarTimesVisible.toString();
@@ -2881,6 +3023,9 @@
             if (currentUser) {
                 userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
                 
+                // 开始使用时间计时
+                startUsageTimer();
+                
                 // 检查用户权限，动态显示管理面板
                 const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
                     (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
@@ -2908,6 +3053,9 @@
                 adminPanelBtn.style.display = 'none';
                 userCenterBtn.style.display = 'none';
                 userManagementTab.style.display = 'none';
+                
+                // 停止使用时间计时
+                stopUsageTimer();
             }
             
             // 新增：用户登录状态变化时刷新捐助用户预测显示
@@ -2992,8 +3140,9 @@
                 version: document.getElementById('version-input').value,
                 about: document.getElementById('about-input').value,
                 tokenAutoCleanDays: parseInt(document.getElementById('auto-clean-days').value) || 30
-            };
-            
+                // 新增：限时预测显示小时数
+                timeLimitedViewHours: parseInt(document.getElementById('time-limited-view-hours').value) || 1
+            };            
             try {
                 const response = await fetch(`${API_BASE}/config`, {
                     method: 'POST',
@@ -3014,6 +3163,8 @@
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
                     // 更新捐助用户预测显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    // 新增：保存限时预测显示小时数到本地存储
+                    localStorage.setItem('timeLimitedViewHours', config.timeLimitedViewHours.toString());
                     return true;
                 } else {
                     if (!checkAuthResponse(response)) {
@@ -3275,6 +3426,7 @@
         document.getElementById('user-login-btn').addEventListener('click', function() {
             if (currentUser) {
                 // 退出登录
+                stopUsageTimer(); // 新增：停止计时
                 currentUser = null;
                 localStorage.removeItem('currentUser');
                 updateUserInterface();
@@ -4618,6 +4770,7 @@
         function updatePermissionsDisplay(isAdmin, permissions) {
             const adminPermissions = document.querySelectorAll('.admin-permission');
             const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
+            const timeLimitedViewPermission = document.getElementById('edit-permission-time-limited-view');
             
             if (isAdmin) {
                 // 管理员：显示所有权限选项
@@ -4625,21 +4778,23 @@
                     permission.style.display = 'flex';
                 });
                 viewHangarTimesPermission.style.display = 'flex';
+                timeLimitedViewPermission.style.display = 'flex';
                 
                 // 设置权限选中状态
                 document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
                     checkbox.checked = permissions[checkbox.value] || false;
                 });
             } else {
-                // 普通用户：只显示机库开启时间权限
+                // 普通用户：显示机库开启时间权限和限时预测显示权限
                 adminPermissions.forEach(permission => {
                     permission.style.display = 'none';
                 });
                 viewHangarTimesPermission.style.display = 'flex';
+                timeLimitedViewPermission.style.display = 'flex';
                 
-                // 只设置机库开启时间权限，其他权限取消选中
+                // 只设置普通用户权限，其他权限取消选中
                 document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    if (checkbox.value === 'viewHangarTimes') {
+                    if (checkbox.value === 'viewHangarTimes' || checkbox.value === 'timeLimitedView') {
                         checkbox.checked = permissions[checkbox.value] || false;
                     } else {
                         checkbox.checked = false;
@@ -4647,7 +4802,22 @@
                 });
             }
         }
+        // 页面卸载时停止计时器
+        window.addEventListener('beforeunload', function() {
+            stopUsageTimer();
+        });
 
+        // 页面加载时检查是否需要重置使用时间
+        window.addEventListener('load', function() {
+            if (currentUser && currentUser.usage) {
+                const today = new Date().toDateString();
+                if (currentUser.usage.lastUsageDate !== today) {
+                    resetDailyUsage();
+                } else {
+                    startUsageTimer();
+                }
+            }
+        });
         // 为角色下拉列表添加change事件
         document.getElementById('edit-role').addEventListener('change', function() {
             if (currentEditingUser) {
@@ -5075,6 +5245,27 @@
                 const loginPromptItem = document.createElement('li');
                 loginPromptItem.innerHTML = `<i class="fas fa-user-lock"></i>捐助我们获得用户权限，登录后方可查看机库开启预测时间`;
                 windowList.appendChild(loginPromptItem);
+                return;
+            }
+            
+            // 新增：检查限时预测显示权限
+            if (isLoggedIn && !hangarTimesVisible && !canViewTimeLimitedHangarTimes()) {
+                windowList.innerHTML = '';
+                const timeLimitedItem = document.createElement('li');
+                
+                // 获取配置中的限时小时数
+                const timeLimitedHours = parseInt(localStorage.getItem('timeLimitedViewHours') || '1');
+                const maxSeconds = timeLimitedHours * 3600;
+                const dailyUsage = currentUser.usage?.dailyUsage || 0;
+                const remainingSeconds = Math.max(0, maxSeconds - dailyUsage);
+                const remainingMinutes = Math.ceil(remainingSeconds / 60);
+                
+                if (remainingSeconds > 0) {
+                    timeLimitedItem.innerHTML = `<i class="fas fa-clock"></i> 今日剩余查看时间: ${remainingMinutes} 分钟`;
+                } else {
+                    timeLimitedItem.innerHTML = `<i class="fas fa-clock"></i> 今日查看时间已用完，请明天再来`;
+                }
+                windowList.appendChild(timeLimitedItem);
                 return;
             }
             
