@@ -5248,27 +5248,6 @@
                 return;
             }
             
-            // 新增：检查限时预测显示权限
-            if (isLoggedIn && !hangarTimesVisible && !canViewTimeLimitedHangarTimes()) {
-                windowList.innerHTML = '';
-                const timeLimitedItem = document.createElement('li');
-                
-                // 获取配置中的限时小时数
-                const timeLimitedHours = parseInt(localStorage.getItem('timeLimitedViewHours') || '1');
-                const maxSeconds = timeLimitedHours * 3600;
-                const dailyUsage = currentUser.usage?.dailyUsage || 0;
-                const remainingSeconds = Math.max(0, maxSeconds - dailyUsage);
-                const remainingMinutes = Math.ceil(remainingSeconds / 60);
-                
-                if (remainingSeconds > 0) {
-                    timeLimitedItem.innerHTML = `<i class="fas fa-clock"></i> 今日剩余查看时间: ${remainingMinutes} 分钟`;
-                } else {
-                    timeLimitedItem.innerHTML = `<i class="fas fa-clock"></i> 今日查看时间已用完，请明天再来`;
-                }
-                windowList.appendChild(timeLimitedItem);
-                return;
-            }
-            
             // 计算上一个开启时间
             let previousWindowTime = new Date(firstGreenTime.getTime());
             while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
