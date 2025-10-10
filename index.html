@@ -2477,6 +2477,11 @@
                         <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
                         <label for="edit-permission-view-hangar-times">捐助用户预测显示</label>
                     </div>
+                    <!-- 新增：限时预测显示权限 -->
+                    <div class="permission-item">
+                        <input type="checkbox" id="edit-permission-time-limited-view" value="timeLimitedView">
+                        <label for="edit-permission-time-limited-view">限时预测显示</label>
+                    </div>
                     <!-- 管理员权限（默认隐藏） -->
                     <div class="permission-item admin-permission" style="display: none;">
                         <input type="checkbox" id="edit-permission-basic" value="basic">
@@ -2545,6 +2550,7 @@
             </div>
         </div>
     </div>
+
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
