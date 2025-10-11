@@ -3468,11 +3468,7 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             document.querySelector(`.user-center-tab[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
- // 如果切换到用户管理标签页，则加载用户列表
- if (tabName === 'user-management') {
-   loadAdminUsers();
- }      
-        }  
+
         // 登录标签点击事件
         document.querySelectorAll('.login-tab').forEach(tab => {
             tab.addEventListener('click', function() {
