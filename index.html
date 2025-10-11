@@ -2212,7 +2212,7 @@
                 <h3><i class="fas fa-database"></i> 数据管理</h3>
                 <div class="form-group">
                     <label for="api-url">API地址</label>
-                    <input type="url" id="api-url" placeholder="输入API地址" value="https://bcfxclub.dpdns.org/api">
+                    <input type="url" id="api-url" placeholder="输入API地址" value="/api">
                     <button id="test-api" style="margin-top: 10px;">
                         <i class="fas fa-plug"></i> 测试API连接
                     </button>
@@ -2548,7 +2548,7 @@
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
-        let API_BASE = "https://bcfxclub.dpdns.org/api";
+        let API_BASE = "/api";
         
         // 初始化状态
         let startTime = new Date();
@@ -3266,13 +3266,24 @@
         });
         
         // 用户登录按钮
-        document.getElementById('user-login-btn').addEventListener('click', function() {
+        document.getElementById('user-login-btn').addEventListener('click', async function() {
             if (currentUser) {
-                // 退出登录
-                currentUser = null;
-                localStorage.removeItem('currentUser');
-                updateUserInterface();
-                alert('已退出登录');
+                // 退出登录 - 调用登出API使令牌失效
+                try {
+                    await fetch(`${API_BASE}/logout`, {
+                        method: 'POST',
+                        headers: getAuthHeaders()
+                    });
+                } catch (error) {
+                    console.error('Logout API error:', error);
+                    // 即使API调用失败，也要继续执行本地退出逻辑
+                } finally {
+                    // 清除本地用户信息
+                    currentUser = null;
+                    localStorage.removeItem('currentUser');
+                    updateUserInterface();
+                    alert('已退出登录');
+                }
             } else {
                 document.getElementById('login-modal').style.display = 'flex';
                 // 切换到登录标签
