@@ -3352,7 +3352,15 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             loadTokenStats();
         });
         
+        // 用户中心按钮
+        document.getElementById('user-center-btn').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'block';
+            initDraggablePanel('user-center');
+            // 加载用户信息
+            loadUserInfo();
 
+            }
+        });
         
         // 捐助按钮
         document.getElementById('donation-btn').addEventListener('click', function() {
