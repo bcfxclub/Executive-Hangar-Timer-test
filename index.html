@@ -2848,7 +2848,43 @@
                     }
                     
                     initializeTimer(config.initialPhase || '5-green');
-                    
+// 在 loadSettings 函数中添加
+if (config.tokenExpirationDays) {
+    document.getElementById('token-expiration-days').value = config.tokenExpirationDays;
+}
+
+// 添加设置令牌过期时间的事件监听器
+document.getElementById('set-token-expiration').addEventListener('click', async function() {
+    const days = parseInt(document.getElementById('token-expiration-days').value);
+    
+    if (isNaN(days) || days < 1 || days > 365) {
+        alert('请输入1-365之间的有效天数');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/tokens/expiration`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ expirationDays: days })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            alert(result.message);
+            // 重新加载令牌统计以更新显示
+            loadTokenStats();
+        } else {
+            if (!checkAuthResponse(response)) {
+                return;
+            }
+            alert('设置失败');
+        }
+    } catch (error) {
+        console.error('Set token expiration error:', error);
+        alert('设置失败');
+    }
+});                    
                     // 更新用户界面状态
                     updateUserInterface();
 
