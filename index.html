@@ -2342,11 +2342,11 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.2.3
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.2.5
 更新日期：2025-10-09
 更新内容：
 在上一版基础上，做出如下修改：
-1、添加对中文用户名支持，这样当管理员审核中文用户名用户时，系统能够正确识别和处理包含中文字符的用户名，解决了无法审核通过的问题。
+1、后台管理添加令牌过期时间设置。
 </textarea>
                 </div>
                 <div class="form-group">
@@ -3468,7 +3468,11 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             document.querySelector(`.user-center-tab[data-tab="${tabName}"]`).classList.add('active');
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
-        
+ // 如果切换到用户管理标签页，则加载用户列表
+ if (tabName === 'user-management') {
+   loadAdminUsers();
+ }      
+        }  
         // 登录标签点击事件
         document.querySelectorAll('.login-tab').forEach(tab => {
             tab.addEventListener('click', function() {
