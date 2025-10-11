@@ -2240,27 +2240,23 @@
                             <span class="token-stat-value" id="token-auto-clean">加载中...</span>
                         </div>
                     </div>
-    <!-- 新增：显示当前令牌过期时间 -->
-    <div class="token-stat-item">
-        <span class="token-stat-label">令牌过期时间:</span>
-        <span class="token-stat-value" id="token-expiration">加载中...</span>
-    </div>
-</div>                    
+                    
                     <div class="form-group">
                         <label for="auto-clean-days">自动清理间隔（天）</label>
                         <input type="number" id="auto-clean-days" min="1" max="365" value="30">
                         <button id="set-auto-clean" style="margin-top: 10px;">
                             <i class="fas fa-cog"></i> 设置自动清理间隔
                         </button>
-                    </div>
-
+<!-- 在现有的自动清理间隔设置后面添加 -->
 <div class="form-group">
     <label for="token-expiration-days">令牌过期时间（天）</label>
-    <input type="number" id="token-expiration-days" min="1" max="365" value="7">
+    <input type="number" id="token-expiration-days" min="1" max="365" value="30">
     <button id="set-token-expiration" style="margin-top: 10px;">
-        <i class="fas fa-cog"></i> 设置令牌过期时间
+        <i class="fas fa-clock"></i> 设置令牌过期时间
     </button>
-</div>                    
+</div>
+                    </div>
+                    
                     <div class="token-actions">
                         <button id="clean-expired-tokens" class="clean-expired-btn">
                             <i class="fas fa-broom"></i> 清理过期令牌
