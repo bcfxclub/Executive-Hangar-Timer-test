@@ -5,7 +5,1640 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>星际公民行政机库计时系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 所有样式保持不变，与之前完全一样 */
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --reset-color: #e74c3c;
+            --card-color: #2ecc71;
+            --poweroff-color: #7f8c8d;
+            --light-off: #bdc3c7;
+            --light-on: #ffffff;
+            --panel-bg: #f8f9fa;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+            --bg-opacity: 0.8;
+            --invite-bg: rgba(255, 215, 0, 0.2);
+            --invite-border: #ffd700;
+            --notification-color: #ffffff;
+            --header-bg-color: transparent;
+            --header-text-color: white;
+            --header-font-size: 1.8rem;
+            --logo-size: 120px;
+            --window-text-color: var(--text-dark);
+            --window-comment-color: var(--text-light);
+            --calibration-text-color: var(--text-light);
+            --countdown-text-color: var(--primary-color);
+            --hangar-time-text-color: var(--text-dark);
+            --status-text-color: var(--text-dark);
+            --qrcode-caption-color: white;
+            --donation-btn-bg: #ff6b6b;
+            --window-title-color: var(--primary-color);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #1a2a6c;
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-image 0.5s ease;
+            background-size: cover;
+            background-position: center;
+            padding-bottom: 60px;
+            position: relative;
+        }
+        
+        body.video-bg {
+            background-image: none !important;
+        }
+        
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .logo {
+            width: var(--logo-size);
+            height: var(--logo-size);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .qrcode-container {
+            position: fixed;
+            bottom: 140px;
+            left: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .qrcode {
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .qrcode:hover {
+            transform: scale(1.05);
+        }
+        
+        .qrcode img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .qrcode-caption {
+            font-size: 0.8rem;
+            color: var(--qrcode-caption-color);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            max-width: 100px;
+        }
+        
+        .invite-code-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--invite-bg);
+            border: 1px solid var(--invite-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .invite-code-container:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+        
+        .invite-code-container a {
+            color: #ffd700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .invite-code-container i {
+            font-size: 0.8rem;
+        }
+        
+        header {
+            background: var(--header-bg-color);
+            color: var(--header-text-color);
+            padding: 1.2rem;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+            font-size: var(--header-font-size);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .timer-display {
+            background-color: rgba(255, 255, 255, var(--bg-opacity));
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .notification-bar {
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 15px;
+            height: 30px;
+            position: relative;
+            color: var(--notification-color);
+        }
+        
+        .notification-scroll {
+            position: absolute;
+            white-space: nowrap;
+            animation: scroll 20s linear infinite;
+        }
+        
+        .notification-scroll a {
+            color: inherit;
+            text-decoration: none;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .phase-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .phase-reset {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--reset-color);
+            border: 2px solid var(--reset-color);
+        }
+        
+        .phase-card {
+            background-color: rgba(46, 204, 113, 0.15);
+            color: var(--card-color);
+            border: 2px solid var(--card-color);
+        }
+        
+        .phase-poweroff {
+            background-color: rgba(127, 140, 141, 0.15);
+            color: var(--poweroff-color);
+            border: 2px solid var(--poweroff-color);
+        }
+        
+        .phase-disabled {
+            background-color: rgba(127, 140, 141, 0.15);
+            color: var(--poweroff-color);
+            border: 2px solid var(--poweroff-color);
+        }
+        
+        .countdown {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--countdown-text-color);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .lights-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .light {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .light.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+        
+        .light.red {
+            background-color: var(--reset-color);
+        }
+        
+        .light.green {
+            background-color: var(--card-color);
+        }
+        
+        .light.gray {
+            background-color: var(--poweroff-color);
+        }
+        
+        .hangar-open-time {
+            font-size: 1.1rem;
+            margin: 15px 0;
+            color: var(--hangar-time-text-color);
+        }
+        
+        .card-windows {
+            background-color: rgba(255, 255, 255, var(--bg-opacity));
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .card-windows h2 {
+            margin-bottom: 10px;
+            color: var(--window-title-color);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--window-comment-color);
+        }
+        
+        .window-status {
+            font-size: 0.85rem;
+            color: var(--window-comment-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .window-list {
+            list-style-type: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+        
+        .window-list li {
+            background-color: transparent;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            color: var(--window-text-color);
+        }
+        
+        .window-list li i {
+            color: var(--card-color);
+            font-size: 1.1rem;
+        }
+        
+        .info-text {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-light);
+            font-style: italic;
+        }
+        
+        .status-indicators {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            color: var(--status-text-color);
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .status-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .status-red {
+            background-color: var(--reset-color);
+        }
+        
+        .status-green {
+            background-color: var(--card-color);
+        }
+        
+        .status-gray {
+            background-color: var(--poweroff-color);
+        }
+        
+        .calibration-time {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 0.8rem;
+            color: var(--calibration-text-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .user-login-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(52, 152, 219, 0.9);
+            z-index: 1000;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .user-login-btn:hover {
+            width: 160px;
+            border-radius: 25px;
+            background: rgba(52, 152, 219, 1);
+        }
+        
+        .user-login-btn span {
+            display: none;
+            white-space: nowrap;
+            padding-left: 5px;
+        }
+        
+        .user-login-btn:hover span {
+            display: inline;
+        }
+        
+        .feedback-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(46, 204, 113, 0.9);
+            z-index: 1000;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .feedback-btn:hover {
+            width: 160px;
+            border-radius: 25px;
+            background: rgba(46, 204, 113, 1);
+        }
+        
+        .feedback-btn span {
+            display: none;
+            white-space: nowrap;
+            padding-left: 5px;
+        }
+        
+        .feedback-btn:hover span {
+            display: inline;
+        }
+        
+        .admin-panel-btn {
+            position: fixed;
+            bottom: 140px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(155, 89, 182, 0.9);
+            z-index: 1000;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .admin-panel-btn:hover {
+            width: 160px;
+            border-radius: 25px;
+            background: rgba(155, 89, 182, 1);
+        }
+        
+        .admin-panel-btn span {
+            display: none;
+            white-space: nowrap;
+            padding-left: 5px;
+        }
+        
+        .admin-panel-btn:hover span {
+            display: inline;
+        }
+        
+        .user-center-btn {
+            position: fixed;
+            bottom: 200px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(241, 196, 15, 0.9);
+            z-index: 1000;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .user-center-btn:hover {
+            width: 160px;
+            border-radius: 25px;
+            background: rgba(241, 196, 15, 1);
+        }
+        
+        .user-center-btn span {
+            display: none;
+            white-space: nowrap;
+            padding-left: 5px;
+        }
+        
+        .user-center-btn:hover span {
+            display: inline;
+        }
+        
+        .donation-btn {
+            position: fixed;
+            bottom: 260px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--donation-btn-bg);
+            z-index: 1000;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .donation-btn:hover {
+            width: 160px;
+            border-radius: 25px;
+            background: var(--donation-btn-bg);
+        }
+        
+        .donation-btn span {
+            display: none;
+            white-space: nowrap;
+            padding-left: 5px;
+        }
+        
+        .donation-btn:hover span {
+            display: inline;
+        }
+        
+        .db-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            width: auto;
+            flex: 1;
+        }
+        
+        .cancel-btn {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+        }
+        
+        .admin-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 85vh;
+            overflow-y: auto;
+            z-index: 1002;
+            resize: both;
+            min-width: 400px;
+            min-height: 300px;
+        }
+        
+        .admin-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+            cursor: move;
+        }
+        
+        .admin-panel-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: none;
+            padding: 0;
+            border: none;
+        }
+        
+        .close-admin-panel {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 5px;
+        }
+        
+        .admin-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .admin-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .admin-tab.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .admin-tab-content {
+            display: none;
+        }
+        
+        .admin-tab-content.active {
+            display: block;
+        }
+        
+        .admin-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px;
+        }
+        
+        .admin-card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        
+        .admin-card h3 {
+            margin-bottom: 12px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--secondary-color);
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+        
+        input[type="datetime-local"], select, input[type="password"], input[type="text"], input[type="range"], textarea, input[type="url"], input[type="file"], input[type="color"], input[type="email"] {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus, input[type="color"]:focus, input[type="email"]:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--secondary-color), #2980b9);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .bg-preview {
+            width: 100%;
+            height: 100px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 2px dashed #ddd;
+        }
+        
+        .video-preview {
+            width: 100%;
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+        }
+        
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .qrcode-preview {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .qrcode-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .feedback-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .feedback-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+        
+        .feedback-date {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+        
+        .feedback-content {
+            margin-top: 5px;
+            word-break: break-word;
+        }
+        
+        .feedback-contact {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            margin-top: 3px;
+        }
+        
+        .feedback-username {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        
+        .delete-feedback {
+            background: var(--reset-color);
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+            width: auto;
+        }
+        
+        .api-test-result {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            font-size: 0.85rem;
+        }
+        
+        .success {
+            color: var(--card-color);
+            border: 1px solid var(--card-color);
+        }
+        
+        .error {
+            color: var(--reset-color);
+            border: 1px solid var(--reset-color);
+        }
+        
+        .upload-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .upload-group input[type="file"] {
+            flex: 1;
+        }
+        
+        .upload-group button {
+            width: auto;
+            flex: 0 0 80px;
+            padding: 8px;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            background: transparent;
+        }
+        
+        .footer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+        }
+        
+        .footer-notice {
+            max-width: 200px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .footer-notice-scroll {
+            display: inline-block;
+            padding-left: 100%;
+            animation: footer-scroll 15s linear infinite;
+        }
+        
+        .footer-notice-scroll a {
+            color: inherit;
+            text-decoration: none;
+        }
+        
+        @keyframes footer-scroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+        
+        .footer-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .footer-info span {
+            white-space: nowrap;
+        }
+        
+        .footer-info a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.3s;
+        }
+        
+        .footer-info a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        
+        .footer-modal-content {
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .donation-modal-content {
+            max-width: 500px;
+        }
+        
+        .donation-qrcodes {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .donation-qrcode {
+            text-align: center;
+        }
+        
+        .donation-qrcode img {
+            width: 150px;
+            height: 150px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .donation-records {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        .donation-record {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .donation-record:last-child {
+            border-bottom: none;
+        }
+        
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .color-preview {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .admin-panel-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .qrcode-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1003;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .qrcode-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .qrcode-modal img {
+            max-width: 250px;
+            max-height: 250px;
+            margin-bottom: 15px;
+        }
+        
+        .qrcode-modal-caption {
+            font-size: 1rem;
+            color: var(--text-dark);
+            margin-top: 10px;
+        }
+        
+        .contact-inputs {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .contact-inputs input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .link-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .link-input-group input {
+            flex: 1;
+        }
+
+        /* 访问统计样式 */
+        .visits-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .visit-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.85rem;
+        }
+        
+        .visit-item:last-child {
+            border-bottom: none;
+        }
+        
+        .visit-ip {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .visit-date {
+            color: var(--text-light);
+            font-size: 0.75rem;
+        }
+        
+        .visit-count {
+            margin-top: 10px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .user-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .user-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .user-action-btn {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+        
+        .user-center {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            z-index: 1002;
+        }
+        
+        .user-center-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+        
+        .user-center-content {
+            margin-bottom: 20px;
+        }
+        
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .login-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .login-tab.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .login-tab-content {
+            display: none;
+        }
+        
+        .login-tab-content.active {
+            display: block;
+        }
+        
+        .user-role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .user-admin {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .user-normal {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .user-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .user-super-admin {
+            background-color: #9b59b6;
+            color: white;
+        }
+        
+        .user-frozen {
+            background-color: #7f8c8d;
+            color: white;
+        }
+        
+        .user-center-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .user-center-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        
+        .user-center-tab.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .user-center-tab-content {
+            display: none;
+        }
+        
+        .user-center-tab-content.active {
+            display: block;
+        }
+        
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .permission-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .user-edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1004;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .user-edit-modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* 找回密码弹窗样式 */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1005;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .password-modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .password-display {
+            background-color: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-password-btn {
+            background: var(--card-color);
+            width: auto;
+            padding: 8px 15px;
+            margin-left: 10px;
+        }
+        
+        /* 令牌管理样式 */
+        .token-stats {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .token-stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .token-stat-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .token-stat-label {
+            font-weight: bold;
+            color: var(--text-dark);
+        }
+        
+        .token-stat-value {
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .token-user-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .token-user-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .token-user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .token-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .token-actions button {
+            flex: 1;
+        }
+        
+        .clean-expired-btn {
+            background: linear-gradient(to right, #f39c12, #e67e22);
+        }
+        
+        .clean-all-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            header {
+                padding: 1rem;
+                font-size: 1.4rem;
+            }
+            
+            .timer-display, .card-windows, .admin-panel, .user-center {
+                padding: 15px;
+            }
+            
+            .countdown {
+                font-size: 2.5rem;
+            }
+            
+            .phase-indicator {
+                font-size: 1.2rem;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .light {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .window-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-panel-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+                width: 50px;
+                border-radius: 50%;
+            }
+            
+            .user-login-btn:hover span, .feedback-btn:hover span, .admin-panel-btn:hover span, .user-center-btn:hover span, .donation-btn:hover span {
+                display: none;
+            }
+            
+            .qrcode-container {
+                bottom: 260px;
+                left: 10px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .footer-notice {
+                max-width: 90%;
+                order: 2;
+            }
+            
+            .footer-info {
+                order: 1;
+                gap: 10px;
+            }
+            
+            .invite-code-container {
+                top: 15px;
+                right: 15px;
+                font-size: 0.75rem;
+                padding: 6px 10px;
+            }
+            
+            .donation-qrcodes {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            .admin-card {
+                padding: 12px;
+            }
+            
+            .admin-panel, .user-center {
+                width: 95%;
+                min-width: unset;
+                padding: 15px;
+            }
+            
+            .user-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .user-actions {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .permissions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .password-display {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .copy-password-btn {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .token-actions {
+                flex-direction: column;
+            }
+            
+            /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
+            .calibration-time {
+                bottom: 25px; /* 从15px调整为25px，上移10px */
+            }
+        }
+    </style>
 </head>
 <body id="body">
     <video id="video-background" autoplay muted loop playsinline style="display: none;">
@@ -92,9 +1725,6 @@
                     <li><i class="fas fa-window-restore"></i> 开启时间 6: 计算中...</li>
                     <li><i class="fas fa-window-restore"></i> 开启时间 7: 计算中...</li>
                 </ul>
-                 <div class="info-text">
-                    注意：以上时间为预测时间，实际时间可能因系统维护等原因有所调整
-                </div>
             </div>
         </div>
     </div>
@@ -912,6 +2542,2696 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // API地址设置 - 使用固定默认值，不存储在localStorage中
+        let API_BASE = "https://bcfxclub.dpdns.org/api";
+        
+        // 初始化状态
+        let startTime = new Date();
+        let currentPhase = 'reset';
+        let currentLights = [];
+        let countdownInterval;
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let timerEnabled = true;
+        let donationEnabled = false;
+        let currentEditingUser = null;
+        
+        //新增：全局变量用于存储调整后的开始时间
+        let adjustedStartTime = new Date();
+        // 新增： 标记是否已经显示过会话过期提示
+        let hasShownExpiredAlert = false;
+        // 新增：令牌自动续期定时器
+        let tokenRefreshTimer = null;
+        // 新增：令牌检测定时器
+        let tokenCheckTimer = null;
+        
+        // 获取认证头信息 - 修改为使用令牌
+        function getAuthHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (currentUser && currentUser.token) {
+                headers['Authorization'] = `Bearer ${currentUser.token}`;
+            }
+            
+            return headers;
+        }
+        
+        // 检查API响应是否需要重新登录
+        function checkAuthResponse(response) {
+            if (response.status === 401) {
+                // 未授权，清除用户信息
+                clearUserSession();
+                
+                // 如果还没有显示过过期提示，则显示并标记
+                if (!hasShownExpiredAlert) {
+                    hasShownExpiredAlert = true;
+                    alert('会话已过期，请重新登录');
+                }
+                return false;
+            }
+            return true;
+        }
+        
+        // 清除用户会话
+        function clearUserSession() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateUserInterface();
+            
+            // 清除令牌检测定时器
+            if (tokenCheckTimer) {
+                clearInterval(tokenCheckTimer);
+                tokenCheckTimer = null;
+            }
+            
+            // 清除令牌续期定时器
+            if (tokenRefreshTimer) {
+                clearTimeout(tokenRefreshTimer);
+                tokenRefreshTimer = null;
+            }
+        }
+        
+        // 新增：令牌自动续期功能
+        async function refreshToken() {
+            if (!currentUser || !currentUser.token) {
+                return false;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/refresh-token`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // 更新令牌和过期时间
+                        currentUser.token = result.token;
+                        currentUser.expiresAt = result.expiresAt;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        console.log('令牌已自动续期');
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('令牌续期失败:', error);
+            }
+            
+            return false;
+        }
+        
+        // 新增：检测令牌状态并自动续期
+        async function checkAndRefreshToken() {
+            if (!currentUser || !currentUser.token) {
+                return;
+            }
+            
+            try {
+                // 首先验证当前令牌是否有效
+                const response = await fetch(`${API_BASE}/verify-token`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.valid) {
+                        // 令牌有效，检查是否需要续期
+                        const now = Date.now();
+                        const expiresAt = currentUser.expiresAt || (now + 24 * 60 * 60 * 1000); // 默认24小时
+                        const timeUntilExpiry = expiresAt - now;
+                        
+                        // 如果令牌将在30分钟内过期，自动续期
+                        if (timeUntilExpiry < 30 * 60 * 1000) {
+                            console.log('令牌即将过期，正在自动续期...');
+                            await refreshToken();
+                        }
+                    } else {
+                        // 令牌无效，清除会话
+                        clearUserSession();
+                        if (!hasShownExpiredAlert) {
+                            hasShownExpiredAlert = true;
+                            alert('会话已过期，请重新登录');
+                        }
+                    }
+                } else {
+                    // API请求失败，可能是网络问题，不处理
+                }
+            } catch (error) {
+                console.error('令牌检测失败:', error);
+                // 网络错误，不处理
+            }
+        }
+        
+        // 新增：启动令牌检测定时器
+        function startTokenMonitor() {
+            if (tokenCheckTimer) {
+                clearInterval(tokenCheckTimer);
+            }
+            
+            // 每5分钟检测一次令牌状态
+            tokenCheckTimer = setInterval(checkAndRefreshToken, 5 * 60 * 1000);
+            
+            // 页面加载时立即检测一次
+            setTimeout(checkAndRefreshToken, 1000);
+        }
+        
+        // 从API加载设置
+        async function loadSettings() {
+            try {
+                // 添加超时处理
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch(`${API_BASE}/config`, {
+                    signal: controller.signal,
+                    headers: getAuthHeaders()
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const config = await response.json();
+                    
+                    if (config.startTime) {
+                        startTime = new Date(config.startTime);
+                        document.getElementById('start-time').value = formatDateTime(startTime);
+                    }
+                    
+                    if (config.initialPhase) {
+                        document.getElementById('initial-phase').value = config.initialPhase;
+                    }
+                    
+                    if (config.timerEnabled !== undefined) {
+                        timerEnabled = config.timerEnabled;
+                        document.getElementById('timer-enabled').value = timerEnabled.toString();
+                    }
+                    
+                    // 新增：捐助用户预测显示设置
+                    if (config.hangarTimesVisible !== undefined) {
+                        document.getElementById('hangar-times-visible').value = config.hangarTimesVisible.toString();
+                        localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    } else {
+                        // 默认值为true
+                        document.getElementById('hangar-times-visible').value = 'true';
+                        localStorage.setItem('hangarTimesVisible', 'true');
+                    }
+                    
+                    if (config.notification) {
+                        document.getElementById('notification-content').value = config.notification;
+                        updateNotificationDisplay(config.notification, config.notificationLink);
+                    }
+                    
+                    if (config.notificationColor) {
+                        document.getElementById('notification-color').value = config.notificationColor;
+                        document.getElementById('notification-color-preview').style.backgroundColor = config.notificationColor;
+                        document.documentElement.style.setProperty('--notification-color', config.notificationColor);
+                    }
+                    
+                    if (config.notificationLink) {
+                        document.getElementById('notification-link').value = config.notificationLink;
+                    }
+                    
+                    if (config.customTitle) {
+                        document.getElementById('custom-title').value = config.customTitle;
+                        document.getElementById('title').textContent = config.customTitle;
+                    }
+                    
+                    if (config.headerTextColor) {
+                        document.getElementById('header-text-color').value = config.headerTextColor;
+                        document.getElementById('header-text-color-preview').style.backgroundColor = config.headerTextColor;
+                        document.documentElement.style.setProperty('--header-text-color', config.headerTextColor);
+                    }
+                    
+                    if (config.headerFontSize) {
+                        document.getElementById('header-font-size').value = config.headerFontSize;
+                        document.getElementById('header-font-size-value').textContent = config.headerFontSize + 'rem';
+                        document.documentElement.style.setProperty('--header-font-size', config.headerFontSize + 'rem');
+                    }
+                    
+                    if (config.logoUrl) {
+                        document.getElementById('logo-url').value = config.logoUrl;
+                        updateLogoPreview(config.logoUrl);
+                    }
+                    
+                    if (config.logoSize) {
+                        document.getElementById('logo-size').value = config.logoSize;
+                        document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
+                        document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
+                    }
+                    
+                    if (config.qrcodeUrl) {
+                        document.getElementById('qrcode-url').value = config.qrcodeUrl;
+                        updateQrcodePreview(config.qrcodeUrl);
+                    }
+                    
+                    if (config.qrcodeCaption) {
+                        document.getElementById('qrcode-caption-input').value = config.qrcodeCaption;
+                        document.getElementById('qrcode-caption').textContent = config.qrcodeCaption;
+                    }
+                    
+                    if (config.qrcodeCaptionColor) {
+                        document.getElementById('qrcode-caption-color').value = config.qrcodeCaptionColor;
+                        document.getElementById('qrcode-caption-color-preview').style.backgroundColor = config.qrcodeCaptionColor;
+                        document.documentElement.style.setProperty('--qrcode-caption-color', config.qrcodeCaptionColor);
+                    }
+                    
+                    if (config.inviteCode) {
+                        document.getElementById('invite-code-input').value = config.inviteCode;
+                        document.getElementById('invite-code').textContent = config.inviteCode;
+                        document.getElementById('invite-code-container').style.display = 'block';
+                    }
+                    
+                    if (config.inviteLink) {
+                        document.getElementById('invite-link-input').value = config.inviteLink;
+                        document.getElementById('invite-link').href = config.inviteLink;
+                    }
+                    
+                    if (config.bgType) {
+                        document.getElementById('bg-type').value = config.bgType;
+                        // 根据背景类型更新显示
+                        updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
+                    }
+                    
+                    if (config.bgImage) {
+                        document.getElementById('bg-image').value = config.bgImage;
+                        updateBgPreview(config.bgImage, config.bgType);
+                    }
+                    
+                    if (config.videoUrl) {
+                        document.getElementById('video-url').value = config.videoUrl;
+                        updateVideoPreview(config.videoUrl);
+                    }
+                    
+                    if (config.bgOpacity) {
+                        document.getElementById('bg-opacity').value = config.bgOpacity;
+                        document.getElementById('opacity-value').textContent = config.bgOpacity;
+                        document.documentElement.style.setProperty('--bg-opacity', config.bgOpacity / 100);
+                    }
+                    
+                    if (config.windowTextColor) {
+                        document.getElementById('window-text-color').value = config.windowTextColor;
+                        document.getElementById('window-text-color-preview').style.backgroundColor = config.windowTextColor;
+                        document.documentElement.style.setProperty('--window-text-color', config.windowTextColor);
+                    }
+                    
+                    if (config.windowCommentColor) {
+                        document.getElementById('window-comment-color').value = config.windowCommentColor;
+                        document.getElementById('window-comment-color-preview').style.backgroundColor = config.windowCommentColor;
+                        document.documentElement.style.setProperty('--window-comment-color', config.windowCommentColor);
+                    }
+                    
+                    if (config.windowTitleColor) {
+                        document.getElementById('window-title-color').value = config.windowTitleColor;
+                        document.getElementById('window-title-color-preview').style.backgroundColor = config.windowTitleColor;
+                        document.documentElement.style.setProperty('--window-title-color', config.windowTitleColor);
+                    }
+                    
+                    if (config.calibrationTextColor) {
+                        document.getElementById('calibration-text-color').value = config.calibrationTextColor;
+                        document.getElementById('calibration-text-color-preview').style.backgroundColor = config.calibrationTextColor;
+                        document.documentElement.style.setProperty('--calibration-text-color', config.calibrationTextColor);
+                    }
+                    
+                    if (config.countdownTextColor) {
+                        document.getElementById('countdown-text-color').value = config.countdownTextColor;
+                        document.getElementById('countdown-text-color-preview').style.backgroundColor = config.countdownTextColor;
+                        document.documentElement.style.setProperty('--countdown-text-color', config.countdownTextColor);
+                    }
+                    
+                    if (config.hangarTimeTextColor) {
+                        document.getElementById('hangar-time-text-color').value = config.hangarTimeTextColor;
+                        document.getElementById('hangar-time-text-color-preview').style.backgroundColor = config.hangarTimeTextColor;
+                        document.documentElement.style.setProperty('--hangar-time-text-color', config.hangarTimeTextColor);
+                    }
+                    
+                    if (config.statusTextColor) {
+                        document.getElementById('status-text-color').value = config.statusTextColor;
+                        document.getElementById('status-text-color-preview').style.backgroundColor = config.statusTextColor;
+                        document.documentElement.style.setProperty('--status-text-color', config.statusTextColor);
+                    }
+                    
+                    if (config.calibrationTime) {
+                        document.getElementById('calibration-time').textContent = `校准时间: ${config.calibrationTime}`;
+                    }
+                    
+                    if (config.apiUrl) {
+                        // 仅更新当前会话的API_BASE，不保存到localStorage
+                        API_BASE = config.apiUrl;
+                        document.getElementById('api-url').value = config.apiUrl;
+                    }
+                    
+                    if (config.donationEnabled !== undefined) {
+                        donationEnabled = config.donationEnabled;
+                        document.getElementById('donation-enabled').value = donationEnabled.toString();
+                        updateDonationButtonDisplay();
+                    }
+                    
+                    // 新增：加载捐助注释
+                    if (config.donationNote) {
+                        document.getElementById('donation-note').value = config.donationNote;
+                        document.getElementById('donation-note-display').textContent = config.donationNote;
+                    }
+                    
+                    if (config.wechatQrcodeUrl) {
+                        document.getElementById('wechat-qrcode-url').value = config.wechatQrcodeUrl;
+                        document.getElementById('wechat-qrcode').src = config.wechatQrcodeUrl;
+                    }
+                    
+                    if (config.alipayQrcodeUrl) {
+                        document.getElementById('alipay-qrcode-url').value = config.alipayQrcodeUrl;
+                        document.getElementById('alipay-qrcode').src = config.alipayQrcodeUrl;
+                    }
+                    
+                    if (config.donationBtnColor) {
+                        document.getElementById('donation-btn-color').value = config.donationBtnColor;
+                        document.getElementById('donation-btn-color-preview').style.backgroundColor = config.donationBtnColor;
+                        document.documentElement.style.setProperty('--donation-btn-bg', config.donationBtnColor);
+                    }
+                    
+                    // 加载页脚信息
+                    if (config.footerNotice) {
+                        document.getElementById('footer-notice-input').value = config.footerNotice;
+                        updateFooterNoticeDisplay(config.footerNotice, config.footerNoticeLink);
+                    }
+                    
+                    if (config.footerNoticeLink) {
+                        document.getElementById('footer-notice-link').value = config.footerNoticeLink;
+                    }
+                    
+                    if (config.recordInfo) {
+                        document.getElementById('record-info-input').value = config.recordInfo;
+                        document.getElementById('record-info').textContent = config.recordInfo;
+                    }
+                    
+                    if (config.organizationName) {
+                        document.getElementById('organization-name-input').value = config.organizationName;
+                        document.getElementById('organization-name').textContent = config.organizationName;
+                    }
+                    
+                    if (config.projectDescription) {
+                        document.getElementById('project-description-input').value = config.projectDescription;
+                    }
+                    
+                    if (config.version) {
+                        document.getElementById('version-input').value = config.version;
+                    }
+                    
+                    if (config.about) {
+                        document.getElementById('about-input').value = config.about;
+                    }
+                    
+                    // 新增：加载令牌自动清理间隔
+                    if (config.tokenAutoCleanDays) {
+                        document.getElementById('auto-clean-days').value = config.tokenAutoCleanDays;
+                    }
+                    
+                    // 新增：加载令牌过期时间
+                    if (config.tokenExpirationDays) {
+                        document.getElementById('token-expiration-days').value = config.tokenExpirationDays;
+                    }
+                    
+                    initializeTimer(config.initialPhase || '5-green');
+                    
+                    // 更新用户界面状态
+                    updateUserInterface();
+
+                    // 添加计时器状态实时保存功能
+                    document.getElementById('timer-enabled').addEventListener('change', async function() {
+                        timerEnabled = this.value === 'true';
+                        await saveSettings();
+                        initializeTimer(document.getElementById('initial-phase').value);
+                    });
+                } else {
+                    console.error('Failed to load settings');
+                    initializeTimer('5-green');
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+                if (error.name === 'AbortError') {
+                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接超时</span>';
+                } else {
+                    document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
+                }
+                initializeTimer('5-green');
+            }
+        }
+        
+        // 更新用户界面状态
+        function updateUserInterface() {
+            const userLoginBtn = document.getElementById('user-login-btn');
+            const adminPanelBtn = document.getElementById('admin-panel-btn');
+            const userCenterBtn = document.getElementById('user-center-btn');
+            
+            if (currentUser) {
+                userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
+                
+                // 检查用户权限，动态显示管理面板
+                const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
+                    (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
+                
+                if (hasAnyPermission) {
+                    adminPanelBtn.style.display = 'flex';
+                    userCenterBtn.style.display = 'flex';
+                    
+                    // 动态更新管理面板标签显示
+                    updateAdminPanelTabs();
+                } else {
+                    adminPanelBtn.style.display = 'none';
+                    userCenterBtn.style.display = 'flex';
+                }
+                
+                // 启动令牌监控
+                startTokenMonitor();
+            } else {
+                userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
+                adminPanelBtn.style.display = 'none';
+                userCenterBtn.style.display = 'none';
+                
+                // 停止令牌监控
+                if (tokenCheckTimer) {
+                    clearInterval(tokenCheckTimer);
+                    tokenCheckTimer = null;
+                }
+            }
+            
+            // 新增：用户登录状态变化时刷新捐助用户预测显示
+            calculateHangarOpenTimes(adjustedStartTime);
+        }
+        
+        // 动态更新管理面板标签显示
+        function updateAdminPanelTabs() {
+            if (!currentUser) return;
+            
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                const tabName = tab.getAttribute('data-tab');
+                let shouldShow = false;
+                
+                // 超级管理员可以看到所有标签
+                if (currentUser.isSuperAdmin) {
+                    shouldShow = true;
+                } 
+                // 管理员根据权限显示标签
+                else if (currentUser.isAdmin && currentUser.permissions) {
+                    shouldShow = currentUser.permissions[tabName] || false;
+                }
+                // 普通用户根据权限显示标签
+                else if (currentUser.permissions) {
+                    shouldShow = currentUser.permissions[tabName] || false;
+                }
+                
+                tab.style.display = shouldShow ? 'block' : 'none';
+            });
+            
+            // 如果没有显示的标签，隐藏管理面板按钮
+            const visibleTabs = Array.from(tabs).filter(tab => tab.style.display !== 'none');
+            if (visibleTabs.length === 0) {
+                document.getElementById('admin-panel-btn').style.display = 'none';
+            }
+        }
+        
+        // 保存设置到API
+        async function saveSettings() {
+            const config = {
+                startTime: new Date(document.getElementById('start-time').value).toISOString(),
+                initialPhase: document.getElementById('initial-phase').value,
+                timerEnabled: document.getElementById('timer-enabled').value === 'true',
+                hangarTimesVisible: document.getElementById('hangar-times-visible').value === 'true',
+                notification: document.getElementById('notification-content').value,
+                notificationLink: document.getElementById('notification-link').value,
+                notificationColor: document.getElementById('notification-color').value,
+                customTitle: document.getElementById('custom-title').value,
+                headerTextColor: document.getElementById('header-text-color').value,
+                headerFontSize: parseFloat(document.getElementById('header-font-size').value),
+                logoUrl: document.getElementById('logo-url').value,
+                logoSize: parseInt(document.getElementById('logo-size').value),
+                qrcodeUrl: document.getElementById('qrcode-url').value,
+                qrcodeCaption: document.getElementById('qrcode-caption-input').value,
+                qrcodeCaptionColor: document.getElementById('qrcode-caption-color').value,
+                inviteCode: document.getElementById('invite-code-input').value,
+                inviteLink: document.getElementById('invite-link-input').value,
+                bgType: document.getElementById('bg-type').value,
+                bgImage: document.getElementById('bg-image').value,
+                videoUrl: document.getElementById('video-url').value,
+                bgOpacity: document.getElementById('bg-opacity').value,
+                windowTextColor: document.getElementById('window-text-color').value,
+                windowCommentColor: document.getElementById('window-comment-color').value,
+                windowTitleColor: document.getElementById('window-title-color').value,
+                calibrationTextColor: document.getElementById('calibration-text-color').value,
+                countdownTextColor: document.getElementById('countdown-text-color').value,
+                hangarTimeTextColor: document.getElementById('hangar-time-text-color').value,
+                statusTextColor: document.getElementById('status-text-color').value,
+                calibrationTime: document.getElementById('calibration-time').textContent.replace('校准时间: ', ''),
+                apiUrl: document.getElementById('api-url').value,
+                donationEnabled: document.getElementById('donation-enabled').value === 'true',
+                donationNote: document.getElementById('donation-note').value,
+                wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
+                alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
+                donationBtnColor: document.getElementById('donation-btn-color').value,
+                footerNotice: document.getElementById('footer-notice-input').value,
+                footerNoticeLink: document.getElementById('footer-notice-link').value,
+                recordInfo: document.getElementById('record-info-input').value,
+                organizationName: document.getElementById('organization-name-input').value,
+                projectDescription: document.getElementById('project-description-input').value,
+                version: document.getElementById('version-input').value,
+                about: document.getElementById('about-input').value,
+                tokenAutoCleanDays: parseInt(document.getElementById('auto-clean-days').value) || 30,
+                tokenExpirationDays: parseInt(document.getElementById('token-expiration-days').value) || 30
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/config`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(config)
+                });
+                
+                if (response.ok) {
+                    // 更新当前会话的API_BASE，不保存到localStorage
+                    API_BASE = config.apiUrl;
+                    // 更新邀请码显示
+                    updateInviteDisplay(config);
+                    // 更新页脚显示
+                    updateFooterDisplay(config);
+                    // 更新捐助按钮显示
+                    updateDonationButtonDisplay();
+                    // 更新背景显示
+                    updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
+                    // 更新捐助用户预测显示设置
+                    localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+                    return true;
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return false;
+                    }
+                    alert('保存失败');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Failed to save settings:', error);
+                alert('保存失败');
+                return false;
+            }
+        }
+        
+        // 更新背景显示
+        function updateBackgroundDisplay(bgType, bgImage, videoUrl) {
+            const videoBackground = document.getElementById('video-background');
+            
+            if (bgType === 'video') {
+                // 视频背景
+                if (videoUrl && videoUrl.trim() !== '') {
+                    videoBackground.innerHTML = `<source src="${videoUrl}" type="video/mp4">`;
+                    videoBackground.style.display = 'block';
+                    document.body.classList.add('video-bg');
+                    document.body.style.backgroundImage = 'none';
+                } else {
+                    videoBackground.style.display = 'none';
+                    document.body.classList.remove('video-bg');
+                    if (bgImage && bgImage.trim() !== '') {
+                        document.body.style.backgroundImage = `url(${bgImage})`;
+                    } else {
+                        document.body.style.backgroundImage = 'none';
+                    }
+                }
+            } else {
+                // 图片背景
+                videoBackground.style.display = 'none';
+                document.body.classList.remove('video-bg');
+                if (bgImage && bgImage.trim() !== '') {
+                    document.body.style.backgroundImage = `url(${bgImage})`;
+                } else {
+                    document.body.style.backgroundImage = 'none';
+                }
+            }
+        }
+        
+        // 更新邀请码显示
+        function updateInviteDisplay(config) {
+            const inviteContainer = document.getElementById('invite-code-container');
+            const inviteCode = document.getElementById('invite-code');
+            const inviteLink = document.getElementById('invite-link');
+            
+            if (config.inviteCode && config.inviteCode.trim() !== '') {
+                inviteCode.textContent = config.inviteCode;
+                inviteContainer.style.display = 'block';
+                
+                if (config.inviteLink && config.inviteLink.trim() !== '') {
+                    inviteLink.href = config.inviteLink;
+                } else {
+                    inviteLink.href = '#';
+                }
+            } else {
+                inviteContainer.style.display = 'none';
+            }
+        }
+        
+        // 更新捐助按钮显示
+        function updateDonationButtonDisplay() {
+            const donationBtn = document.getElementById('donation-btn');
+            if (donationEnabled) {
+                donationBtn.style.display = 'flex';
+            } else {
+                donationBtn.style.display = 'none';
+            }
+        }
+        
+        // 更新页脚显示
+        function updateFooterDisplay(config) {
+            if (config.footerNotice) {
+                updateFooterNoticeDisplay(config.footerNotice, config.footerNoticeLink);
+            }
+            
+            if (config.recordInfo) {
+                document.getElementById('record-info').textContent = config.recordInfo;
+            }
+            
+            if (config.organizationName) {
+                document.getElementById('organization-name').textContent = config.organizationName;
+            }
+        }
+        
+        // 更新通知显示
+        function updateNotificationDisplay(notification, link) {
+            const notificationScroll = document.getElementById('notification-scroll');
+            if (notification && notification.trim() !== '') {
+                if (link && link.trim() !== '') {
+                    notificationScroll.innerHTML = `<a href="${link}" target="_blank">${notification}</a>`;
+                } else {
+                    notificationScroll.textContent = notification;
+                }
+                document.getElementById('notification-bar').style.display = 'block';
+            } else {
+                document.getElementById('notification-bar').style.display = 'none';
+            }
+        }
+        
+        // 更新页脚公告显示
+        function updateFooterNoticeDisplay(notice, link) {
+            const footerNoticeScroll = document.getElementById('footer-notice-scroll');
+            if (notice && notice.trim() !== '') {
+                if (link && link.trim() !== '') {
+                    footerNoticeScroll.innerHTML = `<a href="${link}" target="_blank">${notice}</a>`;
+                } else {
+                    footerNoticeScroll.textContent = notice;
+                }
+            }
+        }
+        
+        // 更新Logo预览
+        function updateLogoPreview(url) {
+            const logoPreview = document.getElementById('logo-preview');
+            const logo = document.getElementById('logo');
+            
+            if (url && url.trim() !== '') {
+                logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview">`;
+                logo.innerHTML = `<img src="${url}" alt="Logo">`;
+            } else {
+                logoPreview.innerHTML = '<span>无Logo</span>';
+                logo.innerHTML = '';
+            }
+        }
+        
+        // 更新二维码预览
+        function updateQrcodePreview(url) {
+            const qrcodePreview = document.getElementById('qrcode-preview');
+            const qrcode = document.getElementById('qrcode');
+            
+            if (url && url.trim() !== '') {
+                qrcodePreview.innerHTML = `<img src="${url}" alt="QR Code Preview">`;
+                qrcode.innerHTML = `<img src="${url}" alt="QR Code">`;
+                
+                // 添加点击事件
+                qrcodePreview.onclick = function() {
+                    showQrcodeModal(url, document.getElementById('qrcode-caption-input').value);
+                };
+                
+                qrcode.onclick = function() {
+                    showQrcodeModal(url, document.getElementById('qrcode-caption-input').value);
+                };
+            } else {
+                qrcodePreview.innerHTML = '<span>无二维码</span>';
+                qrcode.innerHTML = '';
+                qrcodePreview.onclick = null;
+                qrcode.onclick = null;
+            }
+        }
+        
+        // 显示二维码模态框
+        function showQrcodeModal(url, caption) {
+            document.getElementById('qrcode-modal-img').src = url;
+            document.getElementById('qrcode-modal-caption').textContent = caption || '';
+            document.getElementById('qrcode-modal').style.display = 'flex';
+        }
+        
+        // 更新背景预览
+        function updateBgPreview(url, type) {
+            const bgPreview = document.getElementById('bg-preview');
+            
+            if (url && url.trim() !== '') {
+                if (type === 'video') {
+                    // 图片背景预览
+                    bgPreview.style.backgroundImage = `url(${url})`;
+                    bgPreview.innerHTML = '';
+                } else {
+                    // 图片背景预览
+                    bgPreview.style.backgroundImage = `url(${url})`;
+                    bgPreview.innerHTML = '';
+                }
+            } else {
+                bgPreview.style.backgroundImage = 'none';
+                bgPreview.innerHTML = '<span>无背景</span>';
+            }
+        }
+        
+        // 更新视频预览
+        function updateVideoPreview(url) {
+            const videoPreview = document.getElementById('video-preview');
+            
+            if (url && url.trim() !== '') {
+                videoPreview.innerHTML = `
+                    <video style="width: 100%; height: 100%; object-fit: cover;" controls>
+                        <source src="${url}" type="video/mp4">
+                        您的浏览器不支持视频标签
+                    </video>
+                `;
+            } else {
+                videoPreview.innerHTML = '<span>视频预览区域</span>';
+            }
+        }
+        
+        // 更新校准时间显示
+        function updateCalibrationTime() {
+            const now = new Date();
+            const calibrationTime = formatDateTimeFull(now);
+            document.getElementById('calibration-time').textContent = `校准时间: ${calibrationTime}`;
+        }
+        
+        // 阶段持续时间（分钟）
+        const PHASE_DURATIONS = {
+            reset: 120,      // 2小时 = 120分钟
+            card: 60,        // 1小时 = 60分钟
+            poweroff: 5      // 5分钟
+        };
+        
+        // 阶段配置
+        const PHASE_CONFIG = {
+            '5-red': { phase: 'reset', lights: ['red', 'red', 'red', 'red', 'red'], offset: 0 },
+            '1-green-4-red': { phase: 'reset', lights: ['green', 'red', 'red', 'red', 'red'], offset: 24 },
+            '2-green-3-red': { phase: 'reset', lights: ['green', 'green', 'red', 'red', 'red'], offset: 48 },
+            '3-green-2-red': { phase: 'reset', lights: ['green', 'green', 'green', 'red', 'red'], offset: 72 },
+            '4-green-1-red': { phase: 'reset', lights: ['green', 'green', 'green', 'green', 'red'], offset: 96 },
+            '5-green': { phase: 'card', lights: ['green', 'green', 'green', 'green', 'green'], offset: 0 },
+            '1-gray-4-green': { phase: 'card', lights: ['gray', 'green', 'green', 'green', 'green'], offset: 12 },
+            '2-gray-3-green': { phase: 'card', lights: ['gray', 'gray', 'green', 'green', 'green'], offset: 24 },
+            '3-gray-2-green': { phase: 'card', lights: ['gray', 'gray', 'gray', 'green', 'green'], offset: 36 },
+            '4-gray-1-green': { phase: 'card', lights: ['gray', 'gray', 'gray', 'gray', 'green'], offset: 48 },
+            '5-gray': { phase: 'poweroff', lights: ['gray', 'gray', 'gray', 'gray', 'gray'], offset: 0 }
+        };
+        
+        // 设置初始时间
+        document.getElementById('start-time').value = formatDateTime(startTime);
+        
+        // 更新计时器
+        document.getElementById('update-timer').addEventListener('click', function() {
+            const newStartTime = new Date(document.getElementById('start-time').value);
+            const initialPhase = document.getElementById('initial-phase').value;
+            
+            if (isNaN(newStartTime.getTime())) {
+                alert('请输入有效的时间');
+                return;
+            }
+            
+            startTime = newStartTime;
+            updateCalibrationTime();
+            
+            initializeTimer(initialPhase);
+            
+            // 保存设置
+            saveSettings();
+        });
+        
+        // 添加时间开放控制的保存事件监听
+        document.getElementById('save-time-control').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 用户登录按钮
+        document.getElementById('user-login-btn').addEventListener('click', async function() {
+            if (currentUser) {
+                // 退出登录 - 调用登出API使令牌失效
+                try {
+                    await fetch(`${API_BASE}/logout`, {
+                        method: 'POST',
+                        headers: getAuthHeaders()
+                    });
+                } catch (error) {
+                    console.error('Logout API error:', error);
+                    // 即使API调用失败，也要继续执行本地退出逻辑
+                } finally {
+                    // 清除本地用户信息
+                    clearUserSession();
+                    alert('已退出登录');
+                }
+            } else {
+                document.getElementById('login-modal').style.display = 'flex';
+                // 切换到登录标签
+                switchLoginTab('login');
+            }
+        });
+        
+        // 反馈按钮
+        document.getElementById('feedback-btn').addEventListener('click', function() {
+            document.getElementById('feedback-modal').style.display = 'flex';
+        });
+        
+        // 后台管理按钮
+        document.getElementById('admin-panel-btn').addEventListener('click', function() {
+            document.getElementById('admin-panel').style.display = 'block';
+            initDraggablePanel('admin-panel');
+            // 加载反馈和访问统计
+            loadFeedback();
+            loadVisits();
+            loadUsers();
+            // 新增：加载令牌统计
+            loadTokenStats();
+        });
+        
+        // 用户中心按钮
+        document.getElementById('user-center-btn').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'block';
+            initDraggablePanel('user-center');
+            // 加载用户信息
+            loadUserInfo();
+            // 注意：移除了加载用户管理数据的部分
+        });
+        
+        // 捐助按钮
+        document.getElementById('donation-btn').addEventListener('click', function() {
+            document.getElementById('donation-modal').style.display = 'flex';
+        });
+        
+        // 关闭后台管理面板
+        document.getElementById('close-admin-panel').addEventListener('click', function() {
+            document.getElementById('admin-panel').style.display = 'none';
+        });
+        
+        document.getElementById('close-admin-panel-bottom').addEventListener('click', function() {
+            document.getElementById('admin-panel').style.display = 'none';
+        });
+        
+        // 关闭用户中心
+        document.getElementById('close-user-center').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'none';
+        });
+        
+        document.getElementById('close-user-center-bottom').addEventListener('click', function() {
+            document.getElementById('user-center').style.display = 'none';
+        });
+        
+        // 关闭二维码模态框
+        document.getElementById('close-qrcode-modal').addEventListener('click', function() {
+            document.getElementById('qrcode-modal').style.display = 'none';
+        });
+        
+        // 关闭捐助模态框
+        document.getElementById('close-donation-modal').addEventListener('click', function() {
+            document.getElementById('donation-modal').style.display = 'none';
+        });
+        
+        // 关闭密码找回弹窗
+        document.getElementById('close-password-modal').addEventListener('click', function() {
+            document.getElementById('password-modal').style.display = 'none';
+        });
+        
+        // 取消登录
+        document.getElementById('cancel-login').addEventListener('click', function() {
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+        });
+        
+        // 取消注册
+        document.getElementById('cancel-register').addEventListener('click', function() {
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+            document.getElementById('register-email').value = '';
+            document.getElementById('security-question').value = '';
+            document.getElementById('security-answer').value = '';
+        });
+        
+        // 取消找回密码
+        document.getElementById('cancel-reset').addEventListener('click', function() {
+            document.getElementById('login-modal').style.display = 'none';
+            document.getElementById('reset-username').value = '';
+            document.getElementById('reset-email').value = '';
+            document.getElementById('reset-security-question').value = '';
+            document.getElementById('reset-security-answer').value = '';
+        });
+        
+        // 取消反馈
+        document.getElementById('cancel-feedback').addEventListener('click', function() {
+            document.getElementById('feedback-modal').style.display = 'none';
+            document.getElementById('feedback-content').value = '';
+            document.getElementById('feedback-contact').value = '';
+        });
+        
+        // 登录标签切换
+        function switchLoginTab(tabName) {
+            // 移除所有标签的active类
+            document.querySelectorAll('.login-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 隐藏所有内容
+            document.querySelectorAll('.login-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活选中的标签和内容
+            document.querySelector(`.login-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        // 用户中心标签切换
+        function switchUserCenterTab(tabName) {
+            // 移除所有标签的active类
+            document.querySelectorAll('.user-center-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 隐藏所有内容
+            document.querySelectorAll('.user-center-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活选中的标签和内容
+            document.querySelector(`.user-center-tab[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        // 登录标签点击事件
+        document.querySelectorAll('.login-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                switchLoginTab(tabName);
+            });
+        });
+        
+        // 用户中心标签点击事件
+        document.querySelectorAll('.user-center-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.getAttribute('data-tab');
+                switchUserCenterTab(tabName);
+            });
+        });
+        
+        // 后台管理标签点击事件
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // 移除所有标签的active类
+                document.querySelectorAll('.admin-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有内容
+                document.querySelectorAll('.admin-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 激活选中的标签和内容
+                this.classList.add('active');
+                const tabName = this.getAttribute('data-tab');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+                
+                // 如果切换到数据管理标签，加载令牌统计
+                if (tabName === 'data') {
+                    loadTokenStats();
+                }
+            });
+        });
+        
+        // 登录
+        document.getElementById('login-btn').addEventListener('click', async function() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/verify-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.valid) {
+                        // 保存用户信息和令牌
+                        currentUser = {
+                            ...result.user,
+                            token: result.token,
+                            isAdmin: result.isAdmin,
+                            isSuperAdmin: result.isSuperAdmin,
+                            permissions: result.permissions,
+                            expiresAt: result.expiresAt || (Date.now() + 24 * 60 * 60 * 1000) // 默认24小时
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        document.getElementById('login-modal').style.display = 'none';
+                        document.getElementById('login-username').value = '';
+                        document.getElementById('login-password').value = '';
+                        updateUserInterface();
+                        // 新增： 重置过期提示标记
+                        hasShownExpiredAlert = false; 
+                        alert('登录成功');
+                        
+                        // 新增：登录成功后刷新捐助用户预测显示
+                        calculateHangarOpenTimes(adjustedStartTime);
+                    } else {
+                        alert(result.error || '用户名或密码错误');
+                    }
+                } else {
+                    alert('登录失败');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('登录失败');
+            }
+        });
+        
+        // 注册
+        document.getElementById('register-btn').addEventListener('click', async function() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const email = document.getElementById('register-email').value;
+            const securityQuestion = document.getElementById('security-question').value;
+            const securityAnswer = document.getElementById('security-answer').value;
+            
+            if (!username || !password || !email) {
+                alert('请填写所有必填字段');
+                return;
+            }
+            
+            if (password.length < 4) {
+                alert('密码长度至少4位');
+                return;
+            }
+            
+            if (!securityQuestion || !securityAnswer) {
+                alert('请选择密保问题并填写答案');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        password, 
+                        email,
+                        securityQuestion,
+                        securityAnswer
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('注册成功，请扫码添加QQ群，直接联系管理员审核，请不要泄露个人信息。');
+                        document.getElementById('login-modal').style.display = 'none';
+                        document.getElementById('register-username').value = '';
+                        document.getElementById('register-password').value = '';
+                        document.getElementById('register-email').value = '';
+                        document.getElementById('security-question').value = '';
+                        document.getElementById('security-answer').value = '';
+                    } else {
+                        alert(result.error || '注册失败');
+                    }
+                } else {
+                    alert('注册失败');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                alert('注册失败');
+            }
+        });
+        
+        // 找回密码
+        document.getElementById('recover-password-btn').addEventListener('click', async function() {
+            const username = document.getElementById('reset-username').value;
+            const email = document.getElementById('reset-email').value;
+            const securityQuestion = document.getElementById('reset-security-question').value;
+            const securityAnswer = document.getElementById('reset-security-answer').value;
+            
+            if (!username || !email || !securityQuestion || !securityAnswer) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/recover-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username, 
+                        email,
+                        securityQuestion,
+                        securityAnswer
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        // 显示密码弹窗
+                        document.getElementById('password-display').textContent = result.password;
+                        document.getElementById('password-modal').style.display = 'flex';
+                        document.getElementById('login-modal').style.display = 'none';
+                        
+                        // 清空表单
+                        document.getElementById('reset-username').value = '';
+                        document.getElementById('reset-email').value = '';
+                        document.getElementById('reset-security-question').value = '';
+                        document.getElementById('reset-security-answer').value = '';
+                    } else {
+                        alert(result.error || '找回密码失败');
+                    }
+                } else {
+                    alert('找回密码失败');
+                }
+            } catch (error) {
+                console.error('Recover password error:', error);
+                alert('找回密码失败');
+            }
+        });
+        
+        // 复制密码
+        document.getElementById('copy-password-btn').addEventListener('click', function() {
+            const password = document.getElementById('password-display').textContent;
+            navigator.clipboard.writeText(password).then(function() {
+                alert('密码已复制到剪贴板');
+            }).catch(function() {
+                alert('复制失败，请手动复制');
+            });
+        });
+        
+        // 提交反馈
+        document.getElementById('submit-feedback').addEventListener('click', async function() {
+            const content = document.getElementById('feedback-content').value;
+            const contact = document.getElementById('feedback-contact').value;
+            
+            if (!content) {
+                alert('请输入反馈内容');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        content, 
+                        contact,
+                        username: currentUser ? currentUser.username : '匿名用户'
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('反馈提交成功');
+                        document.getElementById('feedback-modal').style.display = 'none';
+                        document.getElementById('feedback-content').value = '';
+                        document.getElementById('feedback-contact').value = '';
+                    } else {
+                        alert(result.error || '反馈提交失败');
+                    }
+                } else {
+                    alert('反馈提交失败');
+                }
+            } catch (error) {
+                console.error('Feedback error:', error);
+                alert('反馈提交失败');
+            }
+        });
+        
+        // 更新通知
+        document.getElementById('update-notification').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 保存外观设置
+        document.getElementById('save-appearance').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 保存捐助设置
+        document.getElementById('save-donation-settings').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 保存页脚信息
+        document.getElementById('save-footer-info').addEventListener('click', function() {
+            saveSettings();
+        });
+        
+        // 删除二维码
+        document.getElementById('delete-qrcode').addEventListener('click', function() {
+            document.getElementById('qrcode-url').value = '';
+            updateQrcodePreview('');
+            saveSettings();
+        });
+        
+        // 测试API连接
+        document.getElementById('test-api').addEventListener('click', async function() {
+            const apiUrl = document.getElementById('api-url').value;
+            const resultDiv = document.getElementById('api-test-result');
+            
+            if (!apiUrl) {
+                resultDiv.innerHTML = '<span class="error">请输入API地址</span>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiUrl}/config`);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span class="success">API连接成功</span>';
+                    // 更新当前会话的API_BASE
+                    API_BASE = apiUrl;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">API连接失败: ${response.status}</span>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">API连接失败: ${error.message}</span>`;
+            }
+        });
+        
+        // 导出数据
+        document.getElementById('export-data').addEventListener('click', async function() {
+            try {
+                const response = await fetch(`${API_BASE}/export-data`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 创建下载链接
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `hangar-timer-export-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('导出数据失败');
+                }
+            } catch (error) {
+                console.error('Export data error:', error);
+                alert('导出数据失败');
+            }
+        });
+        
+        // 重置数据
+        document.getElementById('reset-data').addEventListener('click', function() {
+            if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
+                fetch(`${API_BASE}/reset-data`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('数据已重置');
+                        location.reload();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('重置数据失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Reset data error:', error);
+                    alert('重置数据失败');
+                });
+            }
+        });
+        
+        // 加载反馈
+        async function loadFeedback() {
+            try {
+                const response = await fetch(`${API_BASE}/feedback`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const feedback = await response.json();
+                    const feedbackList = document.getElementById('feedback-list');
+                    
+                    if (feedback.length === 0) {
+                        feedbackList.innerHTML = '<div class="feedback-item">暂无反馈</div>';
+                        return;
+                    }
+                    
+                    feedbackList.innerHTML = '';
+                    feedback.forEach(item => {
+                        const feedbackItem = document.createElement('div');
+                        feedbackItem.className = 'feedback-item';
+                        feedbackItem.innerHTML = `
+                            <div class="feedback-date">${new Date(item.date).toLocaleString()}</div>
+                            <div class="feedback-username">${item.username || '匿名用户'}</div>
+                            <div class="feedback-content">${item.content}</div>
+                            ${item.contact ? `<div class="feedback-contact">联系方式: ${item.contact}</div>` : ''}
+                            <button class="delete-feedback" data-id="${item.id}">删除</button>
+                        `;
+                        feedbackList.appendChild(feedbackItem);
+                    });
+                    
+                    // 添加删除事件监听
+                    document.querySelectorAll('.delete-feedback').forEach(button => {
+                        button.addEventListener('click', async function() {
+                            const id = this.getAttribute('data-id');
+                            if (confirm('确定要删除这条反馈吗？')) {
+                                try {
+                                    const response = await fetch(`${API_BASE}/feedback/${id}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders()
+                                    });
+                                    
+                                    if (response.ok) {
+                                        loadFeedback();
+                                    } else {
+                                        if (!checkAuthResponse(response)) {
+                                            return;
+                                        }
+                                        alert('删除失败');
+                                    }
+                                } catch (error) {
+                                    console.error('Delete feedback error:', error);
+                                    alert('删除失败');
+                                }
+                            }
+                        });
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load feedback');
+                }
+            } catch (error) {
+                console.error('Failed to load feedback:', error);
+            }
+        }
+        
+        // 加载访问统计
+        async function loadVisits() {
+            try {
+                const response = await fetch(`${API_BASE}/visits`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const visits = await response.json();
+                    const visitsList = document.getElementById('visits-list');
+                    const visitCount = document.getElementById('visit-count');
+                    
+                    visitCount.textContent = `总IP数: ${visits.length}`;
+                    
+                    if (visits.length === 0) {
+                        visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
+                        return;
+                    }
+                    
+                    visitsList.innerHTML = '';
+                    visits.forEach(visit => {
+                        const visitItem = document.createElement('div');
+                        visitItem.className = 'visit-item';
+                        visitItem.innerHTML = `
+                            <div class="visit-ip">${visit.ip}</div>
+                            <div class="visit-date">${new Date(visit.date).toLocaleString()}</div>
+                        `;
+                        visitsList.appendChild(visitItem);
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load visits');
+                }
+            } catch (error) {
+                console.error('Failed to load visits:', error);
+            }
+        }
+        
+        // 刷新访问统计
+        document.getElementById('refresh-visits').addEventListener('click', function() {
+            loadVisits();
+        });
+        
+        // 清除访问记录
+        document.getElementById('clear-visits').addEventListener('click', function() {
+            if (confirm('确定要清除所有访问记录吗？')) {
+                fetch(`${API_BASE}/visits`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        loadVisits();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('清除失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Clear visits error:', error);
+                    alert('清除失败');
+                });
+            }
+        });
+        
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const users = await response.json();
+                    const userList = document.getElementById('user-list');
+                    
+                    if (users.length === 0) {
+                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
+                        return;
+                    }
+                    
+                    userList.innerHTML = '';
+                    users.forEach(user => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item';
+                        
+                        let roleBadge = '';
+                        if (user.isSuperAdmin) {
+                            roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
+                        } else if (user.isAdmin) {
+                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
+                        } else {
+                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                        }
+                        
+                        if (user.frozen) {
+                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
+                        }
+                        
+                        if (!user.approved) {
+                            roleBadge += '<span class="user-role-badge user-pending">待审核</span>';
+                        }
+                        
+                        userItem.innerHTML = `
+                            <div class="user-info">
+                                <strong>${user.username}</strong>
+                                ${roleBadge}
+                                <div>${user.email}</div>
+                                <div>注册时间: ${new Date(user.registerDate).toLocaleString()}</div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="user-action-btn edit-user" data-id="${user.id}">编辑</button>
+                                <button class="user-action-btn delete-user" data-id="${user.id}" style="background: var(--reset-color);">删除</button>
+                            </div>
+                        `;
+                        userList.appendChild(userItem);
+                    });
+                    
+                    // 添加编辑和删除事件监听
+                    document.querySelectorAll('.edit-user').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const userId = this.getAttribute('data-id');
+                            editUser(userId);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-user').forEach(button => {
+                        button.addEventListener('click', function() {
+                            const userId = this.getAttribute('data-id');
+                            deleteUser(userId);
+                        });
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load users');
+                }
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+        
+        // 刷新用户列表
+        document.getElementById('refresh-users').addEventListener('click', function() {
+            loadUsers();
+        });
+        
+        // 编辑用户
+        async function editUser(userId) {
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    currentEditingUser = user;
+                    
+                    document.getElementById('edit-username').value = user.username;
+                    document.getElementById('edit-email').value = user.email;
+                    
+                    // 设置用户角色
+                    if (user.isSuperAdmin) {
+                        document.getElementById('edit-role').value = 'super-admin';
+                        // 显示超级管理员选项
+                        document.getElementById('super-admin-option').style.display = 'block';
+                    } else if (user.isAdmin) {
+                        document.getElementById('edit-role').value = 'admin';
+                        // 隐藏超级管理员选项
+                        document.getElementById('super-admin-option').style.display = 'none';
+                    } else {
+                        document.getElementById('edit-role').value = 'normal';
+                        // 隐藏超级管理员选项
+                        document.getElementById('super-admin-option').style.display = 'none';
+                    }
+                    
+                    // 设置权限
+                    const permissions = user.permissions || {};
+                    document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                        const permissionName = checkbox.value;
+                        checkbox.checked = permissions[permissionName] || false;
+                    });
+                    
+                    // 根据角色显示/隐藏管理员权限
+                    updatePermissionVisibility();
+                    
+                    // 设置审核状态和冻结状态
+                    document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
+                    document.getElementById('edit-frozen').value = user.frozen ? 'true' : 'false';
+                    
+                    document.getElementById('user-edit-modal').style.display = 'flex';
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('获取用户信息失败');
+                }
+            } catch (error) {
+                console.error('Edit user error:', error);
+                alert('获取用户信息失败');
+            }
+        }
+        
+        // 更新权限可见性
+        function updatePermissionVisibility() {
+            const role = document.getElementById('edit-role').value;
+            const adminPermissions = document.querySelectorAll('.admin-permission');
+            
+            if (role === 'admin' || role === 'super-admin') {
+                adminPermissions.forEach(permission => {
+                    permission.style.display = 'flex';
+                });
+            } else {
+                adminPermissions.forEach(permission => {
+                    permission.style.display = 'none';
+                });
+            }
+        }
+        
+        // 角色变更时更新权限可见性
+        document.getElementById('edit-role').addEventListener('change', updatePermissionVisibility);
+        
+        // 保存用户编辑
+        document.getElementById('save-user-edit').addEventListener('click', async function() {
+            if (!currentEditingUser) return;
+            
+            const email = document.getElementById('edit-email').value;
+            const role = document.getElementById('edit-role').value;
+            const password = document.getElementById('edit-password').value;
+            const approved = document.getElementById('edit-approved').value === 'true';
+            const frozen = document.getElementById('edit-frozen').value === 'true';
+            
+            // 收集权限
+            const permissions = {};
+            document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                permissions[checkbox.value] = checkbox.checked;
+            });
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentEditingUser.id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        email,
+                        role,
+                        password: password || undefined,
+                        permissions,
+                        approved,
+                        frozen
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('用户信息已更新');
+                        document.getElementById('user-edit-modal').style.display = 'none';
+                        loadUsers();
+                        
+                        // 如果编辑的是当前登录用户，更新本地存储
+                        if (currentUser && currentUser.id === currentEditingUser.id) {
+                            const updatedUser = {
+                                ...currentUser,
+                                email,
+                                isAdmin: role === 'admin' || role === 'super-admin',
+                                isSuperAdmin: role === 'super-admin',
+                                permissions,
+                                approved,
+                                frozen
+                            };
+                            currentUser = updatedUser;
+                            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                            updateUserInterface();
+                        }
+                    } else {
+                        alert(result.error || '更新用户信息失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新用户信息失败');
+                }
+            } catch (error) {
+                console.error('Save user edit error:', error);
+                alert('更新用户信息失败');
+            }
+        });
+        
+        // 取消用户编辑
+        document.getElementById('cancel-user-edit').addEventListener('click', function() {
+            document.getElementById('user-edit-modal').style.display = 'none';
+            currentEditingUser = null;
+        });
+        
+        // 删除用户
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除这个用户吗？此操作不可恢复！')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('用户已删除');
+                        loadUsers();
+                        
+                        // 如果删除的是当前登录用户，退出登录
+                        if (currentUser && currentUser.id === userId) {
+                            clearUserSession();
+                            alert('您的账户已被删除，已退出登录');
+                        }
+                    } else {
+                        alert(result.error || '删除用户失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('删除用户失败');
+                }
+            } catch (error) {
+                console.error('Delete user error:', error);
+                alert('删除用户失败');
+            }
+        }
+        
+        // 加载用户信息
+        async function loadUserInfo() {
+            if (!currentUser) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    
+                    document.getElementById('user-info-username').value = user.username;
+                    document.getElementById('user-info-email').value = user.email;
+                    
+                    let roleText = '';
+                    if (user.isSuperAdmin) {
+                        roleText = '超级管理员';
+                    } else if (user.isAdmin) {
+                        roleText = '管理员';
+                    } else {
+                        roleText = '普通用户';
+                    }
+                    
+                    if (user.frozen) {
+                        roleText += ' (已冻结)';
+                    }
+                    
+                    if (!user.approved) {
+                        roleText += ' (待审核)';
+                    }
+                    
+                    document.getElementById('user-info-role').textContent = roleText;
+                    
+                    // 设置密保问题
+                    document.getElementById('user-security-question').value = user.securityQuestion || '';
+                    document.getElementById('user-security-answer').value = user.securityAnswer || '';
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load user info');
+                }
+            } catch (error) {
+                console.error('Failed to load user info:', error);
+            }
+        }
+        
+        // 更新用户信息
+        document.getElementById('update-user-info').addEventListener('click', async function() {
+            if (!currentUser) return;
+            
+            const email = document.getElementById('user-info-email').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ email })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('用户信息已更新');
+                        
+                        // 更新本地存储
+                        currentUser.email = email;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    } else {
+                        alert(result.error || '更新用户信息失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新用户信息失败');
+                }
+            } catch (error) {
+                console.error('Update user info error:', error);
+                alert('更新用户信息失败');
+            }
+        });
+        
+        // 修改密码
+        document.getElementById('change-password-btn').addEventListener('click', async function() {
+            if (!currentUser) return;
+            
+            const oldPassword = document.getElementById('change-password-old').value;
+            const newPassword = document.getElementById('change-password-new').value;
+            const confirmPassword = document.getElementById('change-password-confirm').value;
+            
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alert('请填写所有密码字段');
+                return;
+            }
+            
+            if (newPassword.length < 4) {
+                alert('新密码长度至少4位');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('新密码和确认密码不一致');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/change-password`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        oldPassword,
+                        newPassword
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密码修改成功');
+                        document.getElementById('change-password-old').value = '';
+                        document.getElementById('change-password-new').value = '';
+                        document.getElementById('change-password-confirm').value = '';
+                    } else {
+                        alert(result.error || '密码修改失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('密码修改失败');
+                }
+            } catch (error) {
+                console.error('Change password error:', error);
+                alert('密码修改失败');
+            }
+        });
+        
+        // 更新密保设置
+        document.getElementById('update-security-question').addEventListener('click', async function() {
+            if (!currentUser) return;
+            
+            const securityQuestion = document.getElementById('user-security-question').value;
+            const securityAnswer = document.getElementById('user-security-answer').value;
+            
+            if (!securityQuestion || !securityAnswer) {
+                alert('请选择密保问题并填写答案');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/${currentUser.id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        securityQuestion,
+                        securityAnswer
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('密保设置已更新');
+                        
+                        // 更新本地存储
+                        currentUser.securityQuestion = securityQuestion;
+                        currentUser.securityAnswer = securityAnswer;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    } else {
+                        alert(result.error || '更新密保设置失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('更新密保设置失败');
+                }
+            } catch (error) {
+                console.error('Update security question error:', error);
+                alert('更新密保设置失败');
+            }
+        });
+        
+        // 页脚信息按钮
+        document.getElementById('project-description-btn').addEventListener('click', function() {
+            document.getElementById('footer-modal-title').textContent = '项目介绍';
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('project-description-input').value;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('version-btn').addEventListener('click', function() {
+            document.getElementById('footer-modal-title').textContent = '版本更新';
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('version-input').value;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        document.getElementById('about-btn').addEventListener('click', function() {
+            document.getElementById('footer-modal-title').textContent = '关于我们';
+            document.getElementById('footer-modal-content').innerHTML = document.getElementById('about-input').value;
+            document.getElementById('footer-info-modal').style.display = 'flex';
+        });
+        
+        // 关闭页脚信息模态框
+        document.getElementById('close-footer-modal').addEventListener('click', function() {
+            document.getElementById('footer-info-modal').style.display = 'none';
+        });
+        
+        // 初始化可拖拽面板
+        function initDraggablePanel(panelId) {
+            const panel = document.getElementById(panelId);
+            const header = document.getElementById(`${panelId}-header`);
+            
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            
+            header.addEventListener("mousedown", dragStart);
+            document.addEventListener("mousemove", drag);
+            document.addEventListener("mouseup", dragEnd);
+            
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                if (e.target === header || header.contains(e.target)) {
+                    isDragging = true;
+                }
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    setTranslate(currentX, currentY, panel);
+                }
+            }
+            
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+            
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                isDragging = false;
+            }
+        }
+        
+        // 新增：加载令牌统计
+        async function loadTokenStats() {
+            try {
+                const response = await fetch(`${API_BASE}/token-stats`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const stats = await response.json();
+                    
+                    document.getElementById('token-total').textContent = stats.totalTokens || 0;
+                    document.getElementById('token-active').textContent = stats.activeTokens || 0;
+                    document.getElementById('token-expired').textContent = stats.expiredTokens || 0;
+                    document.getElementById('token-auto-clean').textContent = `${stats.autoCleanDays || 30}天`;
+                    
+                    // 更新用户令牌列表
+                    const userList = document.getElementById('token-user-list');
+                    if (stats.userStats && stats.userStats.length > 0) {
+                        userList.innerHTML = '';
+                        stats.userStats.forEach(user => {
+                            const userItem = document.createElement('div');
+                            userItem.className = 'token-user-item';
+                            userItem.innerHTML = `
+                                <span>${user.username}</span>
+                                <span>${user.tokenCount}个令牌</span>
+                            `;
+                            userList.appendChild(userItem);
+                        });
+                    } else {
+                        userList.innerHTML = '<div class="token-user-item">暂无用户令牌数据</div>';
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    console.error('Failed to load token stats');
+                }
+            } catch (error) {
+                console.error('Failed to load token stats:', error);
+            }
+        }
+        
+        // 新增：设置自动清理间隔
+        document.getElementById('set-auto-clean').addEventListener('click', async function() {
+            const days = parseInt(document.getElementById('auto-clean-days').value);
+            
+            if (isNaN(days) || days < 1 || days > 365) {
+                alert('请输入1-365之间的有效天数');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/set-auto-clean`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ days })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(`自动清理间隔已设置为${days}天`);
+                        loadTokenStats();
+                    } else {
+                        alert(result.error || '设置失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('设置失败');
+                }
+            } catch (error) {
+                console.error('Set auto clean error:', error);
+                alert('设置失败');
+            }
+        });
+        
+        // 新增：设置令牌过期时间
+        document.getElementById('set-token-expiration').addEventListener('click', async function() {
+            const days = parseInt(document.getElementById('token-expiration-days').value);
+            
+            if (isNaN(days) || days < 1 || days > 365) {
+                alert('请输入1-365之间的有效天数');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/set-token-expiration`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ days })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        alert(`令牌过期时间已设置为${days}天`);
+                    } else {
+                        alert(result.error || '设置失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('设置失败');
+                }
+            } catch (error) {
+                console.error('Set token expiration error:', error);
+                alert('设置失败');
+            }
+        });
+        
+        // 新增：清理过期令牌
+        document.getElementById('clean-expired-tokens').addEventListener('click', function() {
+            if (confirm('确定要清理所有过期令牌吗？')) {
+                fetch(`${API_BASE}/clean-expired-tokens`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        throw new Error('清理失败');
+                    }
+                })
+                .then(result => {
+                    if (result.success) {
+                        alert(`已清理 ${result.cleanedCount} 个过期令牌`);
+                        loadTokenStats();
+                    } else {
+                        alert(result.error || '清理失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Clean expired tokens error:', error);
+                    alert('清理失败');
+                });
+            }
+        });
+        
+        // 新增：清理所有令牌
+        document.getElementById('clean-all-tokens').addEventListener('click', function() {
+            if (confirm('确定要清理所有令牌吗？所有用户将需要重新登录！')) {
+                fetch(`${API_BASE}/clean-all-tokens`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        throw new Error('清理失败');
+                    }
+                })
+                .then(result => {
+                    if (result.success) {
+                        alert(`已清理 ${result.cleanedCount} 个令牌`);
+                        loadTokenStats();
+                        
+                        // 如果清理了当前用户的令牌，需要重新登录
+                        if (result.cleanedCount > 0) {
+                            clearUserSession();
+                            alert('所有令牌已清理，请重新登录');
+                        }
+                    } else {
+                        alert(result.error || '清理失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Clean all tokens error:', error);
+                    alert('清理失败');
+                });
+            }
+        });
+        
+        // 文件上传功能
+        document.getElementById('upload-logo').addEventListener('click', function() {
+            const fileInput = document.getElementById('logo-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'logo');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('logo-url').value = url;
+                updateLogoPreview(url);
+                saveSettings();
+            });
+        });
+        
+        document.getElementById('upload-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'qrcode');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('qrcode-url').value = url;
+                updateQrcodePreview(url);
+                saveSettings();
+            });
+        });
+        
+        document.getElementById('upload-bg').addEventListener('click', function() {
+            const fileInput = document.getElementById('bg-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'background');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('bg-image').value = url;
+                updateBgPreview(url, document.getElementById('bg-type').value);
+                saveSettings();
+            });
+        });
+        
+        document.getElementById('upload-video').addEventListener('click', function() {
+            const fileInput = document.getElementById('video-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的视频');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'video');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('video-url').value = url;
+                updateVideoPreview(url);
+                saveSettings();
+            });
+        });
+        
+        document.getElementById('upload-wechat-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('wechat-qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'wechat-qrcode');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('wechat-qrcode-url').value = url;
+                document.getElementById('wechat-qrcode').src = url;
+                saveSettings();
+            });
+        });
+        
+        document.getElementById('upload-alipay-qrcode').addEventListener('click', function() {
+            const fileInput = document.getElementById('alipay-qrcode-upload');
+            if (fileInput.files.length === 0) {
+                alert('请选择要上传的图片');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('type', 'alipay-qrcode');
+            
+            uploadFile(formData, function(url) {
+                document.getElementById('alipay-qrcode-url').value = url;
+                document.getElementById('alipay-qrcode').src = url;
+                saveSettings();
+            });
+        });
+        
+        // 文件上传函数
+        async function uploadFile(formData, callback) {
+            try {
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        callback(result.url);
+                    } else {
+                        alert(result.error || '上传失败');
+                    }
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                    alert('上传失败');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('上传失败');
+            }
+        }
+        
+        // 初始化计时器
+        function initializeTimer(initialPhase) {
+            const phaseConfig = PHASE_CONFIG[initialPhase];
+            if (!phaseConfig) {
+                console.error('Invalid initial phase:', initialPhase);
+                return;
+            }
+            
+            currentPhase = phaseConfig.phase;
+            currentLights = [...phaseConfig.lights];
+            
+            // 计算调整后的开始时间
+            const offsetMinutes = phaseConfig.offset;
+            adjustedStartTime = new Date(startTime.getTime() + offsetMinutes * 60 * 1000);
+            
+            // 清除现有计时器
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // 立即更新一次
+            updateTimer();
+            
+            // 设置定时器每秒更新
+            countdownInterval = setInterval(updateTimer, 1000);
+            
+            // 更新界面
+            updateLights();
+            updatePhaseIndicator();
+            updateCalibrationTime();
+            
+            // 计算机库开启时间
+            calculateHangarOpenTimes(adjustedStartTime);
+        }
+        
+        // 更新计时器显示
+        function updateTimer() {
+            if (!timerEnabled) {
+                document.getElementById('countdown').textContent = '系统维护中';
+                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-tools"></i> <span>系统维护中</span>';
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
+                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-play-circle"></i> 当前机库开启时间: 系统维护中';
+                return;
+            }
+            
+            const now = new Date();
+            const elapsedMinutes = (now - adjustedStartTime) / (1000 * 60);
+            
+            // 计算当前阶段和剩余时间
+            const phaseDuration = PHASE_DURATIONS[currentPhase];
+            const phaseElapsed = elapsedMinutes % (phaseDuration * 6); // 6个阶段循环
+            
+            let currentStage = Math.floor(phaseElapsed / phaseDuration);
+            let stageElapsed = phaseElapsed % phaseDuration;
+            let stageRemaining = phaseDuration - stageElapsed;
+            
+            // 确保阶段在有效范围内
+            if (currentStage >= 6) {
+                currentStage = 0;
+            }
+            
+            // 更新灯光状态
+            updateLightsForStage(currentStage);
+            
+            // 更新倒计时显示
+            const hours = Math.floor(stageRemaining / 60);
+            const minutes = Math.floor(stageRemaining % 60);
+            const seconds = Math.floor((stageRemaining * 60) % 60);
+            
+            document.getElementById('countdown').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // 更新阶段指示器
+            updatePhaseIndicator();
+            
+            // 更新机库开启时间
+            updateHangarOpenTime();
+        }
+        
+        // 根据阶段更新灯光状态
+        function updateLightsForStage(stage) {
+            // 根据当前阶段和阶段索引更新灯光
+            if (currentPhase === 'reset') {
+                // 重置阶段：从5红灯逐渐变为5绿灯
+                currentLights = Array(5).fill('red');
+                for (let i = 0; i <= stage; i++) {
+                    if (i < 5) {
+                        currentLights[i] = 'green';
+                    }
+                }
+            } else if (currentPhase === 'card') {
+                // 插卡阶段：从5绿灯逐渐变为5灰灯
+                currentLights = Array(5).fill('green');
+                for (let i = 0; i <= stage; i++) {
+                    if (i < 5) {
+                        currentLights[i] = 'gray';
+                    }
+                }
+            } else if (currentPhase === 'poweroff') {
+                // 断电阶段：所有灯都是灰色
+                currentLights = Array(5).fill('gray');
+            }
+            
+            updateLights();
+        }
+        
+        // 更新灯光显示
+        function updateLights() {
+            const lightsContainer = document.getElementById('lights-container');
+            
+            for (let i = 0; i < 5; i++) {
+                const light = document.getElementById(`light-${i}`);
+                const color = currentLights[i] || 'gray';
+                
+                light.className = `light ${color} active`;
+            }
+        }
+        
+        // 更新阶段指示器
+        function updatePhaseIndicator() {
+            const phaseIndicator = document.getElementById('phase-indicator');
+            
+            if (currentPhase === 'reset') {
+                phaseIndicator.innerHTML = '<i class="fas fa-sync-alt"></i> <span>机库已关闭等待开启中</span>';
+                phaseIndicator.className = 'phase-indicator phase-reset';
+            } else if (currentPhase === 'card') {
+                phaseIndicator.innerHTML = '<i class="fas fa-id-card"></i> <span>机库已开启可以插卡</span>';
+                phaseIndicator.className = 'phase-indicator phase-card';
+            } else if (currentPhase === 'poweroff') {
+                phaseIndicator.innerHTML = '<i class="fas fa-power-off"></i> <span>机库已断电无法插卡</span>';
+                phaseIndicator.className = 'phase-indicator phase-poweroff';
+            }
+        }
+        
+        // 更新机库开启时间
+        function updateHangarOpenTime() {
+            const now = new Date();
+            const elapsedMinutes = (now - adjustedStartTime) / (1000 * 60);
+            
+            // 计算下一次机库开启时间
+            const totalCycleMinutes = (PHASE_DURATIONS.reset * 6) + (PHASE_DURATIONS.card * 6) + PHASE_DURATIONS.poweroff;
+            const cycleElapsed = elapsedMinutes % totalCycleMinutes;
+            
+            let nextOpenTime;
+            
+            if (cycleElapsed < PHASE_DURATIONS.reset * 6) {
+                // 当前在重置阶段
+                const resetStage = Math.floor(cycleElapsed / PHASE_DURATIONS.reset);
+                const nextResetStage = resetStage + 1;
+                
+                if (nextResetStage < 6) {
+                    nextOpenTime = new Date(adjustedStartTime.getTime() + 
+                        (PHASE_DURATIONS.reset * nextResetStage) * 60 * 1000);
+                } else {
+                    // 进入插卡阶段
+                    nextOpenTime = new Date(adjustedStartTime.getTime() + 
+                        (PHASE_DURATIONS.reset * 6) * 60 * 1000);
+                }
+            } else if (cycleElapsed < (PHASE_DURATIONS.reset * 6 + PHASE_DURATIONS.card * 6)) {
+                // 当前在插卡阶段
+                const cardStage = Math.floor((cycleElapsed - PHASE_DURATIONS.reset * 6) / PHASE_DURATIONS.card);
+                const nextCardStage = cardStage + 1;
+                
+                if (nextCardStage < 6) {
+                    nextOpenTime = new Date(adjustedStartTime.getTime() + 
+                        (PHASE_DURATIONS.reset * 6 + PHASE_DURATIONS.card * nextCardStage) * 60 * 1000);
+                } else {
+                    // 进入断电阶段，然后重新开始
+                    nextOpenTime = new Date(adjustedStartTime.getTime() + 
+                        (PHASE_DURATIONS.reset * 6 + PHASE_DURATIONS.card * 6 + PHASE_DURATIONS.poweroff) * 60 * 1000);
+                }
+            } else {
+                // 当前在断电阶段
+                nextOpenTime = new Date(adjustedStartTime.getTime() + 
+                    (PHASE_DURATIONS.reset * 6 + PHASE_DURATIONS.card * 6 + PHASE_DURATIONS.poweroff) * 60 * 1000);
+            }
+            
+            document.getElementById('hangar-open-time').innerHTML = 
+                `<i class="fas fa-play-circle"></i> 当前机库开启时间: ${formatDateTimeFull(nextOpenTime)}`;
+        }
+        
+        // 计算机库开启时间预测
+        function calculateHangarOpenTimes(baseTime) {
+            // 新增：检查捐助用户预测显示权限
+            const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false';
+            const hasViewPermission = currentUser && currentUser.permissions && currentUser.permissions.viewHangarTimes;
+            
+            // 如果设置为仅授权用户可见且用户没有权限，则不显示
+            if (!hangarTimesVisible && !hasViewPermission) {
+                const windowList = document.getElementById('window-list');
+                windowList.innerHTML = `
+                    <li><i class="fas fa-window-restore"></i> 机库开启时间预测仅对授权用户开放</li>
+                    <li><i class="fas fa-window-restore"></i> 请登录并联系管理员获取查看权限</li>
+                `;
+                return;
+            }
+            
+            const totalCycleMinutes = (PHASE_DURATIONS.reset * 6) + (PHASE_DURATIONS.card * 6) + PHASE_DURATIONS.poweroff;
+            const windowList = document.getElementById('window-list');
+            const times = [];
+            
+            // 上次开启时间（上一个插卡阶段的开始）
+            let lastOpenTime = new Date(baseTime.getTime() - totalCycleMinutes * 60 * 1000 + 
+                (PHASE_DURATIONS.reset * 6) * 60 * 1000);
+            times.push({ label: '上次开启时间', time: lastOpenTime });
+            
+            // 下次开启时间
+            let nextOpenTime = new Date(baseTime.getTime() + (PHASE_DURATIONS.reset * 6) * 60 * 1000);
+            times.push({ label: '下次开启时间', time: nextOpenTime });
+            
+            // 后续开启时间
+            for (let i = 1; i <= 7; i++) {
+                const openTime = new Date(nextOpenTime.getTime() + totalCycleMinutes * i * 60 * 1000);
+                times.push({ label: `开启时间 ${i}`, time: openTime });
+            }
+            
+            // 更新列表
+            windowList.innerHTML = '';
+            times.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-window-restore"></i> ${item.label}: ${formatDateTimeFull(item.time)}`;
+                windowList.appendChild(li);
+            });
+        }
+        
+        // 格式化日期时间（用于datetime-local输入）
+        function formatDateTime(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+        
+        // 格式化完整日期时间
+        function formatDateTimeFull(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        
+        // 颜色选择器预览更新
+        document.getElementById('notification-color').addEventListener('input', function() {
+            document.getElementById('notification-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--notification-color', this.value);
+        });
+        
+        document.getElementById('header-text-color').addEventListener('input', function() {
+            document.getElementById('header-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--header-text-color', this.value);
+        });
+        
+        document.getElementById('qrcode-caption-color').addEventListener('input', function() {
+            document.getElementById('qrcode-caption-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--qrcode-caption-color', this.value);
+        });
+        
+        document.getElementById('window-title-color').addEventListener('input', function() {
+            document.getElementById('window-title-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--window-title-color', this.value);
+        });
+        
+        document.getElementById('window-text-color').addEventListener('input', function() {
+            document.getElementById('window-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--window-text-color', this.value);
+        });
+        
+        document.getElementById('window-comment-color').addEventListener('input', function() {
+            document.getElementById('window-comment-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--window-comment-color', this.value);
+        });
+        
+        document.getElementById('countdown-text-color').addEventListener('input', function() {
+            document.getElementById('countdown-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--countdown-text-color', this.value);
+        });
+        
+        document.getElementById('hangar-time-text-color').addEventListener('input', function() {
+            document.getElementById('hangar-time-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--hangar-time-text-color', this.value);
+        });
+        
+        document.getElementById('calibration-text-color').addEventListener('input', function() {
+            document.getElementById('calibration-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--calibration-text-color', this.value);
+        });
+        
+        document.getElementById('status-text-color').addEventListener('input', function() {
+            document.getElementById('status-text-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--status-text-color', this.value);
+        });
+        
+        document.getElementById('donation-btn-color').addEventListener('input', function() {
+            document.getElementById('donation-btn-color-preview').style.backgroundColor = this.value;
+            document.documentElement.style.setProperty('--donation-btn-bg', this.value);
+        });
+        
+        // 字体大小滑块
+        document.getElementById('header-font-size').addEventListener('input', function() {
+            const value = this.value;
+            document.getElementById('header-font-size-value').textContent = value + 'rem';
+            document.documentElement.style.setProperty('--header-font-size', value + 'rem');
+        });
+        
+        // Logo大小滑块
+        document.getElementById('logo-size').addEventListener('input', function() {
+            const value = this.value;
+            document.getElementById('logo-size-value').textContent = value + 'px';
+            document.documentElement.style.setProperty('--logo-size', value + 'px');
+        });
+        
+        // 背景透明度滑块
+        document.getElementById('bg-opacity').addEventListener('input', function() {
+            const value = this.value;
+            document.getElementById('opacity-value').textContent = value;
+            document.documentElement.style.setProperty('--bg-opacity', value / 100);
+        });
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            updateUserInterface();
+            
+            // 新增：页面加载时检查令牌状态
+            setTimeout(() => {
+                if (currentUser && currentUser.token) {
+                    checkAndRefreshToken();
+                }
+            }, 1000);
+        });
+        
+        // 监听页面可见性变化，当页面重新激活时检查令牌状态
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && currentUser && currentUser.token) {
+                checkAndRefreshToken();
+            }
+        });
+    </script>
 </body>
 </html>
