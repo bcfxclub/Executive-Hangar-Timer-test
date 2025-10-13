@@ -3348,17 +3348,17 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             loadTokenStats();
         });
         
-        // 用户中心按钮
-        document.getElementById('user-center-btn').addEventListener('click', function() {
-            document.getElementById('user-center').style.display = 'block';
-            initDraggablePanel('user-center');
-            // 加载用户信息
-            loadUserInfo();
-            // 如果是管理员，加载用户管理数据
-            if (currentUser && (currentUser.isAdmin || currentUser.isSuperAdmin)) {
-                loadAdminUsers();
-            }
-        });
+// 用户中心按钮
+document.getElementById('user-center-btn').addEventListener('click', function() {
+    document.getElementById('user-center').style.display = 'block';
+    initDraggablePanel('user-center');
+    // 加载用户信息
+    loadUserInfo();
+    // 如果是管理员，加载用户管理数据
+    if (currentUser && (currentUser.isAdmin || currentUser.isSuperAdmin)) {
+        loadAdminUsers();
+    }
+});
         
         // 捐助按钮
         document.getElementById('donation-btn').addEventListener('click', function() {
@@ -3474,37 +3474,17 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
         });
         
         // 用户中心标签点击事件
-        document.querySelectorAll('.user-center-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabName = this.getAttribute('data-tab');
-                switchUserCenterTab(tabName);
-            });
-        });
+document.querySelectorAll('.user-center-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        switchUserCenterTab(tabName);
         
-        // 后台管理标签点击事件
-        document.querySelectorAll('.admin-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                // 移除所有标签的active类
-                document.querySelectorAll('.admin-tab').forEach(t => {
-                    t.classList.remove('active');
-                });
-                
-                // 隐藏所有内容
-                document.querySelectorAll('.admin-tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                
-                // 激活选中的标签和内容
-                this.classList.add('active');
-                const tabName = this.getAttribute('data-tab');
-                document.getElementById(`${tabName}-tab`).classList.add('active');
-                
-                // 如果切换到数据管理标签，加载令牌统计
-                if (tabName === 'data') {
-                    loadTokenStats();
-                }
-            });
-        });
+        // 新增：如果切换到用户管理标签，加载用户列表
+        if (tabName === 'user-management' && currentUser && (currentUser.isAdmin || currentUser.isSuperAdmin)) {
+            loadAdminUsers();
+        }
+    });
+});
         
         // 登录
         document.getElementById('login-btn').addEventListener('click', async function() {
@@ -4408,192 +4388,200 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             }
         }
         
-        // 加载管理员用户列表
-        async function loadAdminUsers() {
-            try {
-                const response = await fetch(`${API_BASE}/users`, {
-                    headers: getAuthHeaders()
-                });
-                if (response.ok) {
-                    const users = await response.json();
-                    const userList = document.getElementById('admin-user-list');
-                    
-                    if (users.length === 0) {
-                        userList.innerHTML = '<div class="user-item">暂无用户</div>';
-                        return;
-                    }
-                    
-                    userList.innerHTML = '';
-                    users.forEach(user => {
-                        const userItem = document.createElement('div');
-                        userItem.className = 'user-item';
-                        
-                        let roleBadge = '';
-                        if (user.isSuperAdmin) {
-                            roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
-                        } else if (user.isAdmin) {
-                            roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
-                        } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
-                        } else {
-                            roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
-                        }
-                        
-                        if (user.frozen) {
-                            roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
-                        }
-                        
-                        userItem.innerHTML = `
-                            <div class="user-info">
-                                <div><strong>${user.username}</strong> ${roleBadge}</div>
-                                <div class="visit-date">邮箱: ${user.email}</div>
-                                <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
-                            </div>
-                            <div class="user-actions">
-                                ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                                <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                                ${user.frozen ? 
-                                    `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                                    `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
-                                }
-                                ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
-                            </div>
-                        `;
-                        userList.appendChild(userItem);
-                    });
-                    
-                    // 添加审核用户事件监听
-                    document.querySelectorAll('#admin-user-list .approve-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ approved: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户审核通过');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Approve user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加编辑用户事件监听
-                    document.querySelectorAll('#admin-user-list .edit-user').forEach(button => {
-                        button.addEventListener('click', function() {
-                            const username = this.getAttribute('data-username');
-                            openUserEditModal(username);
-                        });
-                    });
-                    
-                    // 添加冻结用户事件监听
-                    document.querySelectorAll('#admin-user-list .freeze-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要冻结用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: true })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已冻结');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Freeze user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加解冻用户事件监听
-                    document.querySelectorAll('#admin-user-list .unfreeze-user').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要解冻用户 ${username} 吗？`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'PUT',
-                                        headers: getAuthHeaders(),
-                                        body: JSON.stringify({ frozen: false })
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已解冻');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('操作失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Unfreeze user error:', error);
-                                    alert('操作失败');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // 添加删除用户事件监听
-                    document.querySelectorAll('#admin-user-list .user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
-                        button.addEventListener('click', async function() {
-                            const username = this.getAttribute('data-username');
-                            if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
-                                try {
-                                    const response = await fetch(`${API_BASE}/users/${username}`, {
-                                        method: 'DELETE',
-                                        headers: getAuthHeaders()
-                                    });
-                                    
-                                    if (response.ok) {
-                                        alert('用户已删除');
-                                        loadAdminUsers();
-                                    } else {
-                                        if (!checkAuthResponse(response)) {
-                                            return;
-                                        }
-                                        alert('删除失败');
-                                    }
-                                } catch (error) {
-                                    console.error('Delete user error:', error);
-                                    alert('删除失败');
-                                }
-                            }
-                        });
-                    });
+// 加载管理员用户列表
+async function loadAdminUsers() {
+    try {
+        const response = await fetch(`${API_BASE}/users`, {
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            const users = await response.json();
+            const userList = document.getElementById('admin-user-list');
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div class="user-item">暂无用户</div>';
+                return;
+            }
+            
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                
+                let roleBadge = '';
+                if (user.isSuperAdmin) {
+                    roleBadge = '<span class="user-role-badge user-super-admin">超级管理员</span>';
+                } else if (user.isAdmin) {
+                    roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
+                } else if (user.approved) {
+                    roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
                 } else {
-                    if (!checkAuthResponse(response)) {
-                        return;
-                    }
+                    roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                 }
-            } catch (error) {
-                console.error('Load admin users error:', error);
-                document.getElementById('admin-user-list').innerHTML = '加载用户列表失败';
+                
+                if (user.frozen) {
+                    roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
+                }
+                
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div><strong>${user.username}</strong> ${roleBadge}</div>
+                        <div class="visit-date">邮箱: ${user.email}</div>
+                        <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
+                    </div>
+                    <div class="user-actions">
+                        ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                        <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                        ${user.frozen ? 
+                            `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                            `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                        }
+                        ${!user.isSuperAdmin ? `<button class="user-action-btn delete-user-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                    </div>
+                `;
+                userList.appendChild(userItem);
+            });
+            
+            // 添加审核用户事件监听
+            document.querySelectorAll('#admin-user-list .approve-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要审核通过用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
+                                method: 'PUT',
+                                headers: getAuthHeaders(),
+                                body: JSON.stringify({ approved: true })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户审核通过');
+                                loadAdminUsers();
+                            } else {
+                                if (!checkAuthResponse(response)) {
+                                    return;
+                                }
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Approve user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 添加编辑用户事件监听
+            document.querySelectorAll('#admin-user-list .edit-user').forEach(button => {
+                button.addEventListener('click', function() {
+                    const username = this.getAttribute('data-username');
+                    openUserEditModal(username);
+                });
+            });
+            
+            // 添加冻结用户事件监听
+            document.querySelectorAll('#admin-user-list .freeze-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要冻结用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
+                                method: 'PUT',
+                                headers: getAuthHeaders(),
+                                body: JSON.stringify({ frozen: true })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已冻结');
+                                loadAdminUsers();
+                            } else {
+                                if (!checkAuthResponse(response)) {
+                                    return;
+                                }
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Freeze user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 添加解冻用户事件监听
+            document.querySelectorAll('#admin-user-list .unfreeze-user').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要解冻用户 ${username} 吗？`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
+                                method: 'PUT',
+                                headers: getAuthHeaders(),
+                                body: JSON.stringify({ frozen: false })
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已解冻');
+                                loadAdminUsers();
+                            } else {
+                                if (!checkAuthResponse(response)) {
+                                    return;
+                                }
+                                alert('操作失败');
+                            }
+                        } catch (error) {
+                            console.error('Unfreeze user error:', error);
+                            alert('操作失败');
+                        }
+                    }
+                });
+            });
+            
+            // 添加删除用户事件监听
+            document.querySelectorAll('#admin-user-list .delete-user-btn').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
+                        try {
+                            const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}`, {
+                                method: 'DELETE',
+                                headers: getAuthHeaders()
+                            });
+                            
+                            if (response.ok) {
+                                alert('用户已删除');
+                                loadAdminUsers();
+                            } else {
+                                if (!checkAuthResponse(response)) {
+                                    return;
+                                }
+                                alert('删除失败');
+                            }
+                        } catch (error) {
+                            console.error('Delete user error:', error);
+                            alert('删除失败');
+                        }
+                    }
+                });
+            });
+        } else {
+            if (!checkAuthResponse(response)) {
+                return;
             }
         }
+    } catch (error) {
+        console.error('Load admin users error:', error);
+        document.getElementById('admin-user-list').innerHTML = '加载用户列表失败';
+    }
+    
+    // 确保刷新按钮事件监听器正确绑定
+    const refreshBtn = document.getElementById('refresh-admin-users');
+    if (refreshBtn) {
+        refreshBtn.onclick = function() {
+            loadAdminUsers();
+        };
+    }
+}
         
         // 打开用户编辑模态框
         async function openUserEditModal(username) {
