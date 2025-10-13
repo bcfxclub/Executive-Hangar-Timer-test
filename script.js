@@ -10,17 +10,12 @@ let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 let timerEnabled = true;
 let donationEnabled = false;
 let currentEditingUser = null;
+let tokenRefreshInterval = null;
 
 //新增：全局变量用于存储调整后的开始时间
 let adjustedStartTime = new Date();
 // 新增： 标记是否已经显示过会话过期提示
 let hasShownExpiredAlert = false;
-// 新增：令牌自动续期相关变量
-let tokenRefreshInterval;
-let lastUserActivity = Date.now();
-const TOKEN_REFRESH_THRESHOLD = 15 * 60 * 1000; // 15分钟
-const TOKEN_EXPIRY_WARNING = 5 * 60 * 1000; // 5分钟警告
-const ACTIVITY_CHECK_INTERVAL = 60000; // 1分钟检查一次活动
 
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
@@ -35,18 +30,18 @@ function getAuthHeaders() {
     return headers;
 }
 
-// 新增：检查令牌是否即将过期
-function isTokenNearExpiry() {
-    if (!currentUser || !currentUser.tokenExpiry) return false;
+// 新增：检查令牌是否即将过期（剩余时间小于1天）
+function isTokenExpiringSoon() {
+    if (!currentUser || !currentUser.expiresAt) return false;
     
     const now = Date.now();
-    const expiryTime = currentUser.tokenExpiry;
-    const timeUntilExpiry = expiryTime - now;
+    const expiresAt = currentUser.expiresAt;
+    const oneDay = 24 * 60 * 60 * 1000; // 1天的毫秒数
     
-    return timeUntilExpiry < TOKEN_REFRESH_THRESHOLD;
+    return (expiresAt - now) < oneDay;
 }
 
-// 新增：自动续期令牌
+// 新增：自动刷新令牌
 async function refreshToken() {
     if (!currentUser || !currentUser.token) return false;
     
@@ -61,109 +56,95 @@ async function refreshToken() {
             if (result.success) {
                 // 更新令牌和过期时间
                 currentUser.token = result.token;
-                currentUser.tokenExpiry = result.expiresAt;
+                currentUser.expiresAt = result.expiresAt;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
                 console.log('令牌已自动续期');
                 return true;
             }
         }
         return false;
     } catch (error) {
-        console.error('令牌续期失败:', error);
+        console.error('刷新令牌失败:', error);
         return false;
     }
 }
 
-// 新增：检查并刷新令牌
-async function checkAndRefreshToken() {
-    if (!currentUser) return;
-    
-    // 检查用户最近是否有活动
-    const timeSinceLastActivity = Date.now() - lastUserActivity;
-    if (timeSinceLastActivity > 30 * 60 * 1000) { // 30分钟无活动不续期
-        return;
-    }
-    
-    if (isTokenNearExpiry()) {
-        const refreshed = await refreshToken();
-        if (!refreshed) {
-            // 续期失败，检查令牌是否已过期
-            await checkTokenValidity();
-        }
-    }
-}
-
-// 新增：检查令牌有效性
-async function checkTokenValidity() {
-    if (!currentUser || !currentUser.token) return;
+// 新增：检查令牌状态
+async function checkTokenStatus() {
+    if (!currentUser || !currentUser.token) return false;
     
     try {
         const response = await fetch(`${API_BASE}/verify-token`, {
             headers: getAuthHeaders()
         });
         
-        if (!response.ok) {
-            if (response.status === 401) {
-                handleTokenExpired();
+        if (response.ok) {
+            const result = await response.json();
+            if (result.valid) {
+                // 令牌有效，更新过期时间
+                currentUser.expiresAt = result.expiresAt;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                return true;
             }
         }
+        
+        // 令牌无效
+        return false;
     } catch (error) {
-        console.error('令牌验证失败:', error);
-        // 网络错误时不立即认为令牌过期
+        console.error('检查令牌状态失败:', error);
+        return false;
     }
 }
 
-// 新增：处理令牌过期
-function handleTokenExpired() {
-    // 清除用户信息
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    updateUserInterface();
-    
-    // 如果还没有显示过过期提示，则显示并标记
-    if (!hasShownExpiredAlert) {
-        hasShownExpiredAlert = true;
-        alert('会话已过期，请重新登录');
-    }
-    
-    // 清除令牌检查间隔
+// 新增：令牌自动刷新管理
+function startTokenAutoRefresh() {
     if (tokenRefreshInterval) {
         clearInterval(tokenRefreshInterval);
     }
-}
-
-// 新增：记录用户活动
-function recordUserActivity() {
-    lastUserActivity = Date.now();
+    
+    // 每5分钟检查一次令牌状态
+    tokenRefreshInterval = setInterval(async () => {
+        if (currentUser && currentUser.token) {
+            // 检查令牌是否即将过期
+            if (isTokenExpiringSoon()) {
+                console.log('检测到令牌即将过期，尝试自动续期...');
+                const refreshed = await refreshToken();
+                if (!refreshed) {
+                    // 续期失败，检查令牌是否仍然有效
+                    const valid = await checkTokenStatus();
+                    if (!valid) {
+                        // 令牌已过期，清除用户信息
+                        currentUser = null;
+                        localStorage.removeItem('currentUser');
+                        updateUserInterface();
+                        
+                        if (!hasShownExpiredAlert) {
+                            hasShownExpiredAlert = true;
+                            alert('会话已过期，请重新登录');
+                        }
+                    }
+                }
+            }
+        }
+    }, 5 * 60 * 1000); // 5分钟检查一次
 }
 
 // 检查API响应是否需要重新登录
 function checkAuthResponse(response) {
     if (response.status === 401) {
-        handleTokenExpired();
+        // 未授权，清除用户信息
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        updateUserInterface();
+        
+        // 如果还没有显示过过期提示，则显示并标记
+        if (!hasShownExpiredAlert) {
+            hasShownExpiredAlert = true;
+            alert('会话已过期，请重新登录');
+        }
         return false;
     }
     return true;
-}
-
-// 初始化令牌自动检查
-function initTokenAutoRefresh() {
-    if (tokenRefreshInterval) {
-        clearInterval(tokenRefreshInterval);
-    }
-    
-    if (currentUser && currentUser.token) {
-        // 每分钟检查一次令牌状态
-        tokenRefreshInterval = setInterval(async () => {
-            await checkAndRefreshToken();
-        }, ACTIVITY_CHECK_INTERVAL);
-        
-        // 监听用户活动
-        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, recordUserActivity, { passive: true });
-        });
-    }
 }
 
 // 从API加载设置
@@ -470,23 +451,10 @@ function updateUserInterface() {
             adminPanelBtn.style.display = 'none';
             userCenterBtn.style.display = 'flex';
         }
-        
-        // 初始化令牌自动刷新
-        initTokenAutoRefresh();
-        
-        // 立即检查一次令牌状态
-        setTimeout(() => {
-            checkTokenValidity();
-        }, 1000);
     } else {
         userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
         adminPanelBtn.style.display = 'none';
         userCenterBtn.style.display = 'none';
-        
-        // 清除令牌检查间隔
-        if (tokenRefreshInterval) {
-            clearInterval(tokenRefreshInterval);
-        }
     }
     
     // 新增：用户登录状态变化时刷新捐助用户预测显示
@@ -1075,10 +1043,10 @@ document.getElementById('login-btn').addEventListener('click', async function() 
                 currentUser = {
                     ...result.user,
                     token: result.token,
-                    tokenExpiry: result.expiresAt,
                     isAdmin: result.isAdmin,
                     isSuperAdmin: result.isSuperAdmin,
-                    permissions: result.permissions
+                    permissions: result.permissions,
+                    expiresAt: result.expiresAt // 新增：保存令牌过期时间
                 };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
@@ -1088,6 +1056,8 @@ document.getElementById('login-btn').addEventListener('click', async function() 
                 updateUserInterface();
                 // 新增： 重置过期提示标记
                 hasShownExpiredAlert = false; 
+                // 新增：启动令牌自动刷新
+                startTokenAutoRefresh();
                 alert('登录成功');
                 
                 // 新增：登录成功后刷新捐助用户预测显示
@@ -2706,6 +2676,25 @@ function calculateHangarOpenTimes(adjustedStartTime) {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
+    // 新增：页面加载时检查令牌状态
+    if (currentUser && currentUser.token) {
+        // 检查令牌是否过期
+        checkTokenStatus().then(valid => {
+            if (!valid) {
+                // 令牌无效，清除本地存储
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                updateUserInterface();
+                alert('会话已过期，请重新登录');
+            } else {
+                // 令牌有效，启动自动刷新
+                startTokenAutoRefresh();
+            }
+        }).catch(error => {
+            console.error('检查令牌状态失败:', error);
+        });
+    }
+    
     // 加载设置
     loadSettings();
     
@@ -2720,13 +2709,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 定期检查数据库状态（每30秒）
     setInterval(checkDatabaseStatus, 30000);
-    
-    // 新增：页面加载时立即检查令牌状态
-    if (currentUser && currentUser.token) {
-        setTimeout(() => {
-            checkTokenValidity();
-        }, 2000);
-    }
 });
 
 // 检查数据库状态
