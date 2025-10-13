@@ -2260,7 +2260,7 @@ function updateDisplay(adjustedStartTime) {
         // 插卡阶段 - 机库开启中可插卡
         currentPhase = 'card';
         phaseName = '机库开启中可插卡';
-        phaseIcon = 'fas fa-credit-card';
+        phaseIcon = 'fas fa-door-open';
         phaseTimeRemaining = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000 - cycleElapsedMs;
         
         // 计算灯的状态（每12分钟变化一次）
