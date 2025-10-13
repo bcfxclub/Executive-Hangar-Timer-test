@@ -2212,7 +2212,7 @@
                 <h3><i class="fas fa-database"></i> 数据管理</h3>
                 <div class="form-group">
                     <label for="api-url">API地址</label>
-                    <input type="url" id="api-url" placeholder="输入API地址" value="/api">
+                    <input type="url" id="api-url" placeholder="输入API地址" value="https://bcfxclub.dpdns.org/api">
                     <button id="test-api" style="margin-top: 10px;">
                         <i class="fas fa-plug"></i> 测试API连接
                     </button>
@@ -2556,7 +2556,7 @@
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
-        let API_BASE = "/api";
+        let API_BASE = "https://bcfxclub.dpdns.org/api";
         
         // 初始化状态
         let startTime = new Date();
@@ -2568,12 +2568,10 @@
         let donationEnabled = false;
         let currentEditingUser = null;
         
-        // 新增：全局变量用于存储调整后的开始时间
+        //新增：全局变量用于存储调整后的开始时间
         let adjustedStartTime = new Date();
-        
-        // 新增：全局变量来跟踪是否已经显示过登录提示
-        let hasShownLoginPrompt = false;
-        
+       // 新增： 标记是否已经显示过会话过期提示
+        let hasShownExpiredAlert = false;
         // 获取认证头信息 - 修改为使用令牌
         function getAuthHeaders() {
             const headers = {
@@ -2587,28 +2585,23 @@
             return headers;
         }
         
-        // 检查API响应是否需要重新登录 - 修改为只提示一次
+        // 检查API响应是否需要重新登录
         function checkAuthResponse(response) {
             if (response.status === 401) {
-                // 未授权，清除用户信息
-                currentUser = null;
-                localStorage.removeItem('currentUser');
-                updateUserInterface();
-                
-                // 只在第一次遇到401时显示提示
-                if (!hasShownLoginPrompt) {
-                    hasShownLoginPrompt = true;
-                    alert('会话已过期，请重新登录');
-                    
-                    // 5秒后重置提示状态
-                    setTimeout(() => {
-                        hasShownLoginPrompt = false;
-                    }, 5000);
-                }
-                return false;
-            }
-            return true;
+        // 未授权，清除用户信息
+        currentUser = null;
+        localStorage.removeItem('currentUser');
+        updateUserInterface();
+        
+        // 如果还没有显示过过期提示，则显示并标记
+        if (!hasShownExpiredAlert) {
+            hasShownExpiredAlert = true;
+            alert('会话已过期，请重新登录');
         }
+        return false;
+    }
+    return true;
+}
         
         // 从API加载设置
         async function loadSettings() {
@@ -2908,14 +2901,7 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                         initializeTimer(document.getElementById('initial-phase').value);
                     });
                 } else {
-                    // 只在响应不ok且不是401时才显示错误
-                    if (response.status !== 401) {
-                        console.error('Failed to load settings');
-                    }
-                    // 401错误由checkAuthResponse统一处理
-                    if (!checkAuthResponse(response)) {
-                        return; // 如果是401，直接返回
-                    }
+                    console.error('Failed to load settings');
                     initializeTimer('5-green');
                 }
             } catch (error) {
@@ -3077,10 +3063,7 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                     if (!checkAuthResponse(response)) {
                         return false;
                     }
-                    // 只在不是401错误时才显示保存失败
-                    if (response.status !== 401) {
-                        alert('保存失败');
-                    }
+                    alert('保存失败');
                     return false;
                 }
             } catch (error) {
@@ -3569,6 +3552,8 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                         document.getElementById('login-username').value = '';
                         document.getElementById('login-password').value = '';
                         updateUserInterface();
+                        // 新增： 重置过期提示标记
+                        hasShownExpiredAlert = false; 
                         alert('登录成功');
                         
                         // 新增：登录成功后刷新捐助用户预测显示
@@ -4881,7 +4866,7 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                 console.error('Update user info error:', error);
                 alert('更新失败');
             }
-        }
+        });
         
         // 更新密保设置
         document.getElementById('update-security-question').addEventListener('click', async function() {
