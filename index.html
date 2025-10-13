@@ -2212,7 +2212,7 @@
                 <h3><i class="fas fa-database"></i> 数据管理</h3>
                 <div class="form-group">
                     <label for="api-url">API地址</label>
-                    <input type="url" id="api-url" placeholder="输入API地址" value="https://bcfxclub.dpdns.org/api">
+                    <input type="url" id="api-url" placeholder="输入API地址" value="/api">
                     <button id="test-api" style="margin-top: 10px;">
                         <i class="fas fa-plug"></i> 测试API连接
                     </button>
@@ -2374,6 +2374,7 @@
             <div class="user-center-tab active" data-tab="user-info">用户信息</div>
             <div class="user-center-tab" data-tab="change-password">修改密码</div>
             <div class="user-center-tab" data-tab="security-question">密保设置</div>
+            <div class="user-center-tab" id="user-management-tab" data-tab="user-management" style="display: none;">用户管理</div>
         </div>
         
         <div class="user-center-tab-content active" id="user-info-tab">
@@ -2446,7 +2447,7 @@
                 <h3><i class="fas fa-users-cog"></i> 用户管理</h3>
                 <div class="user-list" id="admin-user-list">加载中...</div>
                 <button id="refresh-admin-users" style="margin-top: 10px;">
-
+                    <i class="fas fa-sync"></i> 刷新用户列表
                 </button>
             </div>
         </div>
@@ -2555,7 +2556,7 @@
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
-        let API_BASE = "https://bcfxclub.dpdns.org/api";
+        let API_BASE = "/api";
         
         // 初始化状态
         let startTime = new Date();
@@ -2570,6 +2571,9 @@
         // 新增：全局变量用于存储调整后的开始时间
         let adjustedStartTime = new Date();
         
+        // 新增：全局变量来跟踪是否已经显示过登录提示
+        let hasShownLoginPrompt = false;
+        
         // 获取认证头信息 - 修改为使用令牌
         function getAuthHeaders() {
             const headers = {
@@ -2583,14 +2587,24 @@
             return headers;
         }
         
-        // 检查API响应是否需要重新登录
+        // 检查API响应是否需要重新登录 - 修改为只提示一次
         function checkAuthResponse(response) {
             if (response.status === 401) {
                 // 未授权，清除用户信息
                 currentUser = null;
                 localStorage.removeItem('currentUser');
                 updateUserInterface();
-                alert('会话已过期，请重新登录');
+                
+                // 只在第一次遇到401时显示提示
+                if (!hasShownLoginPrompt) {
+                    hasShownLoginPrompt = true;
+                    alert('会话已过期，请重新登录');
+                    
+                    // 5秒后重置提示状态
+                    setTimeout(() => {
+                        hasShownLoginPrompt = false;
+                    }, 5000);
+                }
                 return false;
             }
             return true;
@@ -2894,7 +2908,14 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                         initializeTimer(document.getElementById('initial-phase').value);
                     });
                 } else {
-                    console.error('Failed to load settings');
+                    // 只在响应不ok且不是401时才显示错误
+                    if (response.status !== 401) {
+                        console.error('Failed to load settings');
+                    }
+                    // 401错误由checkAuthResponse统一处理
+                    if (!checkAuthResponse(response)) {
+                        return; // 如果是401，直接返回
+                    }
                     initializeTimer('5-green');
                 }
             } catch (error) {
@@ -3056,7 +3077,10 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                     if (!checkAuthResponse(response)) {
                         return false;
                     }
-                    alert('保存失败');
+                    // 只在不是401错误时才显示保存失败
+                    if (response.status !== 401) {
+                        alert('保存失败');
+                    }
                     return false;
                 }
             } catch (error) {
@@ -3357,7 +3381,10 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
             initDraggablePanel('user-center');
             // 加载用户信息
             loadUserInfo();
-
+            // 如果是管理员，加载用户管理数据
+            if (currentUser && (currentUser.isAdmin || currentUser.isSuperAdmin)) {
+                loadAdminUsers();
+            }
         });
         
         // 捐助按钮
@@ -4854,7 +4881,7 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
                 console.error('Update user info error:', error);
                 alert('更新失败');
             }
-        });
+        }
         
         // 更新密保设置
         document.getElementById('update-security-question').addEventListener('click', async function() {
