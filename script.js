@@ -2324,7 +2324,7 @@ function updateDisplay(adjustedStartTime) {
     // 计算当前机库开启时间
     const currentCycleStart = new Date(now.getTime() - cycleElapsedMs);
     const currentHangarOpenTime = new Date(currentCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-    document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 当前机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
+    document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-door-open"></i> 当前机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
     
     if (cycleElapsedMs < PHASE_DURATIONS.reset * 60 * 1000) {
         // 重置阶段 - 机库已关闭等待开启中
