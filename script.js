@@ -1,5 +1,5 @@
         // API地址设置 - 使用固定默认值，不存储在localStorage中
-        let API_BASE = "https://bcfxclub.dpdns.org/api";
+        let API_BASE = "/api";
         
         // 初始化状态
         let startTime = new Date();
