@@ -1672,80 +1672,79 @@ async function loadFeedback() {
     }
 }
 
-// 加载访问统计
-async function loadVisits() {
-    try {
-        const response = await fetch(`${API_BASE}/visits`, {
-            headers: getAuthHeaders()
-        });
-        if (response.ok) {
-            const visits = await response.json();
-            const visitsList = document.getElementById('visits-list');
-            const visitCount = document.getElementById('visit-count');
-            
-            visitCount.textContent = `总IP数: ${visits.length}`;
-            
-            if (visits.length === 0) {
-                visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
-                return;
-            }
-            
-            visitsList.innerHTML = '';
-            // 按最后访问时间倒序排列
-            visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.firstVisit));
-            
-            visits.forEach(visit => {
-                const visitItem = document.createElement('div');
-                visitItem.className = 'visit-item';
-                visitItem.innerHTML = `
-                    <div><span class="visit-ip">${visit.ip}</span></div>
-                    <div class="visit-date">最后访问: ${new Date(visit.lastVisit).toLocaleString()}</div>
-                    <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
-                    <div class="visit-count">访问次数: ${visit.visitCount}</div>
-                `;
-                visitsList.appendChild(visitItem);
-            });
-        } else {
-            if (!checkAuthResponse(response)) {
-                return;
-            }
-        }
-    } catch (error) {
-        console.error('Load visits error:', error);
-        document.getElementById('visits-list').innerHTML = '加载访问统计失败';
-    }
-}
-
-// 清除访问记录
-document.getElementById('clear-visits').addEventListener('click', async function() {
-    if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
-        try {
-            const response = await fetch(`${API_BASE}/visits`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            
-            if (response.ok) {
-                alert('访问记录已清除');
-                loadVisits();
-            } else {
-                if (!checkAuthResponse(response)) {
-                    return;
+        // 加载访问统计
+        async function loadVisits() {
+            try {
+                const response = await fetch(`${API_BASE}/visits`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const visits = await response.json();
+                    const visitsList = document.getElementById('visits-list');
+                    const visitCount = document.getElementById('visit-count');
+                    
+                    visitCount.textContent = `总IP数: ${visits.length}`;
+                    
+                    if (visits.length === 0) {
+                        visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
+                        return;
+                    }
+                    
+                    visitsList.innerHTML = '';
+                    // 按最后访问时间倒序排列
+                    visits.sort((a, b) => new Date(b.lastVisit) - new Date(a.firstVisit));
+                    
+                    visits.forEach(visit => {
+                        const visitItem = document.createElement('div');
+                        visitItem.className = 'visit-item';
+                        visitItem.innerHTML = `
+                            <div><span class="visit-ip">${visit.ip}</span></div>
+                            <div class="visit-date">最后访问: ${new Date(visit.lastVisit).toLocaleString()}</div>
+                            <div class="visit-date">首次访问: ${new Date(visit.firstVisit).toLocaleString()}</div>
+                            <div class="visit-count">访问次数: ${visit.visitCount}</div>
+                        `;
+                        visitsList.appendChild(visitItem);
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
                 }
-                alert('清除失败');
+            } catch (error) {
+                console.error('Load visits error:', error);
+                document.getElementById('visits-list').innerHTML = '加载访问统计失败';
             }
-        } catch (error) {
-            console.error('Clear visits error:', error);
-            alert('清除失败');
         }
-    }
-});
-
-// 刷新访问统计
-document.getElementById('refresh-visits').addEventListener('click', function() {
-    loadVisits();
-});
-
+        
+        // 清除访问记录
+        document.getElementById('clear-visits').addEventListener('click', async function() {
+            if (confirm('确定要清除所有访问记录吗？此操作不可恢复！')) {
+                try {
+                    const response = await fetch(`${API_BASE}/visits`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        alert('访问记录已清除');
+                        loadVisits();
+                    } else {
+                        if (!checkAuthResponse(response)) {
+                            return;
+                        }
+                        alert('清除失败');
+                    }
+                } catch (error) {
+                    console.error('Clear visits error:', error);
+                    alert('清除失败');
+                }
+            }
+        });
+        
+        // 刷新访问统计
+        document.getElementById('refresh-visits').addEventListener('click', function() {
+            loadVisits();
+        });
 // 加载用户列表
 async function loadUsers() {
     try {
