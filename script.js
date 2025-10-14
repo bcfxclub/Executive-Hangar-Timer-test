@@ -15,10 +15,10 @@ let currentEditingUser = null;
 let adjustedStartTime = new Date();
 // 新增： 标记是否已经显示过会话过期提示
 let hasShownExpiredAlert = false;
-// 新增：令牌自动检测和续期相关变量
-let tokenCheckInterval;
-let userActivityDetected = false;
-let tokenRefreshInProgress = false;
+// 新增：令牌自动续期定时器
+let tokenAutoRenewTimer = null;
+// 新增：用户活动监听器
+let userActivityTimer = null;
 
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
@@ -56,72 +56,102 @@ function handleTokenExpired() {
         alert('会话已过期，请重新登录');
     }
     
-    // 停止令牌检查
-    if (tokenCheckInterval) {
-        clearInterval(tokenCheckInterval);
+    // 停止自动续期定时器
+    stopTokenAutoRenew();
+}
+
+// 新增：检查令牌是否即将过期（在24小时内过期）
+function isTokenExpiringSoon() {
+    if (!currentUser || !currentUser.expiresAt) return false;
+    
+    const now = Date.now();
+    const expiresAt = currentUser.expiresAt;
+    const oneDayInMs = 24 * 60 * 60 * 1000; // 24小时
+    
+    return (expiresAt - now) < oneDayInMs;
+}
+
+// 新增：自动续期令牌
+async function autoRenewToken() {
+    if (!currentUser || !currentUser.token) return false;
+    
+    try {
+        console.log('尝试自动续期令牌...');
+        const response = await fetch(`${API_BASE}/renew-token`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // 更新令牌信息
+                currentUser.token = result.token;
+                currentUser.expiresAt = result.expiresAt;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                console.log('令牌自动续期成功');
+                return true;
+            }
+        }
+        
+        // 续期失败，检查是否需要重新登录
+        if (response.status === 401) {
+            handleTokenExpired();
+        }
+        return false;
+    } catch (error) {
+        console.error('自动续期令牌失败:', error);
+        return false;
     }
 }
 
-// 新增：检测用户活动
-function setupUserActivityDetection() {
+// 新增：启动令牌自动续期检查
+function startTokenAutoRenew() {
+    // 清除现有定时器
+    stopTokenAutoRenew();
+    
+    // 每分钟检查一次令牌状态
+    tokenAutoRenewTimer = setInterval(async () => {
+        if (!currentUser) return;
+        
+        // 检查令牌是否即将过期
+        if (isTokenExpiringSoon()) {
+            console.log('检测到令牌即将过期，尝试自动续期...');
+            await autoRenewToken();
+        }
+    }, 60000); // 每分钟检查一次
+}
+
+// 新增：停止令牌自动续期
+function stopTokenAutoRenew() {
+    if (tokenAutoRenewTimer) {
+        clearInterval(tokenAutoRenewTimer);
+        tokenAutoRenewTimer = null;
+    }
+}
+
+// 新增：用户活动检测
+function setupUserActivityMonitoring() {
+    // 监听用户活动
     const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
     
     activityEvents.forEach(event => {
         document.addEventListener(event, () => {
-            userActivityDetected = true;
-        }, { passive: true });
-    });
-}
-
-// 新增：检查令牌状态并自动续期
-async function checkTokenStatus() {
-    if (!currentUser || !currentUser.token) {
-        return;
-    }
-    
-    try {
-        // 检查令牌是否即将过期（15分钟内）
-        const tokenExpiryTime = currentUser.expiresAt || (Date.now() + 30 * 24 * 60 * 60 * 1000); // 默认30天
-        const timeUntilExpiry = tokenExpiryTime - Date.now();
-        const fifteenMinutes = 15 * 60 * 1000;
-        
-        // 如果令牌即将过期且用户有活动，自动续期
-        if (timeUntilExpiry < fifteenMinutes && userActivityDetected && !tokenRefreshInProgress) {
-            tokenRefreshInProgress = true;
-            
-            const response = await fetch(`${API_BASE}/refresh-token`, {
-                method: 'POST',
-                headers: getAuthHeaders()
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    // 更新本地存储的过期时间
-                    currentUser.expiresAt = result.expiresAt;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    console.log('令牌已自动续期');
-                }
-            } else {
-                // 续期失败，令牌可能已过期
-                if (response.status === 401) {
-                    handleTokenExpired();
-                }
+            // 重置活动计时器
+            if (userActivityTimer) {
+                clearTimeout(userActivityTimer);
             }
             
-            tokenRefreshInProgress = false;
-            userActivityDetected = false; // 重置活动标志
-        }
-        
-        // 如果令牌已过期，立即处理
-        if (timeUntilExpiry <= 0) {
-            handleTokenExpired();
-        }
-        
-    } catch (error) {
-        console.error('Token status check error:', error);
-        tokenRefreshInProgress = false;
-    }
+            // 如果用户有活动且令牌即将过期，立即尝试续期
+            userActivityTimer = setTimeout(async () => {
+                if (currentUser && isTokenExpiringSoon()) {
+                    console.log('用户活动中，令牌即将过期，尝试续期...');
+                    await autoRenewToken();
+                }
+            }, 5000); // 用户停止活动5秒后检查
+        }, { passive: true });
+    });
 }
 
 // 从API加载设置
@@ -381,6 +411,9 @@ async function loadSettings() {
             
             initializeTimer(config.initialPhase || '5-green');
 
+            // 更新用户界面状态
+            updateUserInterface();
+
             // 添加计时器状态实时保存功能
             document.getElementById('timer-enabled').addEventListener('change', async function() {
                 timerEnabled = this.value === 'true';
@@ -426,41 +459,19 @@ function updateUserInterface() {
             userCenterBtn.style.display = 'flex';
         }
         
-        // 新增：用户登录后启动令牌状态检查
-        startTokenStatusCheck();
+        // 启动令牌自动续期
+        startTokenAutoRenew();
     } else {
         userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
         adminPanelBtn.style.display = 'none';
         userCenterBtn.style.display = 'none';
         
-        // 新增：用户退出登录后停止令牌状态检查
-        stopTokenStatusCheck();
+        // 停止令牌自动续期
+        stopTokenAutoRenew();
     }
     
     // 新增：用户登录状态变化时刷新捐助用户预测显示
     calculateHangarOpenTimes(adjustedStartTime);
-}
-
-// 新增：启动令牌状态检查
-function startTokenStatusCheck() {
-    // 清除现有的检查间隔
-    if (tokenCheckInterval) {
-        clearInterval(tokenCheckInterval);
-    }
-    
-    // 每5分钟检查一次令牌状态
-    tokenCheckInterval = setInterval(checkTokenStatus, 5 * 60 * 1000);
-    
-    // 立即执行一次检查
-    checkTokenStatus();
-}
-
-// 新增：停止令牌状态检查
-function stopTokenStatusCheck() {
-    if (tokenCheckInterval) {
-        clearInterval(tokenCheckInterval);
-        tokenCheckInterval = null;
-    }
 }
 
 // 动态更新管理面板标签显示
@@ -1048,7 +1059,7 @@ document.getElementById('login-btn').addEventListener('click', async function() 
                     isAdmin: result.isAdmin,
                     isSuperAdmin: result.isSuperAdmin,
                     permissions: result.permissions,
-                    expiresAt: Date.now() + (30 * 24 * 60 * 60 * 1000) // 默认30天
+                    expiresAt: result.expiresAt // 新增：存储过期时间
                 };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
@@ -2389,118 +2400,353 @@ function updateDisplay(adjustedStartTime) {
     // 更新阶段指示器
     const phaseIndicator = document.getElementById('phase-indicator');
     phaseIndicator.innerHTML = `<i class="${phaseIcon}"></i> <span>${phaseName}</span>`;
-    phaseIndicator.className = `phase-indicator phase-${currentPhase}`;
+    phaseIndicator.className = 'phase-indicator';
+    phaseIndicator.classList.add(`phase-${currentPhase}`);
     
     // 更新倒计时显示
-    const hours = Math.floor(phaseTimeRemaining / (1000 * 60 * 60));
-    const minutes = Math.floor((phaseTimeRemaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((phaseTimeRemaining % (1000 * 60)) / 1000);
-    
-    document.getElementById('countdown').textContent = 
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const countdownElement = document.getElementById('countdown');
+    countdownElement.textContent = formatTimeRemaining(phaseTimeRemaining);
     
     // 更新灯的状态
-    for (let i = 0; i < 5; i++) {
-        const lightElement = document.getElementById(`light-${i}`);
-        lightElement.className = `light ${currentLights[i]}`;
-    }
-    
-    // 计算并显示机库开启时间 - 修改为显示下一次开启时间
-    const nextCycleStart = new Date(currentCycleStart.getTime() + totalCycleMs);
-    const nextHangarOpenTime = new Date(nextCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-    document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 当前机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
-    
-    // 更新捐助用户预测显示
-    calculateHangarOpenTimes(adjustedStartTime);
+    updateLightsDisplay();
 }
 
-// 计算机库开启时间并显示（仅对特定用户显示）
+// 更新灯的状态显示
+function updateLightsDisplay() {
+    for (let i = 0; i < 5; i++) {
+        const lightElement = document.getElementById(`light-${i}`);
+        lightElement.className = 'light';
+        lightElement.classList.add(currentLights[i]);
+        
+        // 移除所有活动状态，然后为当前灯添加活动状态
+        if (currentLights[i] !== 'gray') {
+            lightElement.classList.add('active');
+        }
+    }
+}
+
+// 计算机库开启时间预测
 function calculateHangarOpenTimes(adjustedStartTime) {
+    const windowList = document.getElementById('window-list');
+    windowList.innerHTML = '';
+    
+    const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
+    const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
+    const now = new Date();
+    
+    // 检查计时器状态
     if (!timerEnabled) {
-        document.getElementById('hangar-open-times').innerHTML = '<i class="fas fa-pause"></i> 计时器维护中';
+        // 计时器关闭状态：显示维护提示
+        windowList.innerHTML = '';
+        const maintenanceItem = document.createElement('li');
+        maintenanceItem.innerHTML = `<i class="fas fa-tools"></i> 正在维护中，稍后再来！`;
+        windowList.appendChild(maintenanceItem);
         return;
     }
     
-    const now = new Date();
-    const hangarTimesElement = document.getElementById('hangar-open-times');
-    
-    // 检查用户权限和设置
-    const canViewHangarTimes = currentUser && 
-        (currentUser.isSuperAdmin || currentUser.isAdmin || 
-        (currentUser.permissions && currentUser.permissions.viewHangarTimes));
-    
+    // 检查用户权限和显示设置
     const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false';
+    const isLoggedIn = currentUser !== null;
     
-    // 只有有权限且设置显示的用户才能看到预测
-    if (canViewHangarTimes && hangarTimesVisible) {
-        const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
-        const elapsedMs = now.getTime() - adjustedStartTime.getTime();
-        const cycleElapsedMs = elapsedMs % totalCycleMs;
+    // 根据设置和登录状态决定是否显示时间
+    if (!hangarTimesVisible && !isLoggedIn) {
+        windowList.innerHTML = '';
+        const loginPromptItem = document.createElement('li');
+        loginPromptItem.innerHTML = `<i class="fas fa-user-lock"></i>捐助我们获得用户权限，登录后方可查看机库开启预测时间`;
+        windowList.appendChild(loginPromptItem);
+        return;
+    }
+    
+    // 计算上一个开启时间
+    let previousWindowTime = new Date(firstGreenTime.getTime());
+    while (previousWindowTime.getTime() + totalCycleMs < now.getTime()) {
+        previousWindowTime = new Date(previousWindowTime.getTime() + totalCycleMs);
+    }
+    
+    // 如果当前时间已经超过了第一个开启时间，则显示上一个开启时间
+    if (now.getTime() > firstGreenTime.getTime()) {
+        const prevItem = document.createElement('li');
+        prevItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
+        windowList.appendChild(prevItem);
+    }
+    
+    // 生成后续的8个机库开启时间预测节点
+    for (let i = 0; i < 8; i++) {
+        const windowTime = new Date(previousWindowTime.getTime() + (i + 1) * totalCycleMs);
+        const listItem = document.createElement('li');
         
-        // 计算当前周期开始时间
-        const currentCycleStart = new Date(now.getTime() - cycleElapsedMs);
-        
-        // 计算未来5次机库开启时间
-        let timesHtml = '<i class="fas fa-clock"></i> 机库开启时间预测:<br>';
-        for (let i = 0; i < 5; i++) {
-            const cycleStart = new Date(currentCycleStart.getTime() + i * totalCycleMs);
-            const hangarOpenTime = new Date(cycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-            timesHtml += `${i + 1}. ${formatDateTimeFull(hangarOpenTime)}<br>`;
-        }
-        hangarTimesElement.innerHTML = timesHtml;
-    } else {
-        // 无权限或设置不显示的用户看到提示
-        if (currentUser) {
-            hangarTimesElement.innerHTML = '<i class="fas fa-clock"></i> 捐助用户可查看机库开启时间预测';
+        if (i === 0) {
+            listItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
         } else {
-            hangarTimesElement.innerHTML = '<i class="fas fa-clock"></i> 登录后可查看机库开启时间预测';
+            listItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
+        }
+        
+        windowList.appendChild(listItem);
+    }
+}
+
+// 格式化剩余时间
+function formatTimeRemaining(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    
+    return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)}`;
+}
+
+// 格式化日期时间（用于输入框）
+function formatDateTime(date) {
+    const year = date.getFullYear();
+    const month = padZero(date.getMonth() + 1);
+    const day = padZero(date.getDate());
+    const hours = padZero(date.getHours());
+    const minutes = padZero(date.getMinutes());
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// 格式化完整日期时间（用于显示）
+function formatDateTimeFull(date) {
+    const year = date.getFullYear();
+    const month = padZero(date.getMonth() + 1);
+    const day = padZero(date.getDate());
+    const hours = padZero(date.getHours());
+    const minutes = padZero(date.getMinutes());
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+// 补零函数
+function padZero(num) {
+    return num.toString().padStart(2, '0');
+}
+
+// 初始化可拖拽面板
+function initDraggablePanel(panelId) {
+    const panel = document.getElementById(panelId);
+    const header = panel.querySelector('.admin-panel-header, .user-center-header');
+    
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+    
+    header.addEventListener("mousedown", dragStart);
+    document.addEventListener("mouseup", dragEnd);
+    document.addEventListener("mousemove", drag);
+    
+    function dragStart(e) {
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+        
+        if (e.target === header || e.target.parentNode === header) {
+            isDragging = true;
+        }
+    }
+    
+    function dragEnd(e) {
+        initialX = currentX;
+        initialY = currentY;
+        
+        isDragging = false;
+    }
+    
+    function drag(e) {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            
+            xOffset = currentX;
+            yOffset = currentY;
+            
+            setTranslate(currentX, currentY, panel);
+        }
+    }
+    
+    function setTranslate(xPos, yPos, el) {
+        el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
+    }
+}
+
+// 检查数据库状态
+async function checkDbStatus() {
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${API_BASE}/status`, {
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+            document.getElementById('db-status').innerHTML = '<i class="fas fa-database"></i> <span>数据库状态: 正常</span>';
+        } else {
+            document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 服务器错误</span>';
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接超时</span>';
+        } else {
+            document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
         }
     }
 }
 
-// 新增：加载令牌统计信息
+// 页脚信息点击事件
+document.getElementById('project-description-btn').addEventListener('click', function() {
+    const content = document.getElementById('project-description-input').value || '暂无项目介绍';
+    document.getElementById('footer-modal-title').textContent = '项目介绍';
+    document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+    document.getElementById('footer-info-modal').style.display = 'flex';
+});
+
+document.getElementById('version-btn').addEventListener('click', function() {
+    const content = document.getElementById('version-input').value || '暂无版本信息';
+    document.getElementById('footer-modal-title').textContent = '版本更新';
+    document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+    document.getElementById('footer-info-modal').style.display = 'flex';
+});
+
+document.getElementById('about-btn').addEventListener('click', function() {
+    const content = document.getElementById('about-input').value || '暂无关于信息';
+    document.getElementById('footer-modal-title').textContent = '关于本网站';
+    document.getElementById('footer-modal-content').innerHTML = `<p>${content.replace(/\n/g, '<br>')}</p>`;
+    document.getElementById('footer-info-modal').style.display = 'flex';
+});
+
+document.getElementById('close-footer-modal').addEventListener('click', function() {
+    document.getElementById('footer-info-modal').style.display = 'none';
+});
+
+// 自动检测文本中的链接并使其可点击
+function autoLinkify() {
+    // 获取所有文本节点并检测URL
+    const walker = document.createTreeWalker(
+        document.body,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+        const text = node.nodeValue;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        
+        if (urlRegex.test(text)) {
+            const parent = node.parentNode;
+            if (parent && parent.nodeName !== 'A' && parent.nodeName !== 'SCRIPT' && parent.nodeName !== 'STYLE') {
+                const newHtml = text.replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
+                const newElement = document.createElement('span');
+                newElement.innerHTML = newHtml;
+                parent.replaceChild(newElement, node);
+            }
+        }
+    }
+}
+
+// 记录访问
+async function recordVisit() {
+    try {
+        await fetch(`${API_BASE}/visits`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    } catch (error) {
+        console.error('Failed to record visit:', error);
+    }
+}
+
+// 令牌管理功能
 async function loadTokenStats() {
     try {
         const response = await fetch(`${API_BASE}/tokens`, {
             headers: getAuthHeaders()
         });
+        
         if (response.ok) {
             const data = await response.json();
             const stats = data.stats;
-            const autoCleanInterval = data.autoCleanInterval;
-            const tokenExpirationDays = data.tokenExpirationDays;
             
             // 更新令牌统计显示
             document.getElementById('token-total').textContent = stats.total;
             document.getElementById('token-active').textContent = stats.active;
             document.getElementById('token-expired').textContent = stats.expired;
+            document.getElementById('token-auto-clean').textContent = data.autoCleanInterval + ' 天';
             
-            // 更新按用户统计
-            const byUserElement = document.getElementById('token-by-user');
-            byUserElement.innerHTML = '';
-            for (const [username, count] of Object.entries(stats.byUser)) {
-                const userStat = document.createElement('div');
-                userStat.className = 'user-token-stat';
-                userStat.innerHTML = `<span class="username">${username}</span>: <span class="token-count">${count}</span>`;
-                byUserElement.appendChild(userStat);
+            // 更新用户令牌列表
+            const userList = document.getElementById('token-user-list');
+            userList.innerHTML = '';
+            
+            if (Object.keys(stats.byUser).length === 0) {
+                userList.innerHTML = '<div class="token-user-item">暂无用户令牌数据</div>';
+            } else {
+                Object.entries(stats.byUser).forEach(([username, count]) => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'token-user-item';
+                    userItem.innerHTML = `
+                        <span>${username}</span>
+                        <span class="token-stat-value">${count} 个令牌</span>
+                    `;
+                    userList.appendChild(userItem);
+                });
             }
-            
-            // 更新自动清理间隔
-            document.getElementById('auto-clean-days').value = autoCleanInterval;
-            
-            // 更新令牌过期时间
-            document.getElementById('token-expiration-days').value = tokenExpirationDays;
         } else {
             if (!checkAuthResponse(response)) {
                 return;
             }
+            console.error('Failed to load token stats');
         }
     } catch (error) {
         console.error('Load token stats error:', error);
     }
 }
 
-// 新增：清理过期令牌
+// 设置自动清理间隔
+document.getElementById('set-auto-clean').addEventListener('click', async function() {
+    const days = parseInt(document.getElementById('auto-clean-days').value);
+    
+    if (isNaN(days) || days < 1 || days > 365) {
+        alert('请输入1-365之间的有效天数');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/tokens`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ autoCleanDays: days })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            alert(result.message);
+            // 重新加载令牌统计
+            loadTokenStats();
+            // 保存设置
+            saveSettings();
+        } else {
+            if (!checkAuthResponse(response)) {
+                return;
+            }
+            alert('设置失败');
+        }
+    } catch (error) {
+        console.error('Set auto clean error:', error);
+        alert('设置失败');
+    }
+});
+
+// 清理过期令牌
 document.getElementById('clean-expired-tokens').addEventListener('click', async function() {
     if (confirm('确定要清理所有过期令牌吗？')) {
         try {
@@ -2511,7 +2757,8 @@ document.getElementById('clean-expired-tokens').addEventListener('click', async 
             
             if (response.ok) {
                 const result = await response.json();
-                alert(`已清理 ${result.cleanedCount} 个过期令牌`);
+                alert(result.message);
+                // 重新加载令牌统计
                 loadTokenStats();
             } else {
                 if (!checkAuthResponse(response)) {
@@ -2526,9 +2773,9 @@ document.getElementById('clean-expired-tokens').addEventListener('click', async 
     }
 });
 
-// 新增：清理所有令牌
+// 清理所有令牌
 document.getElementById('clean-all-tokens').addEventListener('click', async function() {
-    if (confirm('确定要清理所有令牌吗？所有用户将被强制登出！')) {
+    if (confirm('确定要清理所有令牌吗？这将导致所有用户需要重新登录！')) {
         try {
             const response = await fetch(`${API_BASE}/tokens?action=clean-all`, {
                 method: 'DELETE',
@@ -2536,14 +2783,17 @@ document.getElementById('clean-all-tokens').addEventListener('click', async func
             });
             
             if (response.ok) {
-                alert('所有令牌已清理，所有用户已被强制登出');
-                // 如果当前用户不是超级管理员，也强制登出
+                const result = await response.json();
+                alert(result.message);
+                // 重新加载令牌统计
+                loadTokenStats();
+                // 如果当前用户不是超级管理员，需要重新登录
                 if (!currentUser.isSuperAdmin) {
                     currentUser = null;
                     localStorage.removeItem('currentUser');
                     updateUserInterface();
+                    alert('令牌已清理，请重新登录');
                 }
-                loadTokenStats();
             } else {
                 if (!checkAuthResponse(response)) {
                     return;
@@ -2557,12 +2807,12 @@ document.getElementById('clean-all-tokens').addEventListener('click', async func
     }
 });
 
-// 新增：设置自动清理间隔
-document.getElementById('set-auto-clean').addEventListener('click', async function() {
-    const autoCleanDays = parseInt(document.getElementById('auto-clean-days').value);
+// 设置令牌过期时间
+document.getElementById('set-token-expiration').addEventListener('click', async function() {
+    const days = parseInt(document.getElementById('token-expiration-days').value);
     
-    if (isNaN(autoCleanDays) || autoCleanDays <= 0) {
-        alert('请输入有效的天数');
+    if (isNaN(days) || days < 1 || days > 365) {
+        alert('请输入1-365之间的有效天数');
         return;
     }
     
@@ -2570,41 +2820,14 @@ document.getElementById('set-auto-clean').addEventListener('click', async functi
         const response = await fetch(`${API_BASE}/tokens`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ autoCleanDays })
+            body: JSON.stringify({ tokenExpirationDays: days })
         });
         
         if (response.ok) {
-            alert(`已设置令牌自动清理间隔为 ${autoCleanDays} 天`);
-        } else {
-            if (!checkAuthResponse(response)) {
-                return;
-            }
-            alert('设置失败');
-        }
-    } catch (error) {
-        console.error('Set auto clean error:', error);
-        alert('设置失败');
-    }
-});
-
-// 新增：设置令牌过期时间
-document.getElementById('set-token-expiration').addEventListener('click', async function() {
-    const expirationDays = parseInt(document.getElementById('token-expiration-days').value);
-    
-    if (isNaN(expirationDays) || expirationDays <= 0 || expirationDays > 365) {
-        alert('请输入1-365之间的有效天数');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}/tokens/expiration`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ expirationDays })
-        });
-        
-        if (response.ok) {
-            alert(`已设置令牌过期时间为 ${expirationDays} 天。新创建的令牌将使用此设置。`);
+            const result = await response.json();
+            alert(result.message);
+            // 保存设置
+            saveSettings();
         } else {
             if (!checkAuthResponse(response)) {
                 return;
@@ -2617,131 +2840,82 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
     }
 });
 
-// 新增：刷新令牌统计
-document.getElementById('refresh-token-stats').addEventListener('click', function() {
-    loadTokenStats();
-});
-
-// 工具函数
-function formatDateTime(date) {
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
-function formatDateTimeFull(date) {
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    });
-}
-
-// 可拖动面板功能
-function initDraggablePanel(panelId) {
-    const panel = document.getElementById(panelId);
-    const header = panel.querySelector('.panel-header');
+// 新增：检查令牌是否过期
+async function checkTokenExpiration() {
+    if (!currentUser || !currentUser.token) return;
     
-    let isDragging = false;
-    let dragOffset = { x: 0, y: 0 };
-    
-    header.addEventListener('mousedown', startDrag);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', stopDrag);
-    
-    function startDrag(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
-            return;
+    try {
+        const response = await fetch(`${API_BASE}/verify-token`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            // 令牌无效或过期
+            if (response.status === 401) {
+                handleTokenExpired();
+            }
+        } else {
+            const result = await response.json();
+            if (result.valid && result.expiresAt) {
+                // 更新过期时间
+                currentUser.expiresAt = result.expiresAt;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
         }
-        isDragging = true;
-        const rect = panel.getBoundingClientRect();
-        dragOffset.x = e.clientX - rect.left;
-        dragOffset.y = e.clientY - rect.top;
-        panel.style.cursor = 'grabbing';
-    }
-    
-    function drag(e) {
-        if (!isDragging) return;
-        
-        const x = e.clientX - dragOffset.x;
-        const y = e.clientY - dragOffset.y;
-        
-        // 限制在窗口范围内
-        const maxX = window.innerWidth - panel.offsetWidth;
-        const maxY = window.innerHeight - panel.offsetHeight;
-        
-        panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-        panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-    }
-    
-    function stopDrag() {
-        isDragging = false;
-        panel.style.cursor = 'grab';
+    } catch (error) {
+        console.error('检查令牌过期状态失败:', error);
     }
 }
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化校准时间
-    updateCalibrationTime();
+    // 检查数据库状态
+    checkDbStatus();
     
     // 加载设置
     loadSettings();
     
-    // 更新用户界面
-    updateUserInterface();
-    
     // 记录访问
     recordVisit();
     
-    // 新增：设置用户活动检测
-    setupUserActivityDetection();
+    // 更新校准时间
+    updateCalibrationTime();
+    setInterval(updateCalibrationTime, 60000); // 每分钟更新一次
     
-    // 新增：页面加载时检查令牌状态
-    checkTokenStatus();
+    // 自动检测文本中的链接
+    autoLinkify();
     
-    // 新增：页面可见性变化时检查令牌状态
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            checkTokenStatus();
+    // 更新用户界面
+    updateUserInterface();
+    
+    // 新增：检查令牌是否过期
+    if (currentUser) {
+        checkTokenExpiration();
+    }
+    
+    // 新增：设置用户活动监控
+    setupUserActivityMonitoring();
+    
+    // 添加点击外部关闭模态框的功能
+    window.addEventListener('click', function(event) {
+        // 关闭所有模态框
+        const modals = document.querySelectorAll('.modal, .qrcode-modal, .password-modal, #admin-panel, #user-center, #user-edit-modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    });
+    
+    // 添加键盘事件监听
+    document.addEventListener('keydown', function(event) {
+        // ESC键关闭模态框
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal, .qrcode-modal, .password-modal, #admin-panel, #user-center, #user-edit-modal');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
+            });
         }
     });
 });
-
-// 记录访问
-async function recordVisit() {
-    try {
-        await fetch(`${API_BASE}/visits`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-    } catch (error) {
-        console.error('Record visit error:', error);
-    }
-}
-
-// 添加数据库状态检查
-async function checkDatabaseStatus() {
-    try {
-        const response = await fetch(`${API_BASE}/status`);
-        if (response.ok) {
-            document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #2ecc71;"></i> <span>数据库状态: 正常</span>';
-        } else {
-            document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 异常</span>';
-        }
-    } catch (error) {
-        document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
-    }
-}
-
-// 页面加载时检查数据库状态
-checkDatabaseStatus();
