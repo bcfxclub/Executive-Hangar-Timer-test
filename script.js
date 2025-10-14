@@ -10,6 +10,7 @@ let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
 let timerEnabled = true;
 let donationEnabled = false;
 let currentEditingUser = null;
+let tokenCheckInterval = null;
 
 //新增：全局变量用于存储调整后的开始时间
 let adjustedStartTime = new Date();
@@ -33,18 +34,196 @@ function getAuthHeaders() {
 function checkAuthResponse(response) {
     if (response.status === 401) {
         // 未授权，清除用户信息
-        currentUser = null;
-        localStorage.removeItem('currentUser');
-        updateUserInterface();
-        
-        // 如果还没有显示过过期提示，则显示并标记
-        if (!hasShownExpiredAlert) {
-            hasShownExpiredAlert = true;
-            alert('会话已过期，请重新登录');
-        }
+        handleTokenExpired();
         return false;
     }
     return true;
+}
+
+// 新增：处理令牌过期
+function handleTokenExpired() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    updateUserInterface();
+    
+    // 停止令牌检查
+    if (tokenCheckInterval) {
+        clearInterval(tokenCheckInterval);
+        tokenCheckInterval = null;
+    }
+    
+    // 如果还没有显示过过期提示，则显示并标记
+    if (!hasShownExpiredAlert) {
+        hasShownExpiredAlert = true;
+        showExpiredNotification('会话已过期，请重新登录');
+    }
+}
+
+// 新增：显示过期通知
+function showExpiredNotification(message) {
+    // 创建通知元素
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #e74c3c;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideIn 0.3s ease-out;
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒后自动移除
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 5000);
+}
+
+// 新增：检查令牌状态
+async function checkTokenStatus() {
+    if (!currentUser || !currentUser.token) {
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/check-token`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.valid) {
+                // 令牌有效，更新剩余时间信息
+                console.log(`令牌有效，剩余 ${result.remainingDays} 天`);
+                return true;
+            } else {
+                // 令牌无效
+                handleTokenExpired();
+                return false;
+            }
+        } else {
+            // API错误，假设令牌可能有问题
+            console.warn('令牌检查API错误');
+            return false;
+        }
+    } catch (error) {
+        console.error('检查令牌状态失败:', error);
+        return false;
+    }
+}
+
+// 新增：启动令牌状态监控
+function startTokenMonitoring() {
+    if (tokenCheckInterval) {
+        clearInterval(tokenCheckInterval);
+    }
+    
+    // 每5分钟检查一次令牌状态
+    tokenCheckInterval = setInterval(async () => {
+        await checkTokenStatus();
+    }, 5 * 60 * 1000); // 5分钟
+    
+    // 页面可见性变化时也检查
+    document.addEventListener('visibilitychange', async () => {
+        if (!document.hidden && currentUser) {
+            await checkTokenStatus();
+        }
+    });
+}
+
+// 更新用户界面状态
+function updateUserInterface() {
+    const userLoginBtn = document.getElementById('user-login-btn');
+    const adminPanelBtn = document.getElementById('admin-panel-btn');
+    const userCenterBtn = document.getElementById('user-center-btn');
+    
+    if (currentUser) {
+        userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
+        
+        // 检查用户权限，动态显示管理面板
+        const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
+            (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
+        
+        if (hasAnyPermission) {
+            adminPanelBtn.style.display = 'flex';
+            userCenterBtn.style.display = 'flex';
+            
+            // 动态更新管理面板标签显示
+            updateAdminPanelTabs();
+        } else {
+            adminPanelBtn.style.display = 'none';
+            userCenterBtn.style.display = 'flex';
+        }
+        
+        // 启动令牌监控
+        startTokenMonitoring();
+        
+        // 立即检查一次令牌状态
+        setTimeout(() => checkTokenStatus(), 1000);
+    } else {
+        userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
+        adminPanelBtn.style.display = 'none';
+        userCenterBtn.style.display = 'none';
+        
+        // 停止令牌监控
+        if (tokenCheckInterval) {
+            clearInterval(tokenCheckInterval);
+            tokenCheckInterval = null;
+        }
+    }
+    
+    // 新增：用户登录状态变化时刷新捐助用户预测显示
+    calculateHangarOpenTimes(adjustedStartTime);
+}
+
+// 动态更新管理面板标签显示
+function updateAdminPanelTabs() {
+    if (!currentUser) return;
+    
+    const tabs = document.querySelectorAll('.admin-tab');
+    tabs.forEach(tab => {
+        const tabName = tab.getAttribute('data-tab');
+        let shouldShow = false;
+        
+        // 超级管理员可以看到所有标签
+        if (currentUser.isSuperAdmin) {
+            shouldShow = true;
+        } 
+        // 管理员根据权限显示标签
+        else if (currentUser.isAdmin && currentUser.permissions) {
+            shouldShow = currentUser.permissions[tabName] || false;
+        }
+        // 普通用户根据权限显示标签
+        else if (currentUser.permissions) {
+            shouldShow = currentUser.permissions[tabName] || false;
+        }
+        
+        tab.style.display = shouldShow ? 'block' : 'none';
+    });
+    
+    // 如果没有显示的标签，隐藏管理面板按钮
+    const visibleTabs = Array.from(tabs).filter(tab => tab.style.display !== 'none');
+    if (visibleTabs.length === 0) {
+        document.getElementById('admin-panel-btn').style.display = 'none';
+    }
 }
 
 // 从API加载设置
@@ -303,7 +482,7 @@ async function loadSettings() {
             }
             
             initializeTimer(config.initialPhase || '5-green');
-            
+
             // 更新用户界面状态
             updateUserInterface();
 
@@ -325,155 +504,6 @@ async function loadSettings() {
             document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
         }
         initializeTimer('5-green');
-    }
-}
-
-// 更新用户界面状态
-function updateUserInterface() {
-    const userLoginBtn = document.getElementById('user-login-btn');
-    const adminPanelBtn = document.getElementById('admin-panel-btn');
-    const userCenterBtn = document.getElementById('user-center-btn');
-    
-    if (currentUser) {
-        userLoginBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i><span>退出登录</span>';
-        
-        // 检查用户权限，动态显示管理面板
-        const hasAnyPermission = currentUser.isSuperAdmin || currentUser.isAdmin || 
-            (currentUser.permissions && Object.values(currentUser.permissions).some(p => p));
-        
-        if (hasAnyPermission) {
-            adminPanelBtn.style.display = 'flex';
-            userCenterBtn.style.display = 'flex';
-            
-            // 动态更新管理面板标签显示
-            updateAdminPanelTabs();
-        } else {
-            adminPanelBtn.style.display = 'none';
-            userCenterBtn.style.display = 'flex';
-        }
-    } else {
-        userLoginBtn.innerHTML = '<i class="fas fa-user"></i><span>用户登录</span>';
-        adminPanelBtn.style.display = 'none';
-        userCenterBtn.style.display = 'none';
-    }
-    
-    // 新增：用户登录状态变化时刷新捐助用户预测显示
-    calculateHangarOpenTimes(adjustedStartTime);
-}
-
-// 动态更新管理面板标签显示
-function updateAdminPanelTabs() {
-    if (!currentUser) return;
-    
-    const tabs = document.querySelectorAll('.admin-tab');
-    tabs.forEach(tab => {
-        const tabName = tab.getAttribute('data-tab');
-        let shouldShow = false;
-        
-        // 超级管理员可以看到所有标签
-        if (currentUser.isSuperAdmin) {
-            shouldShow = true;
-        } 
-        // 管理员根据权限显示标签
-        else if (currentUser.isAdmin && currentUser.permissions) {
-            shouldShow = currentUser.permissions[tabName] || false;
-        }
-        // 普通用户根据权限显示标签
-        else if (currentUser.permissions) {
-            shouldShow = currentUser.permissions[tabName] || false;
-        }
-        
-        tab.style.display = shouldShow ? 'block' : 'none';
-    });
-    
-    // 如果没有显示的标签，隐藏管理面板按钮
-    const visibleTabs = Array.from(tabs).filter(tab => tab.style.display !== 'none');
-    if (visibleTabs.length === 0) {
-        document.getElementById('admin-panel-btn').style.display = 'none';
-    }
-}
-
-// 保存设置到API
-async function saveSettings() {
-    const config = {
-        startTime: new Date(document.getElementById('start-time').value).toISOString(),
-        initialPhase: document.getElementById('initial-phase').value,
-        timerEnabled: document.getElementById('timer-enabled').value === 'true',
-        hangarTimesVisible: document.getElementById('hangar-times-visible').value === 'true',
-        notification: document.getElementById('notification-content').value,
-        notificationLink: document.getElementById('notification-link').value,
-        notificationColor: document.getElementById('notification-color').value,
-        customTitle: document.getElementById('custom-title').value,
-        headerTextColor: document.getElementById('header-text-color').value,
-        headerFontSize: parseFloat(document.getElementById('header-font-size').value),
-        logoUrl: document.getElementById('logo-url').value,
-        logoSize: parseInt(document.getElementById('logo-size').value),
-        qrcodeUrl: document.getElementById('qrcode-url').value,
-        qrcodeCaption: document.getElementById('qrcode-caption-input').value,
-        qrcodeCaptionColor: document.getElementById('qrcode-caption-color').value,
-        inviteCode: document.getElementById('invite-code-input').value,
-        inviteLink: document.getElementById('invite-link-input').value,
-        bgType: document.getElementById('bg-type').value,
-        bgImage: document.getElementById('bg-image').value,
-        videoUrl: document.getElementById('video-url').value,
-        bgOpacity: document.getElementById('bg-opacity').value,
-        windowTextColor: document.getElementById('window-text-color').value,
-        windowCommentColor: document.getElementById('window-comment-color').value,
-        windowTitleColor: document.getElementById('window-title-color').value,
-        calibrationTextColor: document.getElementById('calibration-text-color').value,
-        countdownTextColor: document.getElementById('countdown-text-color').value,
-        hangarTimeTextColor: document.getElementById('hangar-time-text-color').value,
-        statusTextColor: document.getElementById('status-text-color').value,
-        calibrationTime: document.getElementById('calibration-time').textContent.replace('校准时间: ', ''),
-        apiUrl: document.getElementById('api-url').value,
-        donationEnabled: document.getElementById('donation-enabled').value === 'true',
-        donationNote: document.getElementById('donation-note').value,
-        wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
-        alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
-        donationBtnColor: document.getElementById('donation-btn-color').value,
-        footerNotice: document.getElementById('footer-notice-input').value,
-        footerNoticeLink: document.getElementById('footer-notice-link').value,
-        recordInfo: document.getElementById('record-info-input').value,
-        organizationName: document.getElementById('organization-name-input').value,
-        projectDescription: document.getElementById('project-description-input').value,
-        version: document.getElementById('version-input').value,
-        about: document.getElementById('about-input').value,
-        tokenAutoCleanDays: parseInt(document.getElementById('auto-clean-days').value) || 30,
-        tokenExpirationDays: parseInt(document.getElementById('token-expiration-days').value) || 30
-    };
-    
-    try {
-        const response = await fetch(`${API_BASE}/config`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(config)
-        });
-        
-        if (response.ok) {
-            // 更新当前会话的API_BASE，不保存到localStorage
-            API_BASE = config.apiUrl;
-            // 更新邀请码显示
-            updateInviteDisplay(config);
-            // 更新页脚显示
-            updateFooterDisplay(config);
-            // 更新捐助按钮显示
-            updateDonationButtonDisplay();
-            // 更新背景显示
-            updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
-            // 更新捐助用户预测显示设置
-            localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
-            return true;
-        } else {
-            if (!checkAuthResponse(response)) {
-                return false;
-            }
-            alert('保存失败');
-            return false;
-        }
-    } catch (error) {
-        console.error('Failed to save settings:', error);
-        alert('保存失败');
-        return false;
     }
 }
 
@@ -736,7 +766,7 @@ document.getElementById('user-login-btn').addEventListener('click', async functi
             currentUser = null;
             localStorage.removeItem('currentUser');
             updateUserInterface();
-            alert('已退出登录');
+            showExpiredNotification('已退出登录');
         }
     } else {
         document.getElementById('login-modal').style.display = 'flex';
@@ -955,7 +985,7 @@ document.getElementById('login-btn').addEventListener('click', async function() 
                 updateUserInterface();
                 // 新增： 重置过期提示标记
                 hasShownExpiredAlert = false; 
-                alert('登录成功');
+                showExpiredNotification('登录成功');
                 
                 // 新增：登录成功后刷新捐助用户预测显示
                 calculateHangarOpenTimes(adjustedStartTime);
@@ -2260,7 +2290,7 @@ function updateDisplay(adjustedStartTime) {
         // 插卡阶段 - 机库开启中可插卡
         currentPhase = 'card';
         phaseName = '机库开启中可插卡';
-        phaseIcon = 'fas fa-door-open';
+        phaseIcon = 'fas fa-credit-card';
         phaseTimeRemaining = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card) * 60 * 1000 - cycleElapsedMs;
         
         // 计算灯的状态（每12分钟变化一次）
@@ -2746,6 +2776,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 更新用户界面
     updateUserInterface();
+    
+    // 页面加载时检查令牌状态
+    if (currentUser) {
+        setTimeout(() => checkTokenStatus(), 2000);
+    }
     
     // 添加点击外部关闭模态框的功能
     window.addEventListener('click', function(event) {
