@@ -1789,12 +1789,12 @@ async function loadUsers() {
                     </div>
                     <div class="user-actions">
                         ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                        ${!user.isSuperAdmin && !user.isAdmin ? `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>` : ''}
-                        ${user.frozen && !user.isSuperAdmin && !user.isAdmin ? 
+                        <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                        ${user.frozen ? 
                             `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                            (!user.isSuperAdmin && !user.isAdmin ? `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>` : '')
+                            `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
                         }
-                        ${!user.isSuperAdmin && !user.isAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                        ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
                     </div>
                 `;
                 userList.appendChild(userItem);
@@ -1972,16 +1972,8 @@ async function openUserEditModal(username) {
                     editRoleSelect.disabled = false;
                 }
                 
-                // 如果当前用户是管理员（非超级管理员），则禁用角色选择和权限设置
-                if (currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin) {
-                    editRoleSelect.disabled = true;
-                    // 隐藏权限设置区域
-                    document.getElementById('edit-permissions').style.display = 'none';
-                    document.querySelector('label[for="edit-permissions"]').style.display = 'none';
-                } else {
-                    // 设置权限显示
-                    updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
-                }
+                // 设置权限显示
+                updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
                 
                 // 设置审核状态
                 document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
@@ -2072,19 +2064,16 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
         permissions
     };
     
-    // 如果当前用户是超级管理员，允许设置角色
-    if (currentUser && currentUser.isSuperAdmin) {
-        // 设置角色
-        if (role === 'super-admin') {
-            updateData.isSuperAdmin = true;
-            updateData.isAdmin = true;
-        } else if (role === 'admin') {
-            updateData.isSuperAdmin = false;
-            updateData.isAdmin = true;
-        } else {
-            updateData.isSuperAdmin = false;
-            updateData.isAdmin = false;
-        }
+    // 设置角色
+    if (role === 'super-admin') {
+        updateData.isSuperAdmin = true;
+        updateData.isAdmin = true;
+    } else if (role === 'admin') {
+        updateData.isSuperAdmin = false;
+        updateData.isAdmin = true;
+    } else {
+        updateData.isSuperAdmin = false;
+        updateData.isAdmin = false;
     }
     
     // 如果有新密码，添加密码字段
