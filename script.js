@@ -2857,17 +2857,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 2000);
     
-    // 添加点击外部关闭模态框的功能
-    window.addEventListener('click', function(event) {
-        // 关闭所有模态框
-        const modals = document.querySelectorAll('.modal, .qrcode-modal, .password-modal, #admin-panel, #user-center, #user-edit-modal');
-        modals.forEach(modal => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-    
+
     // 添加键盘事件监听
     document.addEventListener('keydown', function(event) {
         // ESC键关闭模态框
