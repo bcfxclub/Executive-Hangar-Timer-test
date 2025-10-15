@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加管理员权限限制
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并加强管理员权限控制
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -1790,53 +1790,42 @@ async function loadUsers() {
                 // 根据当前用户权限决定显示哪些操作按钮
                 let actionButtons = '';
                 
-                // 超级管理员可以看到所有按钮
                 if (currentUser && currentUser.isSuperAdmin) {
-                    // 超级管理员不能删除自己
-                    if (user.username === currentUser.username) {
+                    // 超级管理员：可以操作所有用户，但不能删除自己
+                    actionButtons = `
+                        ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                        <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                        ${user.username !== currentUser.username ? 
+                            (user.frozen ? 
+                                `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                                `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                            ) : ''}
+                        ${!user.isSuperAdmin ? `<button class="user-action-btn delete-user" data-username="${user.username}" style="background: var(--reset-color);">删除</button>` : ''}
+                    `;
+                } else if (currentUser && currentUser.isAdmin) {
+                    // 管理员：只能操作普通用户，不能操作其他管理员和超级管理员
+                    if (!user.isSuperAdmin && !user.isAdmin) {
+                        actionButtons = `
+                            ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                            <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                            ${user.frozen ? 
+                                `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                                `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                            }
+                            <button class="user-action-btn delete-user" data-username="${user.username}" style="background: var(--reset-color);">删除</button>
+                        `;
+                    } else if (user.username === currentUser.username) {
+                        // 管理员可以编辑自己的信息
                         actionButtons = `
                             <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
                         `;
                     } else {
-                        actionButtons = `
-                            ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                            <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                            ${user.frozen ? 
-                                `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                                `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
-                            }
-                            ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
-                        `;
+                        // 对其他管理员和超级管理员，不显示任何操作按钮
+                        actionButtons = '<span>无操作权限</span>';
                     }
-                } 
-                // 管理员只能操作普通用户
-                else if (currentUser && currentUser.isAdmin) {
-                    // 管理员可以编辑自己
-                    if (user.username === currentUser.username) {
-                        actionButtons = `
-                            <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                        `;
-                    }
-                    // 管理员只能操作普通用户（非管理员、非超级管理员）
-                    else if (!user.isAdmin && !user.isSuperAdmin) {
-                        actionButtons = `
-                            ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                            <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
-                            ${user.frozen ? 
-                                `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
-                                `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
-                            }
-                            <button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>
-                        `;
-                    }
-                    // 管理员对其他管理员和超级管理员不显示任何按钮
-                    else {
-                        actionButtons = '';
-                    }
-                }
-                // 普通用户没有用户管理权限
-                else {
-                    actionButtons = '';
+                } else {
+                    // 普通用户：无操作权限
+                    actionButtons = '<span>无操作权限</span>';
                 }
                 
                 userItem.innerHTML = `
@@ -1948,7 +1937,7 @@ async function loadUsers() {
             });
             
             // 添加删除用户事件监听
-            document.querySelectorAll('.user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
+            document.querySelectorAll('.delete-user').forEach(button => {
                 button.addEventListener('click', async function() {
                     const username = this.getAttribute('data-username');
                     if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
@@ -2005,11 +1994,78 @@ async function openUserEditModal(username) {
                 const editRoleSelect = document.getElementById('edit-role');
                 const superAdminOption = document.getElementById('super-admin-option');
                 
-                // 控制超级管理员选项显示
+                // 控制超级管理员选项显示和字段禁用状态
                 if (currentUser && currentUser.isSuperAdmin) {
                     superAdminOption.style.display = 'block';
-                } else {
+                    
+                    // 超级管理员编辑自己时，角色和权限不可编辑
+                    if (user.username === currentUser.username) {
+                        editRoleSelect.disabled = true;
+                        // 权限设置全选且不可编辑
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.checked = true;
+                            checkbox.disabled = true;
+                        });
+                        // 审核状态和冻结状态不可编辑
+                        document.getElementById('edit-approved').disabled = true;
+                        document.getElementById('edit-frozen').disabled = true;
+                    } else {
+                        editRoleSelect.disabled = false;
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.disabled = false;
+                        });
+                        document.getElementById('edit-approved').disabled = false;
+                        document.getElementById('edit-frozen').disabled = false;
+                    }
+                } else if (currentUser && currentUser.isAdmin) {
+                    // 管理员只能编辑普通用户
                     superAdminOption.style.display = 'none';
+                    
+                    if (user.isSuperAdmin || user.isAdmin) {
+                        // 管理员不能编辑其他管理员和超级管理员的角色和权限
+                        editRoleSelect.disabled = true;
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.disabled = true;
+                        });
+                        document.getElementById('edit-approved').disabled = true;
+                        document.getElementById('edit-frozen').disabled = true;
+                        
+                        // 如果是编辑自己，只能修改邮箱和密码
+                        if (user.username === currentUser.username) {
+                            // 允许修改邮箱，但角色和权限不可编辑
+                            document.getElementById('edit-email').disabled = false;
+                        } else {
+                            // 对其他管理员和超级管理员，所有字段都不可编辑
+                            document.getElementById('edit-email').disabled = true;
+                            document.getElementById('edit-password').disabled = true;
+                        }
+                    } else {
+                        // 编辑普通用户
+                        editRoleSelect.disabled = true; // 管理员不能修改用户角色
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.disabled = true; // 管理员不能修改权限
+                        });
+                        
+                        // 用户一旦通过审核就不能变更审核状态
+                        if (user.approved) {
+                            document.getElementById('edit-approved').disabled = true;
+                        } else {
+                            document.getElementById('edit-approved').disabled = false;
+                            // 管理员只能选择审核通过，不能选择未审核
+                            const approvedSelect = document.getElementById('edit-approved');
+                            for (let i = 0; i < approvedSelect.options.length; i++) {
+                                if (approvedSelect.options[i].value === 'false') {
+                                    approvedSelect.options[i].disabled = true;
+                                }
+                            }
+                        }
+                        
+                        document.getElementById('edit-frozen').disabled = false; // 管理员可以冻结/解冻普通用户
+                    }
+                } else {
+                    // 普通用户不能编辑其他用户
+                    alert('无权编辑用户');
+                    return;
                 }
                 
                 if (user.isSuperAdmin) {
@@ -2019,9 +2075,6 @@ async function openUserEditModal(username) {
                 } else {
                     editRoleSelect.value = 'normal';
                 }
-                
-                // 根据权限设置表单字段的禁用状态
-                updateUserEditFormPermissions(user);
                 
                 // 设置权限显示
                 updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
@@ -2047,108 +2100,6 @@ async function openUserEditModal(username) {
     } catch (error) {
         console.error('Open user edit modal error:', error);
         alert('加载用户信息失败');
-    }
-}
-
-// 更新用户编辑表单权限控制
-function updateUserEditFormPermissions(user) {
-    const isEditingSelf = user.username === currentUser.username;
-    const isSuperAdmin = currentUser && currentUser.isSuperAdmin;
-    const isAdmin = currentUser && currentUser.isAdmin;
-    
-    // 获取表单元素
-    const editRoleSelect = document.getElementById('edit-role');
-    const editApprovedSelect = document.getElementById('edit-approved');
-    const editFrozenSelect = document.getElementById('edit-frozen');
-    const editPasswordInput = document.getElementById('edit-password');
-    const permissionCheckboxes = document.querySelectorAll('#edit-permissions input[type="checkbox"]');
-    
-    // 超级管理员可以编辑所有用户的所有字段（除了自己的角色、审核状态和冻结状态）
-    if (isSuperAdmin) {
-        if (isEditingSelf) {
-            // 超级管理员编辑自己：只能修改邮箱和密码
-            editRoleSelect.disabled = true;
-            editApprovedSelect.disabled = true;
-            editFrozenSelect.disabled = true;
-            permissionCheckboxes.forEach(checkbox => {
-                checkbox.disabled = true;
-                checkbox.checked = true; // 超级管理员权限全选
-            });
-        } else {
-            // 超级管理员编辑其他用户：可以编辑所有字段
-            editRoleSelect.disabled = false;
-            editApprovedSelect.disabled = false;
-            editFrozenSelect.disabled = false;
-            permissionCheckboxes.forEach(checkbox => {
-                checkbox.disabled = false;
-            });
-            
-            // 如果用户已审核通过，审核状态禁用
-            if (user.approved) {
-                editApprovedSelect.disabled = true;
-                editApprovedSelect.value = 'true';
-            }
-        }
-    }
-    // 管理员只能编辑普通用户，且有限权限
-    else if (isAdmin) {
-        if (isEditingSelf) {
-            // 管理员编辑自己：只能修改邮箱和密码
-            editRoleSelect.disabled = true;
-            editApprovedSelect.disabled = true;
-            editFrozenSelect.disabled = true;
-            permissionCheckboxes.forEach(checkbox => {
-                checkbox.disabled = true;
-            });
-        } else if (!user.isAdmin && !user.isSuperAdmin) {
-            // 管理员编辑普通用户：可以编辑部分字段
-            editRoleSelect.disabled = true; // 不能修改角色
-            editFrozenSelect.disabled = false;
-            
-            // 权限设置：只显示普通用户权限，不能修改管理员权限
-            document.querySelectorAll('.admin-permission').forEach(permission => {
-                permission.style.display = 'none';
-            });
-            
-            // 如果用户已审核通过，审核状态禁用
-            if (user.approved) {
-                editApprovedSelect.disabled = true;
-                editApprovedSelect.value = 'true';
-            } else {
-                editApprovedSelect.disabled = false;
-            }
-            
-            // 普通用户权限可以编辑
-            permissionCheckboxes.forEach(checkbox => {
-                if (checkbox.value === 'viewHangarTimes') {
-                    checkbox.disabled = false;
-                } else {
-                    checkbox.disabled = true;
-                }
-            });
-        } else {
-            // 管理员不能编辑其他管理员或超级管理员
-            editRoleSelect.disabled = true;
-            editApprovedSelect.disabled = true;
-            editFrozenSelect.disabled = true;
-            editPasswordInput.disabled = true;
-            permissionCheckboxes.forEach(checkbox => {
-                checkbox.disabled = true;
-            });
-            alert('您没有权限编辑管理员用户');
-            document.getElementById('user-edit-modal').style.display = 'none';
-            return;
-        }
-    }
-    // 普通用户没有用户管理权限
-    else {
-        editRoleSelect.disabled = true;
-        editApprovedSelect.disabled = true;
-        editFrozenSelect.disabled = true;
-        editPasswordInput.disabled = true;
-        permissionCheckboxes.forEach(checkbox => {
-            checkbox.disabled = true;
-        });
     }
 }
 
@@ -2214,33 +2165,44 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
     
     const updateData = {
         email,
+        approved,
+        frozen,
         permissions
     };
     
-    // 只有超级管理员可以设置角色
-    if (currentUser && currentUser.isSuperAdmin && currentEditingUser.username !== currentUser.username) {
-        if (role === 'super-admin') {
-            updateData.isSuperAdmin = true;
-            updateData.isAdmin = true;
-        } else if (role === 'admin') {
-            updateData.isSuperAdmin = false;
-            updateData.isAdmin = true;
-        } else {
-            updateData.isSuperAdmin = false;
-            updateData.isAdmin = false;
+    // 根据当前用户权限决定可以修改哪些字段
+    if (currentUser && currentUser.isSuperAdmin) {
+        // 超级管理员可以设置所有字段，但编辑自己时不能修改角色和权限
+        if (currentEditingUser.username !== currentUser.username) {
+            // 设置角色
+            if (role === 'super-admin') {
+                updateData.isSuperAdmin = true;
+                updateData.isAdmin = true;
+            } else if (role === 'admin') {
+                updateData.isSuperAdmin = false;
+                updateData.isAdmin = true;
+            } else {
+                updateData.isSuperAdmin = false;
+                updateData.isAdmin = false;
+            }
         }
-    }
-    
-    // 只有超级管理员或管理员可以设置审核和冻结状态（不能编辑自己）
-    if (currentEditingUser.username !== currentUser.username) {
-        // 如果用户已审核通过，不能修改为未审核
-        if (currentEditingUser.approved && !approved) {
-            alert('用户一旦通过审核就不能变更为未审核状态');
-            return;
+    } else if (currentUser && currentUser.isAdmin) {
+        // 管理员只能修改普通用户的邮箱、密码、冻结状态，不能修改角色和权限
+        // 用户一旦通过审核就不能变更审核状态
+        if (currentEditingUser.approved) {
+            delete updateData.approved; // 不能修改已审核用户的审核状态
         }
         
-        updateData.approved = approved;
-        updateData.frozen = frozen;
+        // 管理员不能修改角色和权限
+        delete updateData.isSuperAdmin;
+        delete updateData.isAdmin;
+        
+        // 如果是编辑自己，只能修改邮箱和密码
+        if (currentEditingUser.username === currentUser.username) {
+            delete updateData.approved;
+            delete updateData.frozen;
+            delete updateData.permissions;
+        }
     }
     
     // 如果有新密码，添加密码字段
@@ -2266,6 +2228,14 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
             
             // 重新加载用户列表
             loadUsers();
+            
+            // 如果更新的是当前用户自己的信息，更新本地存储
+            if (currentEditingUser && currentEditingUser.username === currentUser.username) {
+                const updatedUser = { ...currentUser, ...updateData };
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+                currentUser = updatedUser;
+                updateUserInterface();
+            }
         } else {
             if (!checkAuthResponse(response)) {
                 return;
