@@ -18,7 +18,7 @@
     --header-text-color: white;
     --header-font-size: 1.8rem;
     --header-font-size-mobile: 1.4rem; /* 新增：手机端标题字体大小变量 */
-    --logo-size: 120px;
+    --logo-max-size: 200px; /* 修改：改为最大尺寸限制 */
     --window-text-color: var(--text-dark);
     --window-comment-color: var(--text-light);
     --calibration-text-color: var(--text-light);
@@ -100,8 +100,10 @@ body.video-bg {
 }
 
 .logo {
-    width: var(--logo-size);
-    height: var(--logo-size);
+    max-width: var(--logo-max-size);
+    max-height: var(--logo-max-size);
+    width: auto;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -859,8 +861,8 @@ button:hover {
 }
 
 .logo-preview {
-    width: 80px;
-    height: 80px;
+    max-width: 200px;
+    max-height: 120px;
     border: 2px dashed #ddd;
     border-radius: 8px;
     margin-top: 8px;
@@ -1241,49 +1243,55 @@ button:hover {
 }
 
 .user-action-btn {
-    width: auto;
     padding: 5px 10px;
     font-size: 0.75rem;
+    width: auto;
+    flex: none;
 }
 
-.user-center {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    width: 90%;
-    max-width: 800px;
-    max-height: 85vh;
-    overflow-y: auto;
-    z-index: 1002;
+.user-role-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-left: 5px;
+    color: white;
 }
 
-.user-center-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--secondary-color);
+.user-super-admin {
+    background-color: #9b59b6;
 }
 
-.user-center-content {
-    margin-bottom: 20px;
+.user-admin {
+    background-color: #3498db;
+}
+
+.user-normal {
+    background-color: #2ecc71;
+}
+
+.user-pending {
+    background-color: #f39c12;
+}
+
+.user-frozen {
+    background-color: #e74c3c;
+}
+
+.no-permission {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-style: italic;
 }
 
 .login-tabs {
     display: flex;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border-bottom: 1px solid #ddd;
 }
 
 .login-tab {
-    padding: 10px 20px;
+    padding: 10px 15px;
     cursor: pointer;
     background: #f1f1f1;
     border: 1px solid #ddd;
@@ -1307,44 +1315,60 @@ button:hover {
     display: block;
 }
 
-.user-role-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    font-weight: bold;
-    margin-left: 5px;
+.user-center {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 1002;
+    resize: both;
+    min-width: 400px;
+    min-height: 300px;
 }
 
-.user-admin {
-    background-color: #e74c3c;
-    color: white;
+.user-center-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary-color);
+    cursor: move;
 }
 
-.user-normal {
-    background-color: #3498db;
-    color: white;
+.user-center-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    padding: 0;
+    border: none;
 }
 
-.user-pending {
-    background-color: #f39c12;
-    color: white;
-}
-
-.user-super-admin {
-    background-color: #9b59b6;
-    color: white;
-}
-
-.user-frozen {
-    background-color: #7f8c8d;
-    color: white;
+.close-user-center {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+    padding: 5px;
 }
 
 .user-center-tabs {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border-bottom: 1px solid #ddd;
 }
 
@@ -1373,22 +1397,35 @@ button:hover {
     display: block;
 }
 
-.permissions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    margin-top: 10px;
+.user-info-display {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
-.permission-item {
+.user-info-row {
     display: flex;
+    margin-bottom: 8px;
     align-items: center;
-    gap: 8px;
 }
 
-.permission-item input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+.user-info-row label {
+    width: 100px;
+    margin-bottom: 0;
+    font-weight: bold;
+}
+
+.user-info-row input {
+    flex: 1;
+}
+
+.user-info-row span {
+    flex: 1;
+    padding: 8px 10px;
+    background-color: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
 }
 
 .user-edit-modal {
@@ -1399,7 +1436,7 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1004;
+    z-index: 1003;
     justify-content: center;
     align-items: center;
 }
@@ -1409,13 +1446,77 @@ button:hover {
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
 }
 
-/* 找回密码弹窗样式 */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.permission-item input {
+    width: auto;
+}
+
+.permission-item label {
+    margin-bottom: 0;
+    font-weight: normal;
+    flex: 1;
+}
+
+/* 令牌管理样式 */
+.token-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.token-stat-item {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.token-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.token-user-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.token-user-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.token-user-item:last-child {
+    border-bottom: none;
+}
+
+/* 密码模态框样式 */
 .password-modal {
     display: none;
     position: fixed;
@@ -1424,7 +1525,7 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1005;
+    z-index: 1003;
     justify-content: center;
     align-items: center;
 }
@@ -1434,115 +1535,34 @@ button:hover {
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 450px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
     text-align: center;
 }
 
 .password-display {
-    background-color: #f8f9fa;
-    border: 2px dashed #ddd;
-    border-radius: 6px;
-    padding: 15px;
-    margin: 15px 0;
     font-size: 1.2rem;
     font-weight: bold;
-    word-break: break-all;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.copy-password-btn {
-    background: var(--card-color);
-    width: auto;
-    padding: 8px 15px;
-    margin-left: 10px;
-}
-
-/* 令牌管理样式 */
-.token-stats {
-    background-color: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.token-stat-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.token-stat-item:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-.token-stat-label {
-    font-weight: bold;
-    color: var(--text-dark);
-}
-
-.token-stat-value {
     color: var(--secondary-color);
-    font-weight: bold;
-}
-
-.token-user-list {
-    max-height: 150px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+    margin: 15px 0;
     padding: 10px;
-    margin-top: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    word-break: break-all;
 }
 
-.token-user-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-
-.token-user-item:last-child {
-    border-bottom: none;
-}
-
-.token-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.token-actions button {
-    flex: 1;
-}
-
-.clean-expired-btn {
-    background: linear-gradient(to right, #f39c12, #e67e22);
-}
-
-.clean-all-btn {
-    background: linear-gradient(to right, #e74c3c, #c0392b);
-}
-
+/* 响应式设计 */
 @media (max-width: 768px) {
-    .container {
+    body {
         padding: 10px;
     }
     
     header {
-        padding: 1rem;
         font-size: var(--header-font-size-mobile);
+        padding: 0.8rem;
     }
     
-    .timer-display, .card-windows, .admin-panel, .user-center {
-        padding: 15px;
+    .main-content {
+        grid-template-columns: 1fr;
     }
     
     .countdown {
@@ -1551,35 +1571,76 @@ button:hover {
     
     .phase-indicator {
         font-size: 1.2rem;
-        flex-direction: column;
-        text-align: center;
     }
     
     .light {
-        width: 40px;
-        height: 40px;
+        width: 35px;
+        height: 35px;
     }
     
-    .window-list {
-        grid-template-columns: 1fr;
+    .qrcode-container {
+        bottom: 120px;
+        left: 10px;
+    }
+    
+    .qrcode {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .invite-code-container {
+        top: 10px;
+        right: 10px;
+        font-size: 0.75rem;
+    }
+    
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
+        width: 45px;
+        height: 45px;
+        bottom: 15px;
+        right: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .feedback-btn {
+        bottom: 70px;
+    }
+    
+    .admin-panel-btn {
+        bottom: 125px;
+    }
+    
+    .user-center-btn {
+        bottom: 180px;
+    }
+    
+    .donation-btn {
+        bottom: 235px;
+    }
+    
+    .db-status {
+        bottom: 15px;
+        left: 15px;
+        font-size: 0.7rem;
+    }
+    
+    .admin-panel, .user-center {
+        width: 95%;
+        min-width: unset;
+        min-height: unset;
+        padding: 15px;
     }
     
     .admin-panel-grid {
         grid-template-columns: 1fr;
     }
     
-    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
-        width: 50px;
-        border-radius: 50%;
+    .window-list {
+        grid-template-columns: 1fr;
     }
     
-    .user-login-btn:hover span, .feedback-btn:hover span, .admin-panel-btn:hover span, .user-center-btn:hover span, .donation-btn:hover span {
-        display: none;
-    }
-    
-    .qrcode-container {
-        bottom: 260px;
-        left: 10px;
+    .footer {
+        padding: 8px 10px;
     }
     
     .footer-content {
@@ -1587,70 +1648,106 @@ button:hover {
         gap: 8px;
     }
     
-    .footer-notice {
-        max-width: 90%;
-        order: 2;
-    }
-    
     .footer-info {
-        order: 1;
-        gap: 10px;
+        flex-direction: column;
+        gap: 5px;
     }
     
-    .invite-code-container {
-        top: 15px;
-        right: 15px;
-        font-size: 0.75rem;
-        padding: 6px 10px;
+    .modal-content {
+        width: 95%;
+        padding: 20px;
     }
     
     .donation-qrcodes {
         flex-direction: column;
-        align-items: center;
-        gap: 20px;
+        gap: 15px;
     }
     
-    .admin-card {
-        padding: 12px;
+    .donation-qrcode img {
+        width: 120px;
+        height: 120px;
     }
     
-    .admin-panel, .user-center {
-        width: 95%;
-        min-width: unset;
-        padding: 15px;
+    .admin-tabs, .login-tabs, .user-center-tabs {
+        flex-wrap: wrap;
     }
     
-    .user-item {
-        flex-direction: column;
-        align-items: flex-start;
+    .admin-tab, .login-tab, .user-center-tab {
+        padding: 8px 12px;
+        font-size: 0.85rem;
     }
     
     .user-actions {
-        margin-top: 10px;
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    .permissions-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .password-display {
         flex-direction: column;
-        gap: 10px;
+        gap: 3px;
     }
     
-    .copy-password-btn {
-        margin-left: 0;
-        width: 100%;
+    .user-action-btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .countdown {
+        font-size: 2rem;
     }
     
-    .token-actions {
-        flex-direction: column;
+    .phase-indicator {
+        font-size: 1rem;
     }
     
-    /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
+    .light {
+        width: 30px;
+        height: 30px;
+    }
+    
+    .qrcode-container {
+        bottom: 100px;
+    }
+    
+    .qrcode {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.8rem;
+    }
+    
+    .feedback-btn {
+        bottom: 60px;
+    }
+    
+    .admin-panel-btn {
+        bottom: 110px;
+    }
+    
+    .user-center-btn {
+        bottom: 160px;
+    }
+    
+    .donation-btn {
+        bottom: 210px;
+    }
+    
     .calibration-time {
-        bottom: 25px; /* 从15px调整为25px，上移10px */
+        font-size: 0.7rem;
+        bottom: 10px;
+        left: 10px;
+    }
+    
+    .admin-panel, .user-center {
+        padding: 12px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .token-stats {
+        grid-template-columns: 1fr;
     }
 }
