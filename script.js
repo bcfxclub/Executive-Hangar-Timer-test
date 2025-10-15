@@ -1683,7 +1683,13 @@ async function loadVisits() {
             const visitsList = document.getElementById('visits-list');
             const visitCount = document.getElementById('visit-count');
             
-            visitCount.textContent = `总IP数: ${visits.length}`;
+            // 计算总访问次数
+            let totalVisits = 0;
+            visits.forEach(visit => {
+                totalVisits += visit.visitCount;
+            });
+            
+            visitCount.innerHTML = `总IP数: ${visits.length}<br>总访问次数: ${totalVisits}`;
             
             if (visits.length === 0) {
                 visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
@@ -1789,7 +1795,7 @@ async function loadUsers() {
                     </div>
                     <div class="user-actions">
                         ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
-                        <button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>
+                        ${(!user.isSuperAdmin || (currentUser && currentUser.isSuperAdmin)) ? `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>` : ''}
                         ${user.frozen ? 
                             `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
                             `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
@@ -1944,6 +1950,12 @@ async function openUserEditModal(username) {
             const user = users.find(u => u.username === username);
             
             if (user) {
+                // 检查权限：管理员不能编辑超级管理员，除非自己是超级管理员
+                if (user.isSuperAdmin && (!currentUser || !currentUser.isSuperAdmin)) {
+                    alert('您没有权限编辑超级管理员');
+                    return;
+                }
+                
                 currentEditingUser = user;
                 
                 document.getElementById('edit-username').value = user.username;
@@ -2054,6 +2066,14 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
     // 收集权限设置
     const permissions = {};
     document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+        // 检查当前用户是否有权限设置该权限
+        if (currentUser && currentUser.permissions) {
+            // 如果当前用户没有该权限，则不能给其他用户设置
+            if (!currentUser.permissions[checkbox.value] && !currentUser.isSuperAdmin) {
+                // 跳过该权限设置
+                return;
+            }
+        }
         permissions[checkbox.value] = checkbox.checked;
     });
     
@@ -2063,6 +2083,21 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
         frozen,
         permissions
     };
+    
+    // 检查权限：管理员不能给其他用户设置超级管理员权限，也不能给自己提权
+    if (currentUser && !currentUser.isSuperAdmin) {
+        // 管理员不能设置超级管理员
+        if (role === 'super-admin') {
+            alert('您没有权限设置超级管理员');
+            return;
+        }
+        
+        // 管理员不能给自己提权
+        if (currentEditingUser.username === currentUser.username && role === 'admin') {
+            alert('您不能给自己提升权限');
+            return;
+        }
+    }
     
     // 设置角色
     if (role === 'super-admin') {
