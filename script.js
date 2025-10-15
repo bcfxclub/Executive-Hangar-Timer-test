@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加对任意尺寸logo图片的支持
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -232,11 +232,13 @@ async function loadSettings() {
                 updateLogoPreview(config.logoUrl);
             }
             
+            // 修改：logoSize现在控制最大宽度
             if (config.logoSize) {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-max-width', config.logoSize + 'px');
-                document.documentElement.style.setProperty('--logo-max-height', config.logoSize + 'px');
+                // 更新logo显示
+                updateLogoDisplay();
             }
             
             if (config.qrcodeUrl) {
@@ -411,9 +413,6 @@ async function loadSettings() {
             }
             
             initializeTimer(config.initialPhase || '5-green');
-            
-            // 更新用户界面状态
-            updateUserInterface();
 
             // 添加计时器状态实时保存功能
             document.getElementById('timer-enabled').addEventListener('change', async function() {
@@ -698,32 +697,27 @@ function updateFooterNoticeDisplay(notice, link) {
     }
 }
 
-// 更新Logo预览 - 修改为支持任意尺寸图片
+// 更新Logo预览
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
-    const logo = document.getElementById('logo');
     
     if (url && url.trim() !== '') {
-        // 创建图片对象以获取尺寸
-        const img = new Image();
-        img.onload = function() {
-            const width = this.width;
-            const height = this.height;
-            
-            // 更新预览
-            logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; max-height: 100px; object-fit: contain;">`;
-            logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-            
-            console.log(`Logo尺寸: ${width} x ${height}`);
-        };
-        img.onerror = function() {
-            // 如果图片加载失败，使用默认方式显示
-            logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; max-height: 100px; object-fit: contain;">`;
-            logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-        };
-        img.src = url;
+        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
+        updateLogoDisplay();
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
+        document.getElementById('logo').innerHTML = '';
+    }
+}
+
+// 新增：更新Logo显示
+function updateLogoDisplay() {
+    const logo = document.getElementById('logo');
+    const logoUrl = document.getElementById('logo-url').value;
+    
+    if (logoUrl && logoUrl.trim() !== '') {
+        logo.innerHTML = `<img src="${logoUrl}" alt="Logo" style="max-width: 100%; height: auto;">`;
+    } else {
         logo.innerHTML = '';
     }
 }
@@ -1306,7 +1300,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-max-width', logoSize + 'px');
-    document.documentElement.style.setProperty('--logo-max-height', logoSize + 'px');
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1383,19 +1376,11 @@ document.getElementById('header-font-size').addEventListener('input', function()
     document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
-// Logo大小调整 - 修改为控制最大尺寸
+// Logo大小调整
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-max-width', this.value + 'px');
-    document.documentElement.style.setProperty('--logo-max-height', this.value + 'px');
-    
-    // 更新当前logo显示
-    const logo = document.getElementById('logo');
-    if (logo && logo.querySelector('img')) {
-        const img = logo.querySelector('img');
-        img.style.maxWidth = this.value + 'px';
-        img.style.maxHeight = this.value + 'px';
-    }
+    updateLogoDisplay();
 });
 
 // 颜色选择器预览
