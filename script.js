@@ -223,6 +223,8 @@ async function loadSettings() {
                 document.getElementById('header-font-size').value = config.headerFontSize;
                 document.getElementById('header-font-size-value').textContent = config.headerFontSize + 'rem';
                 document.documentElement.style.setProperty('--header-font-size', config.headerFontSize + 'rem');
+                // 新增：同时设置手机端的标题字体大小
+                document.documentElement.style.setProperty('--header-font-size-mobile', config.headerFontSize + 'rem');
             }
             
             if (config.logoUrl) {
@@ -1282,6 +1284,8 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     document.documentElement.style.setProperty('--header-text-color', headerTextColor);
     document.documentElement.style.setProperty('--header-font-size', headerFontSize + 'rem');
+    // 新增：同时更新手机端的标题字体大小
+    document.documentElement.style.setProperty('--header-font-size-mobile', headerFontSize + 'rem');
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
@@ -1357,6 +1361,8 @@ document.getElementById('bg-opacity').addEventListener('input', function() {
 document.getElementById('header-font-size').addEventListener('input', function() {
     document.getElementById('header-font-size-value').textContent = this.value + 'rem';
     document.documentElement.style.setProperty('--header-font-size', this.value + 'rem');
+    // 新增：同时更新手机端的标题字体大小
+    document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
 // Logo大小调整
@@ -1794,7 +1800,7 @@ async function loadUsers() {
                             `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
                             `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
                         }
-                        ${!user.isSuperAdmin && !(currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin && user.isAdmin) ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                        ${!user.isSuperAdmin ? `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
                     </div>
                 `;
                 userList.appendChild(userItem);
@@ -1970,36 +1976,6 @@ async function openUserEditModal(username) {
                 } else {
                     editRoleSelect.value = 'normal';
                     editRoleSelect.disabled = false;
-                }
-                
-                // 权限控制：如果当前用户是管理员但不是超级管理员
-                if (currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin) {
-                    // 如果编辑的用户是超级管理员，不允许编辑
-                    if (user.isSuperAdmin) {
-                        alert('您无权编辑超级管理员');
-                        document.getElementById('user-edit-modal').style.display = 'none';
-                        return;
-                    }
-                    
-                    // 如果编辑的用户是管理员，不允许编辑
-                    if (user.isAdmin) {
-                        alert('您无权编辑其他管理员');
-                        document.getElementById('user-edit-modal').style.display = 'none';
-                        return;
-                    }
-                    
-                    // 管理员只能编辑普通用户，禁用角色选择和权限修改
-                    editRoleSelect.disabled = true;
-                    editRoleSelect.value = 'normal'; // 强制设置为普通用户
-                    
-                    // 禁用所有管理员权限的复选框
-                    document.querySelectorAll('.admin-permission input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.disabled = true;
-                        checkbox.checked = false; // 确保不分配管理员权限
-                    });
-                    
-                    // 只能编辑普通用户的viewHangarTimes权限
-                    document.getElementById('edit-permission-view-hangar-times').disabled = false;
                 }
                 
                 // 设置权限显示
