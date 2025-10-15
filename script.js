@@ -2287,7 +2287,7 @@ function initializeTimer(initialPhaseKey) {
         document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-tools"></i> <span>计时器维护中，稍后再来</span>';
         document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
         document.getElementById('countdown').textContent = '00:00:00';
-        document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-pause"></i> 维护中';
+        document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-tools"></i> 维护中';
         
         // 将所有灯设置为灰色
         for (let i = 0; i < 5; i++) {
