@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制，支持任意尺寸Logo
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -235,7 +235,7 @@ async function loadSettings() {
             if (config.logoSize) {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
-                document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
+                document.documentElement.style.setProperty('--logo-max-size', config.logoSize + 'px');
             }
             
             if (config.qrcodeUrl) {
@@ -703,8 +703,8 @@ function updateLogoPreview(url) {
     const logo = document.getElementById('logo');
     
     if (url && url.trim() !== '') {
-        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview">`;
-        logo.innerHTML = `<img src="${url}" alt="Logo">`;
+        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
@@ -717,8 +717,8 @@ function updateQrcodePreview(url) {
     const qrcode = document.getElementById('qrcode');
     
     if (url && url.trim() !== '') {
-        qrcodePreview.innerHTML = `<img src="${url}" alt="QR Code Preview">`;
-        qrcode.innerHTML = `<img src="${url}" alt="QR Code">`;
+        qrcodePreview.innerHTML = `<img src="${url}" alt="QR Code Preview" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        qrcode.innerHTML = `<img src="${url}" alt="QR Code" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
         
         // 添加点击事件
         qrcodePreview.onclick = function() {
@@ -1288,7 +1288,7 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     document.documentElement.style.setProperty('--header-font-size-mobile', headerFontSize + 'rem');
     
     updateLogoPreview(logoUrl);
-    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+    document.documentElement.style.setProperty('--logo-max-size', logoSize + 'px');
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1368,7 +1368,7 @@ document.getElementById('header-font-size').addEventListener('input', function()
 // Logo大小调整
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
-    document.documentElement.style.setProperty('--logo-size', this.value + 'px');
+    document.documentElement.style.setProperty('--logo-max-size', this.value + 'px');
 });
 
 // 颜色选择器预览
