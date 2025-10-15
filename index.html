@@ -661,19 +661,18 @@
             </div>
         </div>
         
-        <div class="admin-tab-content" id="visits-tab">
-            <div class="admin-card">
-                <h3><i class="fas fa-chart-line"></i> 访问统计</h3>
-                <div class="visit-count" id="visit-count">总IP数: 加载中...</div>
-                <div class="visits-list" id="visits-list">加载中...</div>
-                <button id="refresh-visits" style="margin-top: 10px;">
-                    <i class="fas fa-sync"></i> 刷新访问统计
-                </button>
-                <button id="clear-visits" style="background: var(--reset-color); margin-top: 10px;">
-                    <i class="fas fa-trash"></i> 清除访问记录
-                </button>
-            </div>
-        </div>
+<!-- 在admin-panel的visits-tab部分添加总访问数显示 -->
+<div id="visits-tab" class="admin-tab-content">
+  <div class="admin-section">
+    <h3>访问统计</h3>
+    <div id="visit-count" class="visit-count">总IP数: 0<br>总访问次数: 0</div>
+    <div class="admin-actions">
+      <button id="refresh-visits" class="admin-btn"><i class="fas fa-sync-alt"></i> 刷新</button>
+      <button id="clear-visits" class="admin-btn" style="background: var(--reset-color);"><i class="fas fa-trash"></i> 清除记录</button>
+    </div>
+    <div id="visits-list" class="visits-list"></div>
+  </div>
+</div>
         
         <div class="admin-tab-content" id="users-tab">
             <div class="admin-card">
