@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加管理员权限限制
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并限制管理员用户管理权限
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -1787,56 +1787,24 @@ async function loadUsers() {
                     roleBadge += '<span class="user-role-badge user-frozen">已冻结</span>';
                 }
                 
-                const userActions = document.createElement('div');
-                userActions.className = 'user-actions';
-                
-                // 权限控制：管理员不能操作超级管理员和其他管理员
-                if (currentUser) {
-                    // 如果是超级管理员，可以操作所有用户
-                    if (currentUser.isSuperAdmin) {
-                        if (!user.approved) {
-                            userActions.innerHTML += `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>`;
-                        }
-                        userActions.innerHTML += `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>`;
-                        if (user.frozen) {
-                            userActions.innerHTML += `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>`;
-                        } else {
-                            userActions.innerHTML += `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`;
-                        }
-                        if (!user.isSuperAdmin) {
-                            userActions.innerHTML += `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>`;
-                        }
-                    }
-                    // 如果是管理员（非超级管理员）
-                    else if (currentUser.isAdmin) {
-                        // 只能操作普通用户，不能操作管理员和超级管理员
-                        if (!user.isAdmin && !user.isSuperAdmin) {
-                            if (!user.approved) {
-                                userActions.innerHTML += `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>`;
-                            }
-                            userActions.innerHTML += `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>`;
-                            if (user.frozen) {
-                                userActions.innerHTML += `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>`;
-                            } else {
-                                userActions.innerHTML += `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`;
-                            }
-                            userActions.innerHTML += `<button class="user-action-btn" style="background: var(--reset-color);" data-username="${user.username}">删除</button>`;
-                        }
-                        // 如果是编辑自己，只显示编辑按钮
-                        else if (user.username === currentUser.username) {
-                            userActions.innerHTML += `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>`;
-                        }
-                    }
-                }
-                
                 userItem.innerHTML = `
                     <div class="user-info">
                         <div><strong>${user.username}</strong> ${roleBadge}</div>
                         <div class="visit-date">邮箱: ${user.email}</div>
                         <div class="visit-date">注册时间: ${new Date(user.createdAt).toLocaleString()}</div>
                     </div>
+                    <div class="user-actions">
+                        ${!user.approved ? `<button class="user-action-btn approve-user" data-username="${user.username}">审核通过</button>` : ''}
+                        ${canEditUser(user) ? `<button class="user-action-btn edit-user" data-username="${user.username}">编辑</button>` : ''}
+                        ${canFreezeUser(user) ? 
+                            (user.frozen ? 
+                                `<button class="user-action-btn unfreeze-user" data-username="${user.username}">解冻</button>` : 
+                                `<button class="user-action-btn freeze-user" data-username="${user.username}">冻结</button>`
+                            ) : ''
+                        }
+                        ${canDeleteUser(user) ? `<button class="user-action-btn delete-user" style="background: var(--reset-color);" data-username="${user.username}">删除</button>` : ''}
+                    </div>
                 `;
-                userItem.appendChild(userActions);
                 userList.appendChild(userItem);
             });
             
@@ -1936,7 +1904,7 @@ async function loadUsers() {
             });
             
             // 添加删除用户事件监听
-            document.querySelectorAll('.user-actions button:not(.approve-user):not(.edit-user):not(.freeze-user):not(.unfreeze-user)').forEach(button => {
+            document.querySelectorAll('.delete-user').forEach(button => {
                 button.addEventListener('click', async function() {
                     const username = this.getAttribute('data-username');
                     if (confirm(`确定要删除用户 ${username} 吗？此操作不可恢复！`)) {
@@ -1973,6 +1941,61 @@ async function loadUsers() {
     }
 }
 
+// 检查当前用户是否有权限编辑指定用户
+function canEditUser(user) {
+    if (!currentUser) return false;
+    
+    // 超级管理员可以编辑所有用户
+    if (currentUser.isSuperAdmin) return true;
+    
+    // 管理员只能编辑自己和普通用户，不能编辑其他管理员和超级管理员
+    if (currentUser.isAdmin) {
+        // 可以编辑自己
+        if (user.username === currentUser.username) return true;
+        // 只能编辑普通用户，不能编辑其他管理员或超级管理员
+        return !user.isAdmin && !user.isSuperAdmin;
+    }
+    
+    // 普通用户只能编辑自己
+    return user.username === currentUser.username;
+}
+
+// 检查当前用户是否有权限冻结/解冻指定用户
+function canFreezeUser(user) {
+    if (!currentUser) return false;
+    
+    // 超级管理员可以冻结/解冻所有用户（除了自己）
+    if (currentUser.isSuperAdmin) {
+        return user.username !== currentUser.username;
+    }
+    
+    // 管理员只能冻结/解冻普通用户，不能冻结/解冻其他管理员和超级管理员
+    if (currentUser.isAdmin) {
+        return !user.isAdmin && !user.isSuperAdmin;
+    }
+    
+    // 普通用户没有冻结/解冻权限
+    return false;
+}
+
+// 检查当前用户是否有权限删除指定用户
+function canDeleteUser(user) {
+    if (!currentUser) return false;
+    
+    // 超级管理员可以删除所有用户（除了自己）
+    if (currentUser.isSuperAdmin) {
+        return user.username !== currentUser.username && !user.isSuperAdmin;
+    }
+    
+    // 管理员只能删除普通用户，不能删除其他管理员和超级管理员
+    if (currentUser.isAdmin) {
+        return !user.isAdmin && !user.isSuperAdmin;
+    }
+    
+    // 普通用户没有删除权限
+    return false;
+}
+
 // 打开用户编辑模态框
 async function openUserEditModal(username) {
     try {
@@ -1993,66 +2016,30 @@ async function openUserEditModal(username) {
                 const editRoleSelect = document.getElementById('edit-role');
                 const superAdminOption = document.getElementById('super-admin-option');
                 
-                // 权限控制：管理员不能提升用户权限
-                if (currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin) {
-                    // 管理员只能编辑普通用户，不能编辑管理员和超级管理员
-                    if (user.isAdmin || user.isSuperAdmin) {
-                        if (user.username !== currentUser.username) {
-                            alert('您无权编辑其他管理员或超级管理员');
-                            document.getElementById('user-edit-modal').style.display = 'none';
-                            return;
-                        }
-                    }
-                    
-                    // 管理员不能修改角色
-                    editRoleSelect.disabled = true;
-                    superAdminOption.style.display = 'none';
-                    
-                    if (user.isSuperAdmin) {
-                        editRoleSelect.value = 'super-admin';
-                    } else if (user.isAdmin) {
-                        editRoleSelect.value = 'admin';
-                    } else {
-                        editRoleSelect.value = 'normal';
-                    }
+                // 控制超级管理员选项显示和编辑权限
+                if (currentUser && currentUser.isSuperAdmin) {
+                    superAdminOption.style.display = 'block';
+                    editRoleSelect.disabled = false;
                 } else {
-                    // 超级管理员可以设置所有角色
-                    if (currentUser && currentUser.isSuperAdmin) {
-                        superAdminOption.style.display = 'block';
-                    } else {
-                        superAdminOption.style.display = 'none';
-                    }
-                    
-                    if (user.isSuperAdmin) {
-                        editRoleSelect.value = 'super-admin';
+                    superAdminOption.style.display = 'none';
+                    // 管理员只能编辑普通用户，不能提升权限
+                    if (currentUser && currentUser.isAdmin) {
                         editRoleSelect.disabled = true;
-                    } else if (user.isAdmin) {
-                        editRoleSelect.value = 'admin';
-                        editRoleSelect.disabled = false;
                     } else {
-                        editRoleSelect.value = 'normal';
                         editRoleSelect.disabled = false;
                     }
                 }
                 
-                // 设置权限显示
-                updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
-                
-                // 权限控制：管理员不能修改权限
-                if (currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin) {
-                    // 如果是编辑自己，只能查看权限不能修改
-                    if (user.username === currentUser.username) {
-                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                            checkbox.disabled = true;
-                        });
-                    }
-                    // 如果是编辑普通用户，只能修改viewHangarTimes权限
-                    else {
-                        document.querySelectorAll('.admin-permission input[type="checkbox"]').forEach(checkbox => {
-                            checkbox.disabled = true;
-                        });
-                    }
+                if (user.isSuperAdmin) {
+                    editRoleSelect.value = 'super-admin';
+                } else if (user.isAdmin) {
+                    editRoleSelect.value = 'admin';
+                } else {
+                    editRoleSelect.value = 'normal';
                 }
+                
+                // 设置权限显示和编辑状态
+                updatePermissionsDisplayForEdit(user);
                 
                 // 设置审核状态
                 document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
@@ -2078,36 +2065,71 @@ async function openUserEditModal(username) {
     }
 }
 
-// 更新权限选项显示
-function updatePermissionsDisplay(isAdmin, permissions) {
+// 更新权限选项显示和编辑状态
+function updatePermissionsDisplayForEdit(user) {
     const adminPermissions = document.querySelectorAll('.admin-permission');
     const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
+    const allPermissionCheckboxes = document.querySelectorAll('#edit-permissions input[type="checkbox"]');
     
-    if (isAdmin) {
-        // 管理员：显示所有权限选项
+    // 超级管理员可以编辑所有权限
+    if (currentUser && currentUser.isSuperAdmin) {
+        // 显示所有权限选项
         adminPermissions.forEach(permission => {
             permission.style.display = 'flex';
         });
         viewHangarTimesPermission.style.display = 'flex';
         
         // 设置权限选中状态
-        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-            checkbox.checked = permissions[checkbox.value] || false;
+        allPermissionCheckboxes.forEach(checkbox => {
+            checkbox.checked = user.permissions[checkbox.value] || false;
+            checkbox.disabled = false;
         });
-    } else {
-        // 普通用户：只显示机库开启时间权限
+    } 
+    // 管理员编辑自己时，可以查看权限但不能修改
+    else if (currentUser && currentUser.isAdmin && user.username === currentUser.username) {
+        // 显示所有权限选项但禁用
+        adminPermissions.forEach(permission => {
+            permission.style.display = 'flex';
+        });
+        viewHangarTimesPermission.style.display = 'flex';
+        
+        // 设置权限选中状态但禁用编辑
+        allPermissionCheckboxes.forEach(checkbox => {
+            checkbox.checked = user.permissions[checkbox.value] || false;
+            checkbox.disabled = true;
+        });
+    }
+    // 管理员编辑普通用户时，只能编辑普通用户权限
+    else if (currentUser && currentUser.isAdmin) {
+        // 只显示普通用户权限
         adminPermissions.forEach(permission => {
             permission.style.display = 'none';
         });
         viewHangarTimesPermission.style.display = 'flex';
         
-        // 只设置机库开启时间权限，其他权限取消选中
-        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+        // 只设置普通用户权限
+        allPermissionCheckboxes.forEach(checkbox => {
             if (checkbox.value === 'viewHangarTimes') {
-                checkbox.checked = permissions[checkbox.value] || false;
+                checkbox.checked = user.permissions[checkbox.value] || false;
+                checkbox.disabled = false;
             } else {
                 checkbox.checked = false;
+                checkbox.disabled = true;
             }
+        });
+    }
+    // 普通用户只能编辑自己，且只能查看权限
+    else {
+        // 显示所有权限选项但禁用
+        adminPermissions.forEach(permission => {
+            permission.style.display = 'flex';
+        });
+        viewHangarTimesPermission.style.display = 'flex';
+        
+        // 设置权限选中状态但禁用编辑
+        allPermissionCheckboxes.forEach(checkbox => {
+            checkbox.checked = user.permissions[checkbox.value] || false;
+            checkbox.disabled = true;
         });
     }
 }
@@ -2133,7 +2155,12 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
     // 收集权限设置
     const permissions = {};
     document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-        permissions[checkbox.value] = checkbox.checked;
+        if (!checkbox.disabled) {
+            permissions[checkbox.value] = checkbox.checked;
+        } else {
+            // 对于禁用的复选框，保持原有权限
+            permissions[checkbox.value] = currentEditingUser.permissions[checkbox.value] || false;
+        }
     });
     
     const updateData = {
@@ -2143,29 +2170,8 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
         permissions
     };
     
-    // 权限控制：管理员不能提升用户权限
-    if (currentUser && currentUser.isAdmin && !currentUser.isSuperAdmin) {
-        // 管理员不能修改角色
-        if (currentEditingUser.username !== currentUser.username) {
-            // 编辑其他用户时，保持原有角色
-            updateData.isSuperAdmin = currentEditingUser.isSuperAdmin || false;
-            updateData.isAdmin = currentEditingUser.isAdmin || false;
-            
-            // 管理员只能给普通用户设置viewHangarTimes权限，不能设置其他权限
-            Object.keys(permissions).forEach(key => {
-                if (key !== 'viewHangarTimes') {
-                    permissions[key] = currentEditingUser.permissions?.[key] || false;
-                }
-            });
-            updateData.permissions = permissions;
-        } else {
-            // 编辑自己时，保持原有角色和权限
-            updateData.isSuperAdmin = currentEditingUser.isSuperAdmin || false;
-            updateData.isAdmin = currentEditingUser.isAdmin || false;
-            updateData.permissions = currentEditingUser.permissions || {};
-        }
-    } else {
-        // 超级管理员可以设置所有角色
+    // 设置角色 - 只有超级管理员可以修改角色
+    if (currentUser && currentUser.isSuperAdmin) {
         if (role === 'super-admin') {
             updateData.isSuperAdmin = true;
             updateData.isAdmin = true;
@@ -2176,6 +2182,10 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
             updateData.isSuperAdmin = false;
             updateData.isAdmin = false;
         }
+    } else {
+        // 非超级管理员不能修改角色，保持原有角色
+        updateData.isSuperAdmin = currentEditingUser.isSuperAdmin || false;
+        updateData.isAdmin = currentEditingUser.isAdmin || false;
     }
     
     // 如果有新密码，添加密码字段
@@ -2201,6 +2211,28 @@ document.getElementById('save-user-edit').addEventListener('click', async functi
             
             // 重新加载用户列表
             loadUsers();
+            
+            // 如果更新的是当前用户自己，更新本地存储的用户信息
+            if (currentUser && currentUser.username === currentEditingUser?.username) {
+                const usersResponse = await fetch(`${API_BASE}/users`, {
+                    headers: getAuthHeaders()
+                });
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    const updatedUser = users.find(u => u.username === currentUser.username);
+                    if (updatedUser) {
+                        currentUser = {
+                            ...currentUser,
+                            email: updatedUser.email,
+                            isAdmin: updatedUser.isAdmin,
+                            isSuperAdmin: updatedUser.isSuperAdmin,
+                            permissions: updatedUser.permissions
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        updateUserInterface();
+                    }
+                }
+            }
         } else {
             if (!checkAuthResponse(response)) {
                 return;
