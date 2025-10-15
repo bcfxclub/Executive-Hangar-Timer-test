@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制，优化Logo显示
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -232,13 +232,10 @@ async function loadSettings() {
                 updateLogoPreview(config.logoUrl);
             }
             
-            // 修改：logoSize现在控制最大宽度
             if (config.logoSize) {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
-                document.documentElement.style.setProperty('--logo-max-width', config.logoSize + 'px');
-                // 更新logo显示
-                updateLogoDisplay();
+                document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
             }
             
             if (config.qrcodeUrl) {
@@ -413,6 +410,9 @@ async function loadSettings() {
             }
             
             initializeTimer(config.initialPhase || '5-green');
+            
+            // 更新用户界面状态
+            updateUserInterface();
 
             // 添加计时器状态实时保存功能
             document.getElementById('timer-enabled').addEventListener('change', async function() {
@@ -697,27 +697,18 @@ function updateFooterNoticeDisplay(notice, link) {
     }
 }
 
-// 更新Logo预览
+// 更新Logo预览 - 修改：支持任意尺寸图片
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
+    const logo = document.getElementById('logo');
     
     if (url && url.trim() !== '') {
-        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
-        updateLogoDisplay();
+        const logoSize = parseInt(document.getElementById('logo-size').value) || 120;
+        
+        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: ${logoSize}px; max-height: 200px; width: auto; height: auto;">`;
+        logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: ${logoSize}px; max-height: 200px; width: auto; height: auto;">`;
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
-        document.getElementById('logo').innerHTML = '';
-    }
-}
-
-// 新增：更新Logo显示
-function updateLogoDisplay() {
-    const logo = document.getElementById('logo');
-    const logoUrl = document.getElementById('logo-url').value;
-    
-    if (logoUrl && logoUrl.trim() !== '') {
-        logo.innerHTML = `<img src="${logoUrl}" alt="Logo" style="max-width: 100%; height: auto;">`;
-    } else {
         logo.innerHTML = '';
     }
 }
@@ -1299,7 +1290,7 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     document.documentElement.style.setProperty('--header-font-size-mobile', headerFontSize + 'rem');
     
     updateLogoPreview(logoUrl);
-    document.documentElement.style.setProperty('--logo-max-width', logoSize + 'px');
+    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1376,11 +1367,17 @@ document.getElementById('header-font-size').addEventListener('input', function()
     document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
-// Logo大小调整
+// Logo大小调整 - 修改：支持任意尺寸图片
 document.getElementById('logo-size').addEventListener('input', function() {
-    document.getElementById('logo-size-value').textContent = this.value + 'px';
-    document.documentElement.style.setProperty('--logo-max-width', this.value + 'px');
-    updateLogoDisplay();
+    const logoSize = this.value;
+    document.getElementById('logo-size-value').textContent = logoSize + 'px';
+    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+    
+    // 更新Logo预览
+    const logoUrl = document.getElementById('logo-url').value;
+    if (logoUrl) {
+        updateLogoPreview(logoUrl);
+    }
 });
 
 // 颜色选择器预览
@@ -1399,7 +1396,7 @@ colorInputs.forEach(input => {
     }
 });
 
-// 预览Logo
+// 预览Logo - 修改：支持任意尺寸图片
 document.getElementById('logo-url').addEventListener('change', function() {
     updateLogoPreview(this.value);
 });
