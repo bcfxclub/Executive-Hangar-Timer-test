@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制，优化Logo显示
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -697,16 +697,14 @@ function updateFooterNoticeDisplay(notice, link) {
     }
 }
 
-// 更新Logo预览 - 修改：支持任意尺寸图片
+// 更新Logo预览
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
     const logo = document.getElementById('logo');
     
     if (url && url.trim() !== '') {
-        const logoSize = parseInt(document.getElementById('logo-size').value) || 120;
-        
-        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: ${logoSize}px; max-height: 200px; width: auto; height: auto;">`;
-        logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: ${logoSize}px; max-height: 200px; width: auto; height: auto;">`;
+        logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview">`;
+        logo.innerHTML = `<img src="${url}" alt="Logo">`;
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
@@ -1367,17 +1365,10 @@ document.getElementById('header-font-size').addEventListener('input', function()
     document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
-// Logo大小调整 - 修改：支持任意尺寸图片
+// Logo大小调整
 document.getElementById('logo-size').addEventListener('input', function() {
-    const logoSize = this.value;
-    document.getElementById('logo-size-value').textContent = logoSize + 'px';
-    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    
-    // 更新Logo预览
-    const logoUrl = document.getElementById('logo-url').value;
-    if (logoUrl) {
-        updateLogoPreview(logoUrl);
-    }
+    document.getElementById('logo-size-value').textContent = this.value + 'px';
+    document.documentElement.style.setProperty('--logo-size', this.value + 'px');
 });
 
 // 颜色选择器预览
@@ -1396,7 +1387,7 @@ colorInputs.forEach(input => {
     }
 });
 
-// 预览Logo - 修改：支持任意尺寸图片
+// 预览Logo
 document.getElementById('logo-url').addEventListener('change', function() {
     updateLogoPreview(this.value);
 });
