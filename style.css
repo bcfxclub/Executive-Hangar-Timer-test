@@ -17,6 +17,7 @@
     --header-bg-color: transparent;
     --header-text-color: white;
     --header-font-size: 1.8rem;
+    --header-font-size-mobile: 1.4rem; /* 新增：手机端标题字体大小变量 */
     --logo-size: 120px;
     --window-text-color: var(--text-dark);
     --window-comment-color: var(--text-light);
@@ -1537,7 +1538,7 @@ button:hover {
     
     header {
         padding: 1rem;
-        font-size: 1.4rem;
+        font-size: var(--header-font-size-mobile);
     }
     
     .timer-display, .card-windows, .admin-panel, .user-center {
