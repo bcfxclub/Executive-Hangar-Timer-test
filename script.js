@@ -2466,7 +2466,7 @@ function calculateHangarOpenTimes(adjustedStartTime) {
     // 如果当前时间已经超过了第一个开启时间，则显示上一个开启时间
     if (now.getTime() > firstGreenTime.getTime()) {
         const prevItem = document.createElement('li');
-        prevItem.innerHTML = `<i class="fas fa-window-restore"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
+        prevItem.innerHTML = `<i class="fas fa-door-closed"></i> 上次开启时间: ${formatDateTimeFull(previousWindowTime)}`;
         windowList.appendChild(prevItem);
     }
     
@@ -2476,9 +2476,9 @@ function calculateHangarOpenTimes(adjustedStartTime) {
         const listItem = document.createElement('li');
         
         if (i === 0) {
-            listItem.innerHTML = `<i class="fas fa-window-restore"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
+            listItem.innerHTML = `<i class="fas fa-door-open"></i> 下次开启时间: ${formatDateTimeFull(windowTime)}`;
         } else {
-            listItem.innerHTML = `<i class="fas fa-window-restore"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
+            listItem.innerHTML = `<i class="fas fa-door-open"></i> 开启时间 ${i+1}: ${formatDateTimeFull(windowTime)}`;
         }
         
         windowList.appendChild(listItem);
