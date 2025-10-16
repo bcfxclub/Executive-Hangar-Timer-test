@@ -232,22 +232,12 @@ async function loadSettings() {
                 updateLogoPreview(config.logoUrl);
             }
             
-            // 修改：Logo大小设置，支持任意尺寸
-            if (config.logoWidth) {
-                document.getElementById('logo-width').value = config.logoWidth;
-                document.getElementById('logo-width-value').textContent = config.logoWidth + 'px';
-                document.documentElement.style.setProperty('--logo-width', config.logoWidth + 'px');
-            }
-            
-            if (config.logoHeight) {
-                document.getElementById('logo-height').value = config.logoHeight;
-                document.getElementById('logo-height-value').textContent = config.logoHeight + 'px';
-                document.documentElement.style.setProperty('--logo-height', config.logoHeight + 'px');
-            }
-            
-            if (config.logoFullWidth !== undefined) {
-                document.getElementById('logo-full-width').value = config.logoFullWidth.toString();
-                document.documentElement.style.setProperty('--logo-full-width', config.logoFullWidth ? '100%' : 'auto');
+            if (config.logoSize) {
+                document.getElementById('logo-size').value = config.logoSize;
+                document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
+                document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
+                // 新增：立即更新logo显示大小
+                updateLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -422,7 +412,7 @@ async function loadSettings() {
             }
             
             initializeTimer(config.initialPhase || '5-green');
-            
+
             // 更新用户界面状态
             updateUserInterface();
 
@@ -444,6 +434,15 @@ async function loadSettings() {
             document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
         }
         initializeTimer('5-green');
+    }
+}
+
+// 新增：更新Logo大小的函数
+function updateLogoSize(size) {
+    const logo = document.querySelector('.logo');
+    if (logo) {
+        logo.style.maxWidth = size + 'px';
+        logo.style.width = size + 'px';
     }
 }
 
@@ -535,10 +534,7 @@ async function saveSettings() {
         headerTextColor: document.getElementById('header-text-color').value,
         headerFontSize: parseFloat(document.getElementById('header-font-size').value),
         logoUrl: document.getElementById('logo-url').value,
-        // 修改：Logo尺寸设置
-        logoWidth: parseInt(document.getElementById('logo-width').value) || 200,
-        logoHeight: parseInt(document.getElementById('logo-height').value) || 80,
-        logoFullWidth: document.getElementById('logo-full-width').value === 'true',
+        logoSize: parseInt(document.getElementById('logo-size').value),
         qrcodeUrl: document.getElementById('qrcode-url').value,
         qrcodeCaption: document.getElementById('qrcode-caption-input').value,
         qrcodeCaptionColor: document.getElementById('qrcode-caption-color').value,
@@ -593,6 +589,8 @@ async function saveSettings() {
             updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
             // 更新捐助用户预测显示设置
             localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
+            // 新增：更新Logo大小
+            updateLogoSize(config.logoSize);
             return true;
         } else {
             if (!checkAuthResponse(response)) {
@@ -718,6 +716,7 @@ function updateLogoPreview(url) {
     const logo = document.getElementById('logo');
     
     if (url && url.trim() !== '') {
+        // 修改：添加样式让Logo自适应容器宽度
         logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
         logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; height: auto;">`;
     } else {
@@ -1275,9 +1274,7 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     const headerTextColor = document.getElementById('header-text-color').value;
     const headerFontSize = document.getElementById('header-font-size').value;
     const logoUrl = document.getElementById('logo-url').value;
-    const logoWidth = document.getElementById('logo-width').value;
-    const logoHeight = document.getElementById('logo-height').value;
-    const logoFullWidth = document.getElementById('logo-full-width').value === 'true';
+    const logoSize = document.getElementById('logo-size').value;
     const qrcodeUrl = document.getElementById('qrcode-url').value;
     const qrcodeCaption = document.getElementById('qrcode-caption-input').value;
     const qrcodeCaptionColor = document.getElementById('qrcode-caption-color').value;
@@ -1305,15 +1302,9 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     document.documentElement.style.setProperty('--header-font-size-mobile', headerFontSize + 'rem');
     
     updateLogoPreview(logoUrl);
-    
-    // 修改：设置Logo尺寸
-    if (logoFullWidth) {
-        document.documentElement.style.setProperty('--logo-width', '100%');
-        document.documentElement.style.setProperty('--logo-height', 'auto');
-    } else {
-        document.documentElement.style.setProperty('--logo-width', logoWidth + 'px');
-        document.documentElement.style.setProperty('--logo-height', logoHeight + 'px');
-    }
+    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+    // 新增：立即更新logo显示大小
+    updateLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1390,31 +1381,13 @@ document.getElementById('header-font-size').addEventListener('input', function()
     document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
-// Logo宽度调整
-document.getElementById('logo-width').addEventListener('input', function() {
-    document.getElementById('logo-width-value').textContent = this.value + 'px';
-    if (document.getElementById('logo-full-width').value !== 'true') {
-        document.documentElement.style.setProperty('--logo-width', this.value + 'px');
-    }
-});
-
-// Logo高度调整
-document.getElementById('logo-height').addEventListener('input', function() {
-    document.getElementById('logo-height-value').textContent = this.value + 'px';
-    if (document.getElementById('logo-full-width').value !== 'true') {
-        document.documentElement.style.setProperty('--logo-height', this.value + 'px');
-    }
-});
-
-// Logo全宽切换
-document.getElementById('logo-full-width').addEventListener('change', function() {
-    if (this.value === 'true') {
-        document.documentElement.style.setProperty('--logo-width', '100%');
-        document.documentElement.style.setProperty('--logo-height', 'auto');
-    } else {
-        document.documentElement.style.setProperty('--logo-width', document.getElementById('logo-width').value + 'px');
-        document.documentElement.style.setProperty('--logo-height', document.getElementById('logo-height').value + 'px');
-    }
+// Logo大小调整
+document.getElementById('logo-size').addEventListener('input', function() {
+    const size = this.value;
+    document.getElementById('logo-size-value').textContent = size + 'px';
+    document.documentElement.style.setProperty('--logo-size', size + 'px');
+    // 新增：立即更新logo显示大小
+    updateLogoSize(size);
 });
 
 // 颜色选择器预览
