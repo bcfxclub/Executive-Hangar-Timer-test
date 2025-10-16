@@ -236,6 +236,8 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
+                // 新增：同时更新手机端的Logo大小
+                updateLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -697,6 +699,17 @@ function updateFooterNoticeDisplay(notice, link) {
     }
 }
 
+// 新增：更新Logo大小（确保手机端和电脑端都生效）
+function updateLogoSize(size) {
+    const logo = document.querySelector('.logo');
+    if (logo) {
+        logo.style.width = size + 'px';
+        logo.style.height = size + 'px';
+        logo.style.maxWidth = size + 'px';
+        logo.style.maxHeight = size + 'px';
+    }
+}
+
 // 更新Logo预览
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
@@ -706,6 +719,10 @@ function updateLogoPreview(url) {
         // 修改：添加样式让Logo自适应容器宽度
         logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
         logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; height: auto;">`;
+        
+        // 新增：确保Logo大小在手机端也生效
+        const logoSize = document.getElementById('logo-size').value;
+        updateLogoSize(logoSize);
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
@@ -1290,6 +1307,8 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+    // 新增：确保Logo大小在手机端也生效
+    updateLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1370,6 +1389,8 @@ document.getElementById('header-font-size').addEventListener('input', function()
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
+    // 新增：确保Logo大小在手机端也实时生效
+    updateLogoSize(this.value);
 });
 
 // 颜色选择器预览
