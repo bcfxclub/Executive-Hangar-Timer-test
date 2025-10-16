@@ -98,7 +98,6 @@ body.video-bg {
     justify-content: center;
     margin-bottom: 10px;
     width: 100%;
-    max-width: var(--logo-size); /* 新增：限制Logo容器最大宽度 */
 }
 
 .logo {
@@ -809,7 +808,7 @@ input[type="datetime-local"], select, input[type="password"], input[type="text"]
     transition: border-color 0.3s;
 }
 
-input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus, input[type="color"]:focus, input[type="email"]:focus {
+input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus, input[type="file"]:focus, input[type="color"]:focus, input[type="email"]:focus {
     border-color: var(--secondary-color);
     outline: none;
 }
@@ -1154,87 +1153,104 @@ button:hover {
 .qrcode-modal-caption {
     font-size: 1rem;
     color: var(--text-dark);
-    margin-bottom: 15px;
+    margin-top: 10px;
 }
 
-.close-qrcode-modal {
-    background: var(--secondary-color);
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    width: auto;
+.contact-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.login-tabs {
-    display: flex;
-    margin-bottom: 15px;
-    border-bottom: 1px solid #ddd;
-}
-
-.login-tab {
-    padding: 10px 15px;
-    cursor: pointer;
-    background: #f1f1f1;
-    border: 1px solid #ddd;
-    border-bottom: none;
-    margin-right: 5px;
-    border-radius: 5px 5px 0 0;
-    transition: all 0.3s;
-    flex: 1;
-    text-align: center;
-}
-
-.login-tab.active {
-    background: var(--secondary-color);
-    color: white;
-    border-color: var(--secondary-color);
-}
-
-.login-tab-content {
-    display: none;
-}
-
-.login-tab-content.active {
-    display: block;
-}
-
-.password-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
+.contact-inputs input {
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1004;
-    justify-content: center;
-    align-items: center;
-}
-
-.password-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.password-display {
-    font-size: 1.2rem;
-    margin: 15px 0;
-    padding: 10px;
-    background-color: #f8f9fa;
+    padding: 8px 10px;
+    border: 2px solid #ddd;
     border-radius: 6px;
-    border: 1px dashed #ddd;
+    font-size: 0.9rem;
 }
 
-.copy-password-btn {
-    background: var(--card-color);
-    width: auto;
-    display: inline-flex;
-    justify-content: center;
+.link-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.link-input-group input {
+    flex: 1;
+}
+
+/* 访问统计样式 */
+.visits-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.visit-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem;
+}
+
+.visit-item:last-child {
+    border-bottom: none;
+}
+
+.visit-ip {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.visit-date {
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+.visit-count {
+    margin-top: 10px;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.user-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-actions {
+    display: flex;
     gap: 5px;
+}
+
+.user-action-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.75rem;
 }
 
 .user-center {
@@ -1252,9 +1268,6 @@ button:hover {
     max-height: 85vh;
     overflow-y: auto;
     z-index: 1002;
-    resize: both;
-    min-width: 400px;
-    min-height: 300px;
 }
 
 .user-center-header {
@@ -1264,27 +1277,123 @@ button:hover {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--secondary-color);
-    cursor: move;
 }
 
-.user-center-header h2 {
-    margin: 0;
-    color: var(--primary-color);
+.user-center-content {
+    margin-bottom: 20px;
+}
+
+.login-tabs {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    background: none;
-    padding: 0;
-    border: none;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
 }
 
-.close-user-center {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
+.login-tab {
+    padding: 10px 20px;
     cursor: pointer;
+    background: #f1f1f1;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s;
+}
+
+.login-tab.active {
+    background: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.login-tab-content {
+    display: none;
+}
+
+.login-tab-content.active {
+    display: block;
+}
+
+.user-role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.user-super-admin {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.user-admin {
+    background-color: #3498db;
+    color: white;
+}
+
+.user-normal {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.user-pending {
+    background-color: #f39c12;
+    color: white;
+}
+
+.user-frozen {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.no-permission {
     color: var(--text-light);
-    padding: 5px;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.password-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1003;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.password-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    margin: 20px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 2px dashed #ddd;
+}
+
+.range-value {
+    display: inline-block;
+    margin-left: 10px;
+    font-weight: bold;
+    color: var(--secondary-color);
+    min-width: 40px;
 }
 
 .user-center-tabs {
@@ -1319,46 +1428,6 @@ button:hover {
     display: block;
 }
 
-.user-info-form {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
-}
-
-.user-role-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-left: 5px;
-}
-
-.user-super-admin {
-    background-color: #8e44ad;
-    color: white;
-}
-
-.user-admin {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-.user-normal {
-    background-color: var(--card-color);
-    color: white;
-}
-
-.user-pending {
-    background-color: #f39c12;
-    color: white;
-}
-
-.user-frozen {
-    background-color: var(--reset-color);
-    color: white;
-}
-
 .user-edit-modal {
     display: none;
     position: fixed;
@@ -1380,145 +1449,57 @@ button:hover {
     max-width: 500px;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-.user-edit-modal h2 {
-    margin-bottom: 20px;
-    color: var(--primary-color);
-    text-align: center;
-}
-
-.user-edit-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.user-edit-buttons button {
-    flex: 1;
-}
-
-.user-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.user-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    background-color: white;
-}
-
-.user-item:last-child {
-    border-bottom: none;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.user-action-btn {
-    width: auto;
-    padding: 6px 10px;
-    font-size: 0.75rem;
-    white-space: nowrap;
-}
-
-.no-permission {
-    color: var(--text-light);
-    font-size: 0.8rem;
-    font-style: italic;
-}
-
-.permissions-container {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
     margin-top: 10px;
 }
 
 .permission-item {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 8px;
 }
 
-.permission-item:last-child {
-    margin-bottom: 0;
-}
-
-.permission-item input[type="checkbox"] {
+.permission-item input {
     width: auto;
-    margin-right: 8px;
 }
 
-.visits-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
+.permission-item label {
+    margin: 0;
+    font-weight: normal;
 }
 
-.visit-item {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-    background-color: white;
-}
-
-.visit-item:last-child {
-    border-bottom: none;
-}
-
-.visit-ip {
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.visit-date {
-    font-size: 0.8rem;
-    color: var(--text-light);
-}
-
-.visit-count {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-    font-weight: bold;
-}
-
+/* 令牌统计样式 */
 .token-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
     margin-bottom: 15px;
 }
 
 .token-stat-item {
-    background-color: white;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 6px;
     text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.token-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 5px;
 }
 
 .token-stat-value {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: bold;
-    color: var(--secondary-color);
-    margin-top: 5px;
+    color: var(--primary-color);
 }
 
 .token-user-list {
@@ -1533,49 +1514,53 @@ button:hover {
 .token-user-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     padding: 8px;
     border-bottom: 1px solid #eee;
-    background-color: white;
 }
 
 .token-user-item:last-child {
     border-bottom: none;
 }
 
-.token-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.token-actions button {
-    flex: 1;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
     body {
         padding: 10px;
-        padding-bottom: 60px;
+        padding-bottom: 50px;
     }
     
     header {
-        padding: 0.8rem;
-        font-size: var(--header-font-size-mobile); /* 使用手机端字体大小变量 */
+        font-size: var(--header-font-size-mobile);
+        padding: 1rem;
+        margin-bottom: 15px;
+    }
+    
+    .logo-container {
+        margin-bottom: 5px;
+    }
+    
+    .logo {
+        max-width: min(100%, var(--logo-size));
+        width: auto;
+        height: auto;
+    }
+    
+    .timer-display {
+        padding: 15px;
+        margin-bottom: 15px;
     }
     
     .countdown {
         font-size: 2.5rem;
     }
     
-    .phase-indicator {
-        font-size: 1.1rem;
-    }
-    
     .light {
         width: 35px;
         height: 35px;
+    }
+    
+    .card-windows {
+        padding: 15px;
     }
     
     .window-list {
@@ -1584,57 +1569,54 @@ button:hover {
     
     .qrcode-container {
         position: fixed;
-        bottom: 140px;
+        bottom: 120px;
         left: 10px;
         transform: scale(0.9);
     }
     
     .invite-code-container {
         position: fixed;
-        top: 15px; /* 修改：向上移动推荐代码，避免遮挡Logo */
+        top: 25px;
         right: 10px;
         font-size: 0.75rem;
         padding: 6px 10px;
+        transform: scale(0.9);
+    }
+    
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
+        width: 45px;
+        height: 45px;
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+        width: 140px;
     }
     
     .user-login-btn {
-        bottom: 10px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 15px;
     }
     
     .feedback-btn {
-        bottom: 65px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 70px;
     }
     
     .admin-panel-btn {
-        bottom: 120px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 125px;
     }
     
     .user-center-btn {
-        bottom: 175px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 180px;
     }
     
     .donation-btn {
-        bottom: 230px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 235px;
     }
     
     .db-status {
-        bottom: 10px;
-        left: 10px;
+        bottom: 15px;
+        left: 15px;
         font-size: 0.7rem;
     }
     
@@ -1647,15 +1629,13 @@ button:hover {
         gap: 8px;
     }
     
-    .admin-panel {
-        width: 95%;
-        min-width: unset;
-        padding: 15px;
+    .footer-notice {
+        max-width: 150px;
     }
     
-    .user-center {
+    .admin-panel {
         width: 95%;
-        min-width: unset;
+        max-height: 80vh;
         padding: 15px;
     }
     
@@ -1663,30 +1643,40 @@ button:hover {
         grid-template-columns: 1fr;
     }
     
-    .donation-qrcodes {
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-    
     .modal-content {
+        width: 95%;
         padding: 20px;
     }
     
-    .logo-container {
-        margin-bottom: 5px;
+    .donation-qrcodes {
+        flex-direction: column;
+        gap: 20px;
     }
     
-    .logo {
-        max-width: 100px; /* 手机端默认Logo大小 */
+    .donation-qrcode img {
+        width: 120px;
+        height: 120px;
     }
     
     .calibration-time {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        text-align: center;
+        position: static;
         margin-top: 10px;
+        text-align: center;
+    }
+    
+    .status-indicators {
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .admin-tab, .login-tab, .user-center-tab {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    button {
+        padding: 8px 12px;
+        font-size: 0.85rem;
     }
 }
 
@@ -1696,8 +1686,7 @@ button:hover {
     }
     
     .phase-indicator {
-        font-size: 1rem;
-        padding: 8px;
+        font-size: 1.2rem;
     }
     
     .light {
@@ -1705,45 +1694,47 @@ button:hover {
         height: 30px;
     }
     
-    .user-login-btn:hover,
-    .feedback-btn:hover,
-    .admin-panel-btn:hover,
-    .user-center-btn:hover,
-    .donation-btn:hover {
-        width: 45px;
-        border-radius: 50%;
+    .qrcode-container {
+        transform: scale(0.8);
+        left: 5px;
+        bottom: 100px;
     }
     
-    .user-login-btn:hover span,
-    .feedback-btn:hover span,
-    .admin-panel-btn:hover span,
-    .user-center-btn:hover span,
-    .donation-btn:hover span {
-        display: none;
+    .invite-code-container {
+        transform: scale(0.8);
+        right: 5px;
+        top: 15px;
     }
     
-    .admin-tabs,
-    .user-center-tabs {
-        flex-direction: column;
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
+        width: 40px;
+        height: 40px;
+        bottom: 10px;
+        right: 10px;
     }
     
-    .admin-tab,
-    .user-center-tab {
-        margin-right: 0;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
+    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+        width: 120px;
     }
     
-    .login-tabs {
-        flex-direction: column;
+    .user-login-btn {
+        bottom: 10px;
     }
     
-    .login-tab {
-        margin-right: 0;
-        margin-bottom: 5px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
+    .feedback-btn {
+        bottom: 60px;
+    }
+    
+    .admin-panel-btn {
+        bottom: 110px;
+    }
+    
+    .user-center-btn {
+        bottom: 160px;
+    }
+    
+    .donation-btn {
+        bottom: 210px;
     }
     
     .footer-content {
@@ -1752,8 +1743,6 @@ button:hover {
     }
     
     .footer-info {
-        flex-direction: column;
-        gap: 5px;
-        text-align: center;
+        gap: 8px;
     }
 }
