@@ -124,7 +124,6 @@ body.video-bg {
     left: 20px;
     text-align: center;
     z-index: 100;
-    transition: transform 0.3s ease;
 }
 
 .qrcode {
@@ -1048,57 +1047,80 @@ button:hover {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     cursor: pointer;
+    white-space: nowrap;
     transition: color 0.3s;
 }
 
 .footer-info a:hover {
-    color: white;
+    color: #ffffff;
     text-decoration: underline;
 }
 
-.footer-info i {
-    margin-right: 3px;
-}
-
-.footer-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1001;
-    justify-content: center;
-    align-items: center;
-}
-
 .footer-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
     max-width: 600px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-height: 80vh;
     overflow-y: auto;
 }
 
-.footer-modal h2 {
-    margin-bottom: 15px;
-    color: var(--primary-color);
+.donation-modal-content {
+    max-width: 500px;
+}
+
+.donation-qrcodes {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.donation-qrcode {
     text-align: center;
 }
 
-.footer-modal p {
-    line-height: 1.6;
-    margin-bottom: 15px;
+.donation-qrcode img {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
 
-.close-footer-modal {
-    background: var(--secondary-color);
-    width: auto;
+.donation-records {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
     margin-top: 15px;
+}
+
+.donation-record {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.donation-record:last-child {
+    border-bottom: none;
+}
+
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-preview {
+    width: 25px;
+    height: 25px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.admin-panel-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
 }
 
 .qrcode-modal {
@@ -1109,7 +1131,7 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1001;
+    z-index: 1003;
     justify-content: center;
     align-items: center;
 }
@@ -1119,79 +1141,146 @@ button:hover {
     padding: 20px;
     border-radius: 12px;
     text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    max-width: 90%;
+    max-width: 300px;
 }
 
 .qrcode-modal img {
     max-width: 250px;
     max-height: 250px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .qrcode-modal-caption {
     font-size: 1rem;
     color: var(--text-dark);
-    margin-bottom: 15px;
+    margin-top: 10px;
 }
 
-.close-qrcode-modal {
-    background: var(--secondary-color);
-    width: auto;
-    padding: 8px 16px;
+.contact-inputs {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.password-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
+.contact-inputs input {
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1001;
-    justify-content: center;
-    align-items: center;
-}
-
-.password-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    text-align: center;
-}
-
-.password-modal h2 {
-    margin-bottom: 15px;
-    color: var(--primary-color);
-}
-
-.password-display {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: var(--secondary-color);
-    background-color: #f8f9fa;
-    padding: 12px;
+    padding: 8px 10px;
+    border: 2px solid #ddd;
     border-radius: 6px;
-    margin: 15px 0;
-    word-break: break-all;
+    font-size: 0.9rem;
 }
 
-.password-modal-buttons {
+.link-input-group {
     display: flex;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 5px;
 }
 
-.password-modal-buttons button {
+.link-input-group input {
     flex: 1;
 }
 
-.copy-password-btn {
-    background: linear-gradient(to right, #2ecc71, #27ae60);
+/* 访问统计样式 */
+.visits-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.visit-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.85rem;
+}
+
+.visit-item:last-child {
+    border-bottom: none;
+}
+
+.visit-ip {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.visit-date {
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+.visit-count {
+    margin-top: 10px;
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.user-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.user-action-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+}
+
+.user-center {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 1002;
+}
+
+.user-center-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.user-center-content {
+    margin-bottom: 20px;
 }
 
 .login-tabs {
@@ -1201,7 +1290,7 @@ button:hover {
 }
 
 .login-tab {
-    padding: 10px 15px;
+    padding: 10px 20px;
     cursor: pointer;
     background: #f1f1f1;
     border: 1px solid #ddd;
@@ -1209,8 +1298,6 @@ button:hover {
     margin-right: 5px;
     border-radius: 5px 5px 0 0;
     transition: all 0.3s;
-    flex: 1;
-    text-align: center;
 }
 
 .login-tab.active {
@@ -1227,60 +1314,44 @@ button:hover {
     display: block;
 }
 
-.user-center {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    padding: 20px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 85vh;
-    overflow-y: auto;
-    z-index: 1002;
-    resize: both;
-    min-width: 400px;
-    min-height: 300px;
+.user-role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 5px;
 }
 
-.user-center-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--secondary-color);
-    cursor: move;
+.user-admin {
+    background-color: #e74c3c;
+    color: white;
 }
 
-.user-center-header h2 {
-    margin: 0;
-    color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: none;
-    padding: 0;
-    border: none;
+.user-normal {
+    background-color: #3498db;
+    color: white;
 }
 
-.close-user-center {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--text-light);
-    padding: 5px;
+.user-pending {
+    background-color: #f39c12;
+    color: white;
+}
+
+.user-super-admin {
+    background-color: #9b59b6;
+    color: white;
+}
+
+.user-frozen {
+    background-color: #7f8c8d;
+    color: white;
 }
 
 .user-center-tabs {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     border-bottom: 1px solid #ddd;
 }
 
@@ -1309,117 +1380,22 @@ button:hover {
     display: block;
 }
 
-.user-info-form {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
-}
-
-.user-info-form h3 {
-    margin-bottom: 12px;
-    color: var(--primary-color);
-    border-bottom: 1px solid var(--secondary-color);
-    padding-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.1rem;
-}
-
-.user-role-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-left: 8px;
-}
-
-.user-super-admin {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.user-admin {
-    background-color: #3498db;
-    color: white;
-}
-
-.user-normal {
-    background-color: #2ecc71;
-    color: white;
-}
-
-.user-pending {
-    background-color: #f39c12;
-    color: white;
-}
-
-.user-frozen {
-    background-color: #95a5a6;
-    color: white;
-}
-
-.user-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
     margin-top: 10px;
 }
 
-.user-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+.permission-item {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    gap: 8px;
 }
 
-.user-item:last-child {
-    border-bottom: none;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.user-action-btn {
-    width: auto;
-    padding: 5px 10px;
-    font-size: 0.75rem;
-    background: var(--secondary-color);
-}
-
-.user-action-btn.delete-user {
-    background: var(--reset-color);
-}
-
-.user-action-btn.approve-user {
-    background: var(--card-color);
-}
-
-.user-action-btn.freeze-user {
-    background: #f39c12;
-}
-
-.user-action-btn.unfreeze-user {
-    background: #3498db;
-}
-
-.no-permission {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    font-style: italic;
+.permission-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
 }
 
 .user-edit-modal {
@@ -1430,168 +1406,73 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1003;
+    z-index: 1004;
     justify-content: center;
     align-items: center;
 }
 
-.user-edit-content {
+.user-edit-modal-content {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-height: 90vh;
     overflow-y: auto;
 }
 
-.user-edit-content h2 {
-    margin-bottom: 20px;
-    color: var(--primary-color);
-    text-align: center;
-}
-
-.edit-permissions {
-    margin-top: 15px;
-}
-
-.permission-group {
-    margin-bottom: 10px;
-}
-
-.permission-item {
-    display: flex;
+/* 找回密码弹窗样式 */
+.password-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1005;
+    justify-content: center;
     align-items: center;
-    margin-bottom: 8px;
-    padding: 8px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
 }
 
-.permission-item input[type="checkbox"] {
-    width: auto;
-    margin-right: 10px;
-}
-
-.permission-item label {
-    margin-bottom: 0;
-    font-weight: normal;
-    flex: 1;
-}
-
-.permission-description {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-left: 25px;
-}
-
-.color-preview {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    margin-left: 8px;
-    vertical-align: middle;
-    border: 1px solid #ddd;
-}
-
-.range-value {
-    display: inline-block;
-    margin-left: 10px;
-    font-weight: bold;
-    color: var(--secondary-color);
-}
-
-.donation-modal-content {
+.password-modal-content {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    max-width: 450px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.donation-qrcodes {
-    display: flex;
-    justify-content: space-around;
-    margin: 20px 0;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.donation-qrcode {
     text-align: center;
-    flex: 1;
-    min-width: 150px;
 }
 
-.donation-qrcode img {
-    width: 150px;
-    height: 150px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.donation-note {
-    margin-top: 15px;
-    padding: 10px;
+.password-display {
     background-color: #f8f9fa;
+    border: 2px dashed #ddd;
     border-radius: 6px;
-    border-left: 4px solid var(--secondary-color);
-}
-
-.donation-note-display {
-    font-style: italic;
-    color: var(--text-dark);
-}
-
-.visits-list {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.visit-item {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.visit-item:last-child {
-    border-bottom: none;
-}
-
-.visit-ip {
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 1.2rem;
     font-weight: bold;
-    color: var(--primary-color);
+    word-break: break-all;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.visit-date {
-    font-size: 0.8rem;
-    color: var(--text-light);
+.copy-password-btn {
+    background: var(--card-color);
+    width: auto;
+    padding: 8px 15px;
+    margin-left: 10px;
 }
 
-.visit-count {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-    font-weight: bold;
-}
-
-.visit-stats {
-    margin-bottom: 10px;
-    padding: 8px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    font-weight: bold;
-}
-
+/* 令牌管理样式 */
 .token-stats {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
     margin-bottom: 15px;
 }
 
@@ -1599,18 +1480,28 @@ button:hover {
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
-    padding: 8px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.token-stat-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.token-stat-label {
+    font-weight: bold;
+    color: var(--text-dark);
 }
 
 .token-stat-value {
-    font-weight: bold;
     color: var(--secondary-color);
+    font-weight: bold;
 }
 
 .token-user-list {
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -1621,72 +1512,54 @@ button:hover {
 .token-user-item {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .token-user-item:last-child {
     border-bottom: none;
 }
 
-/* 响应式设计 */
+.token-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.token-actions button {
+    flex: 1;
+}
+
+.clean-expired-btn {
+    background: linear-gradient(to right, #f39c12, #e67e22);
+}
+
+.clean-all-btn {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+}
+
 @media (max-width: 768px) {
-    body {
+    .container {
         padding: 10px;
-        padding-bottom: 50px;
     }
     
     header {
+        padding: 1rem;
         font-size: var(--header-font-size-mobile);
-        padding: 0.8rem;
-        margin-bottom: 15px;
     }
     
-    .logo {
-        max-width: var(--logo-size);
-        width: 100%;
-    }
-    
-    .logo img {
-        max-width: 100%;
-        height: auto;
-    }
-    
-    .qrcode-container {
-        position: fixed;
-        bottom: 260px;
-        left: 10px;
-        z-index: 100;
-    }
-    
-    .qrcode {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .qrcode-caption {
-        font-size: 0.7rem;
-        max-width: 80px;
-    }
-    
-    .invite-code-container {
-        position: fixed;
-        top: 25px; /* 修改：从15px调整为25px，避免遮挡Logo */
-        right: 10px;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-    }
-    
-    .timer-display {
+    .timer-display, .card-windows, .admin-panel, .user-center {
         padding: 15px;
-    }
-    
-    .phase-indicator {
-        font-size: 1.2rem;
     }
     
     .countdown {
         font-size: 2.5rem;
+    }
+    
+    .phase-indicator {
+        font-size: 1.2rem;
+        flex-direction: column;
+        text-align: center;
     }
     
     .light {
@@ -1694,65 +1567,26 @@ button:hover {
         height: 40px;
     }
     
-    .card-windows {
-        padding: 15px;
-    }
-    
     .window-list {
         grid-template-columns: 1fr;
-    }
-    
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
-        width: 45px;
-        height: 45px;
-        bottom: 15px;
-        right: 15px;
-    }
-    
-    .feedback-btn {
-        bottom: 70px;
-    }
-    
-    .admin-panel-btn {
-        bottom: 125px;
-    }
-    
-    .user-center-btn {
-        bottom: 180px;
-    }
-    
-    .donation-btn {
-        bottom: 235px;
-    }
-    
-    .admin-panel {
-        width: 95%;
-        max-height: 90vh;
-        padding: 15px;
-    }
-    
-    .user-center {
-        width: 95%;
-        max-height: 90vh;
-        padding: 15px;
-    }
-    
-    .modal-content {
-        width: 95%;
-        padding: 20px;
     }
     
     .admin-panel-grid {
         grid-template-columns: 1fr;
     }
     
-    .donation-qrcodes {
-        flex-direction: column;
-        align-items: center;
+    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+        width: 50px;
+        border-radius: 50%;
     }
     
-    .footer {
-        padding: 8px 10px;
+    .user-login-btn:hover span, .feedback-btn:hover span, .admin-panel-btn:hover span, .user-center-btn:hover span, .donation-btn:hover span {
+        display: none;
+    }
+    
+    .qrcode-container {
+        bottom: 260px;
+        left: 10px;
     }
     
     .footer-content {
@@ -1761,83 +1595,81 @@ button:hover {
     }
     
     .footer-notice {
-        max-width: 100%;
+        max-width: 90%;
         order: 2;
     }
     
     .footer-info {
         order: 1;
-        font-size: 0.8rem;
+        gap: 10px;
     }
     
-    .db-status {
-        bottom: 15px;
-        left: 15px;
-        font-size: 0.7rem;
-        padding: 4px 8px;
+    /* 修复：手机版邀请码容器位置上移，避免遮挡logo */
+    .invite-code-container {
+        top: 80px; /* 从15px调整为80px，上移65px */
+        right: 15px;
+        font-size: 0.75rem;
+        padding: 6px 10px;
     }
     
-    .calibration-time {
-        position: relative;
-        bottom: auto;
-        left: auto;
+    .donation-qrcodes {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .admin-card {
+        padding: 12px;
+    }
+    
+    .admin-panel, .user-center {
+        width: 95%;
+        min-width: unset;
+        padding: 15px;
+    }
+    
+    .user-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-actions {
         margin-top: 10px;
-        text-align: center;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .password-display {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .copy-password-btn {
+        margin-left: 0;
         width: 100%;
     }
     
-    /* 新增：手机版二维码自动收起样式 */
-    .qrcode-container.qrcode-hidden {
-        transform: translateX(-85px);
+    .token-actions {
+        flex-direction: column;
     }
     
-    .qrcode-container.qrcode-hidden .qrcode-caption {
-        display: none;
+    /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
+    .calibration-time {
+        bottom: 25px; /* 从15px调整为25px，上移10px */
     }
     
-    .qrcode-container {
-        transition: transform 0.3s ease;
-        cursor: pointer;
-    }
-}
-
-/* 新增：手机版二维码自动收起样式 - 移动端专用 */
-@media (max-width: 768px) {
-    .qrcode-container {
-        transition: transform 0.3s ease;
+    /* 修复：手机版Logo调整大小实时生效 */
+    .logo {
+        max-width: var(--logo-size) !important;
+        width: auto !important;
+        height: auto !important;
     }
     
-    .qrcode-container.qrcode-hidden {
-        transform: translateX(-85px);
-    }
-    
-    .qrcode-container.qrcode-hidden .qrcode-caption {
-        display: none;
-    }
-}
-
-/* 打印样式 */
-@media print {
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn, .qrcode-container, .invite-code-container {
-        display: none !important;
-    }
-    
-    body {
-        background-color: white;
-        color: black;
-    }
-    
-    .timer-display, .card-windows {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-}
-
-/* 深色主题支持 */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --panel-bg: #2d3748;
-        --text-dark: #e2e8f0;
-        --text-light: #a0aec0;
+    .logo-preview {
+        max-width: 200px;
     }
 }
