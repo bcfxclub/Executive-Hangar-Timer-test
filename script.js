@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
+// script.js - 修改后的版本，修复手机版Logo调整大小不生效和推荐代码遮挡问题
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -23,10 +23,6 @@ let tokenCheckInterval = null;
 const TOKEN_CHECK_INTERVAL = 30 * 60 * 1000; // 30分钟
 // 新增：令牌续期阈值（过期前1小时）
 const TOKEN_RENEW_THRESHOLD = 60 * 60 * 1000; // 1小时
-
-// 新增：二维码自动收起相关变量
-let qrcodeAutoHideTimer = null;
-let isQrcodeMinimized = false;
 
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
@@ -156,68 +152,6 @@ function initTokenCheck() {
     }
 }
 
-// 新增：初始化二维码自动收起功能
-function initQrcodeAutoHide() {
-    // 只在移动设备上启用
-    if (window.innerWidth <= 768) {
-        // 清除现有定时器
-        if (qrcodeAutoHideTimer) {
-            clearTimeout(qrcodeAutoHideTimer);
-        }
-        
-        // 5秒后自动收起二维码
-        qrcodeAutoHideTimer = setTimeout(() => {
-            minimizeQrcode();
-        }, 5000);
-        
-        // 添加点击事件监听
-        const qrcodeContainer = document.querySelector('.qrcode-container');
-        if (qrcodeContainer) {
-            qrcodeContainer.addEventListener('click', toggleQrcode);
-        }
-    }
-}
-
-// 新增：收起二维码
-function minimizeQrcode() {
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    if (qrcodeContainer && !isQrcodeMinimized) {
-        qrcodeContainer.classList.add('qrcode-minimized');
-        isQrcodeMinimized = true;
-    }
-}
-
-// 新增：展开二维码
-function maximizeQrcode() {
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    if (qrcodeContainer && isQrcodeMinimized) {
-        qrcodeContainer.classList.remove('qrcode-minimized');
-        isQrcodeMinimized = false;
-        
-        // 展开后5秒再次自动收起
-        if (window.innerWidth <= 768) {
-            if (qrcodeAutoHideTimer) {
-                clearTimeout(qrcodeAutoHideTimer);
-            }
-            qrcodeAutoHideTimer = setTimeout(() => {
-                minimizeQrcode();
-            }, 5000);
-        }
-    }
-}
-
-// 新增：切换二维码状态
-function toggleQrcode(event) {
-    // 阻止事件冒泡，避免触发其他点击事件
-    event.stopPropagation();
-    
-    if (isQrcodeMinimized) {
-        maximizeQrcode();
-    } else {
-        minimizeQrcode();
-    }
-}
-
 // 从API加载设置
 async function loadSettings() {
     try {
@@ -302,8 +236,11 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 新增：实时更新Logo大小
-                updateLogoSize(config.logoSize);
+                // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
+                const logo = document.getElementById('logo');
+                if (logo) {
+                    logo.style.maxWidth = config.logoSize + 'px';
+                }
             }
             
             if (config.qrcodeUrl) {
@@ -503,22 +440,6 @@ async function loadSettings() {
     }
 }
 
-// 新增：实时更新Logo大小
-function updateLogoSize(size) {
-    const logo = document.getElementById('logo');
-    const logoPreview = document.getElementById('logo-preview');
-    
-    if (logo) {
-        logo.style.width = size + 'px';
-        logo.style.height = size + 'px';
-    }
-    
-    if (logoPreview && logoPreview.querySelector('img')) {
-        logoPreview.style.width = size + 'px';
-        logoPreview.style.height = size + 'px';
-    }
-}
-
 // 更新用户界面状态
 function updateUserInterface() {
     const userLoginBtn = document.getElementById('user-login-btn');
@@ -662,8 +583,6 @@ async function saveSettings() {
             updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
             // 更新捐助用户预测显示设置
             localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
-            // 新增：实时更新Logo大小
-            updateLogoSize(config.logoSize);
             return true;
         } else {
             if (!checkAuthResponse(response)) {
@@ -787,21 +706,18 @@ function updateFooterNoticeDisplay(notice, link) {
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
     const logo = document.getElementById('logo');
+    const logoSize = document.getElementById('logo-size').value;
     
     if (url && url.trim() !== '') {
         // 修改：添加样式让Logo自适应容器宽度
-        const logoSize = document.getElementById('logo-size').value || 120;
         logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
         logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; height: auto;">`;
-        
-        // 新增：实时设置Logo大小
-        logo.style.width = logoSize + 'px';
-        logo.style.height = logoSize + 'px';
-        logoPreview.style.width = logoSize + 'px';
-        logoPreview.style.height = logoSize + 'px';
+        // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
+        logo.style.maxWidth = logoSize + 'px';
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
+        logo.style.maxWidth = logoSize + 'px';
     }
 }
 
@@ -1384,9 +1300,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
     
-    // 新增：实时更新Logo大小
-    updateLogoSize(logoSize);
-    
     updateQrcodePreview(qrcodeUrl);
     
     if (qrcodeCaption) {
@@ -1466,8 +1379,11 @@ document.getElementById('header-font-size').addEventListener('input', function()
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
-    // 新增：实时更新Logo大小
-    updateLogoSize(this.value);
+    // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
+    const logo = document.getElementById('logo');
+    if (logo) {
+        logo.style.maxWidth = this.value + 'px';
+    }
 });
 
 // 颜色选择器预览
@@ -2631,7 +2547,7 @@ function calculateHangarOpenTimes(adjustedStartTime) {
     const windowList = document.getElementById('window-list');
     windowList.innerHTML = '';
     
-    const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
+    const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000);
     const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
     const now = new Date();
     
@@ -3058,9 +2974,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 2000);
     
-    // 新增：初始化二维码自动收起功能
-    initQrcodeAutoHide();
-    
     // 添加点击外部关闭模态框的功能
     window.addEventListener('click', function(event) {
         // 关闭所有模态框
@@ -3081,10 +2994,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.style.display = 'none';
             });
         }
-    });
-    
-    // 新增：窗口大小改变时重新初始化二维码自动收起
-    window.addEventListener('resize', function() {
-        initQrcodeAutoHide();
     });
 });
