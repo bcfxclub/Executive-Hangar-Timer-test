@@ -428,10 +428,23 @@
                     </div>
                     <div class="logo-preview" id="logo-preview"></div>
                 </div>
+                <!-- 修改：Logo尺寸设置 -->
                 <div class="form-group">
-                    <label for="logo-size">Logo大小</label>
-                    <input type="range" id="logo-size" min="80" max="500" value="120">
-                    <span id="logo-size-value">120px</span>
+                    <label for="logo-width">Logo宽度</label>
+                    <input type="range" id="logo-width" min="50" max="800" value="200">
+                    <span id="logo-width-value">200px</span>
+                </div>
+                <div class="form-group">
+                    <label for="logo-height">Logo高度</label>
+                    <input type="range" id="logo-height" min="20" max="400" value="80">
+                    <span id="logo-height-value">80px</span>
+                </div>
+                <div class="form-group">
+                    <label for="logo-full-width">Logo全宽显示</label>
+                    <select id="logo-full-width">
+                        <option value="false">固定尺寸</option>
+                        <option value="true">全宽显示</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="qrcode-url">二维码URL</label>
@@ -710,12 +723,15 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.3.1
-更新日期：2025-10-16
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.3.0
+更新日期：2025-10-15
 更新内容：
 在上一版基础上，做出如下修改：
 在现有基础上进行以下修改：
-使Logo能够：支持任意尺寸和形状的图片,自适应容器宽度,在后台实时调整大小,保持图片比例不失真。</textarea>
+1、如果登录用户为管理员，其用户管理内超级管理员和其他管理员的编辑、冻结和删除按钮应该隐藏（只能看到自身的编辑按钮），并且不能给自身或者其他用户进行管理员权限提权或者增加未开放的管理员权限，可以编辑自身邮箱、密码等资料，编辑选项内可见已有权限但是不可选的状态。对其他管理员及超级管理员编辑、冻结、删除等功能不可见，管理员可以编辑普通用户的权限设置但是不能编辑用户角色。如果登录用户为超级管理员隐藏自身冻结按钮，用户管理可以编辑管理员权限设置和用户角色。
+2、用户一旦通过审核就不能变更审核状态，普通管理员不能修改用户为未审核状态但是可以审核通过普通用户。超级管理员和管理员自身编辑选项里审核状态、冻结状态、用户角色栏和权限设置默认不可编辑。超级管理员权限设置默认全选不可编辑，超级管理员可以操作其他用户的审核状态。
+
+</textarea>
                 </div>
                 <div class="form-group">
                     <label for="about-input">关于本网站（详细内容）</label>
