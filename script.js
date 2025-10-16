@@ -236,8 +236,6 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 新增：同时设置手机端的logo大小
-                updateMobileLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -437,13 +435,6 @@ async function loadSettings() {
     }
 }
 
-// 新增：更新手机端logo大小
-function updateMobileLogoSize(size) {
-    // 在手机端，logo大小使用相对值，确保响应式显示
-    const mobileSize = Math.min(size, 200); // 手机端最大不超过200px
-    document.documentElement.style.setProperty('--logo-size-mobile', mobileSize + 'px');
-}
-
 // 更新用户界面状态
 function updateUserInterface() {
     const userLoginBtn = document.getElementById('user-login-btn');
@@ -587,8 +578,6 @@ async function saveSettings() {
             updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
             // 更新捐助用户预测显示设置
             localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
-            // 新增：更新手机端logo大小
-            updateMobileLogoSize(config.logoSize);
             return true;
         } else {
             if (!checkAuthResponse(response)) {
@@ -1301,8 +1290,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    // 新增：更新手机端logo大小
-    updateMobileLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1383,8 +1370,6 @@ document.getElementById('header-font-size').addEventListener('input', function()
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
-    // 新增：同时更新手机端logo大小
-    updateMobileLogoSize(this.value);
 });
 
 // 颜色选择器预览
