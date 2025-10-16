@@ -18,8 +18,9 @@
     --header-text-color: white;
     --header-font-size: 1.8rem;
     --header-font-size-mobile: 1.4rem; /* 新增：手机端标题字体大小变量 */
-    --logo-size: 120px;
-    --logo-width: 400px; /* 新增：logo宽度变量 */
+    --logo-width: 200px; /* 修改：从固定尺寸改为宽度和高度分开 */
+    --logo-height: 80px; /* 修改：默认高度 */
+    --logo-full-width: auto; /* 新增：全宽显示控制 */
     --window-text-color: var(--text-dark);
     --window-comment-color: var(--text-light);
     --calibration-text-color: var(--text-light);
@@ -102,7 +103,8 @@ body.video-bg {
 
 .logo {
     width: var(--logo-width);
-    height: var(--logo-size);
+    height: var(--logo-height);
+    max-width: var(--logo-full-width); /* 新增：支持全宽显示 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,7 +115,9 @@ body.video-bg {
 .logo img {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain;
+    width: auto;
+    height: auto;
+    object-fit: contain; /* 修改：保持图片比例 */
 }
 
 .qrcode-container {
@@ -861,8 +865,8 @@ button:hover {
 
 .logo-preview {
     width: 100%;
-    max-width: 300px;
-    height: 150px;
+    max-width: 200px;
+    height: 100px;
     border: 2px dashed #ddd;
     border-radius: 8px;
     margin-top: 8px;
@@ -875,6 +879,8 @@ button:hover {
 .logo-preview img {
     max-width: 100%;
     max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
 }
 
@@ -1656,9 +1662,12 @@ button:hover {
         bottom: 25px; /* 从15px调整为25px，上移10px */
     }
     
-    /* 新增：手机端logo宽度调整 */
+    /* 修改：手机端Logo容器调整 */
+    .logo-container {
+        margin-bottom: 5px;
+    }
+    
     .logo {
-        width: 100%;
-        max-width: 300px;
+        max-width: 90%; /* 手机端限制最大宽度 */
     }
 }
