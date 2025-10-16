@@ -6,7 +6,7 @@
     <title>星际公民行政机库计时系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 所有样式保持不变，与之前完全一样 */
+        /* 样式保持不变，与之前完全一样 */
         :root {
             --primary-color: #2c3e50;
             --secondary-color: #3498db;
@@ -1557,11 +1557,6 @@
                 margin-left: 0;
                 width: 100%;
             }
-            
-            /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
-            .calibration-time {
-                bottom: 25px; /* 从15px调整为25px，上移10px */
-            }
         }
     </style>
 </head>
@@ -1613,7 +1608,7 @@
                 </div>
                 
                 <div class="hangar-open-time" id="hangar-open-time">
-                    <i class="fas fa-play-circle"></i> 当前机库开启时间: 计算中...
+                    <i class="fas fa-play-circle"></i> 机库开启时间: 计算中...
                 </div>
                 
                 <div class="status-indicators">
@@ -1637,7 +1632,7 @@
             </div>
             
             <div class="card-windows">
-                <h2><i class="fas fa-calendar-check"></i> 机库开启时间预测</h2>
+                <h2><i class="fas fa-calendar-check"></i> 机库开启时间</h2>
                 <p class="window-status">该时间段内可以插卡开启机库大门</p>
                 <ul class="window-list" id="window-list">
                     <li><i class="fas fa-window-restore"></i> 上次开启时间: 计算中...</li>
@@ -1808,7 +1803,7 @@
     <div class="modal" id="donation-modal">
         <div class="modal-content donation-modal-content">
             <h2><i class="fas fa-donate"></i> 支持我们</h2>
-            <p id="donation-note-display">您的捐助将帮助我们持续维护和改进系统</p>
+            <p>您的捐助将帮助我们持续维护和改进系统</p>
             
             <div class="donation-qrcodes" id="donation-qrcodes">
                 <div class="donation-qrcode">
@@ -1866,7 +1861,7 @@
     </div>
     <div class="admin-panel" id="admin-panel">
         <div class="admin-panel-header" id="admin-panel-header">
-            <h2><i class="fas fa-cog"></i> 后台管理</h2>
+            <h2><i class="fas fa-cog"></i> 后台管理系统</h2>
             <button class="cancel-btn" id="close-admin-panel">关闭管理面板</button>
         </div>
         
@@ -1912,9 +1907,9 @@
                         <option value="false">关闭</option>
                     </select>
                 </div>
-                <!-- 新增：机库开启时间预测开放控制 -->
+                <!-- 新增：机库开启时间显示控制 -->
                 <div class="form-group">
-                    <label for="hangar-times-visible"><i class="fas fa-eye"></i> 机库开启时间预测开放</label>
+                    <label for="hangar-times-visible"><i class="fas fa-eye"></i> 机库开启时间显示</label>
                     <select id="hangar-times-visible">
                         <option value="true">所有人可见</option>
                         <option value="false">仅登录用户可见</option>
@@ -2040,34 +2035,34 @@
                     <input type="range" id="bg-opacity" min="10" max="100" value="80">
                 </div>
                 <div class="form-group color-picker-container">
-                    <label for="window-title-color">机库开启时间预测标题颜色</label>
-                    <input type="color" id="window-title-color" value="#2c3e50">
-                    <div class="color-preview" id="window-title-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="window-text-color">机库开启时间预测窗口文字颜色</label>
+                    <label for="window-text-color">机库开启时间窗口文字颜色</label>
                     <input type="color" id="window-text-color" value="#2d3748">
                     <div class="color-preview" id="window-text-color-preview"></div>
                 </div>
                 <div class="form-group color-picker-container">
-                    <label for="window-comment-color">机库开启时间预测窗口注释颜色</label>
+                    <label for="window-comment-color">机库开启时间窗口注释颜色</label>
                     <input type="color" id="window-comment-color" value="#718096">
                     <div class="color-preview" id="window-comment-color-preview"></div>
                 </div>
                 <div class="form-group color-picker-container">
-                    <label for="countdown-text-color">倒计时状态文字颜色</label>
-                    <input type="color" id="countdown-text-color" value="#2c3e50">
-                    <div class="color-preview" id="countdown-text-color-preview"></div>
-                </div>
-                <div class="form-group color-picker-container">
-                    <label for="hangar-time-text-color">倒计时当前机库开启时间文字颜色</label>
-                    <input type="color" id="hangar-time-text-color" value="#2d3748">
-                    <div class="color-preview" id="hangar-time-text-color-preview"></div>
+                    <label for="window-title-color">机库开启时间标题颜色</label>
+                    <input type="color" id="window-title-color" value="#2c3e50">
+                    <div class="color-preview" id="window-title-color-preview"></div>
                 </div>
                 <div class="form-group color-picker-container">
                     <label for="calibration-text-color">倒计时校准时间文字颜色</label>
                     <input type="color" id="calibration-text-color" value="#718096">
                     <div class="color-preview" id="calibration-text-color-preview"></div>
+                </div>
+                <div class="form-group color-picker-container">
+                    <label for="countdown-text-color">倒计时文字颜色</label>
+                    <input type="color" id="countdown-text-color" value="#2c3e50">
+                    <div class="color-preview" id="countdown-text-color-preview"></div>
+                </div>
+                <div class="form-group color-picker-container">
+                    <label for="hangar-time-text-color">倒计时机库开启时间文字颜色</label>
+                    <input type="color" id="hangar-time-text-color" value="#2d3748">
+                    <div class="color-preview" id="hangar-time-text-color-preview"></div>
                 </div>
                 <div class="form-group color-picker-container">
                     <label for="status-text-color">倒计时指示灯状态文字颜色</label>
@@ -2089,11 +2084,6 @@
                         <option value="true">开启</option>
                         <option value="false">关闭</option>
                     </select>
-                </div>
-                <!-- 新增：捐助注释设置 -->
-                <div class="form-group">
-                    <label for="donation-note">捐助注释</label>
-                    <textarea id="donation-note" placeholder="输入捐助功能的说明文字" rows="3">您的捐助将帮助我们持续维护和改进系统</textarea>
                 </div>
                 <div class="form-group">
                     <label for="wechat-qrcode-url">微信支付二维码URL</label>
@@ -2127,7 +2117,7 @@
                 <h3><i class="fas fa-database"></i> 数据管理</h3>
                 <div class="form-group">
                     <label for="api-url">API地址</label>
-                    <input type="url" id="api-url" placeholder="输入API地址" value="https://bcfxclub.dpdns.org/api">
+                    <input type="url" id="api-url" placeholder="输入API地址" value="/api">
                     <button id="test-api" style="margin-top: 10px;">
                         <i class="fas fa-plug"></i> 测试API连接
                     </button>
@@ -2202,12 +2192,13 @@
                 </div>
                 <div class="form-group">
                     <label for="version-input">版本更新（详细内容）</label>
-                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.7
-更新日期：2025-10-06
+                    <textarea id="version-input" placeholder="输入版本号" rows="4">当前版本：v3.1.2
+更新日期：2025-10-01
 更新内容：
 在上一版基础上，做出如下修改：
-1、捐助功能后台可以修改注释信息。删除捐助记录相关代码。
-2、修复因API问题导致的用户中心修改密保问题不生效的问题，修复找回密码功能。
+1、用户注册时需要填写密保问题用于密码找回，可设置问题为：你的姓名是什么？、你的父亲叫什么？、你的母亲叫什么？、你出生地所在的城市是哪里？，至少选择一个密保问题。密保问题单独密钥存储并且对外部访问进行字段过滤处理。用户登录界面找回密码功能重置密码按钮改为找回密码按钮，密保问题回答正确系统会查询密码并弹窗提示。可以复制密码。
+2、直接通过网址访问api/users内email字段数据要同password字段一样过滤。
+3、保持用户登陆界面样式和布局不变。不要修改用户登录模态框的样式。
 </textarea>
                 </div>
                 <div class="form-group">
@@ -2334,54 +2325,52 @@
                 <select id="edit-role">
                     <option value="normal">普通用户</option>
                     <option value="admin">管理员</option>
-                    <!-- 超级管理员选项将在JS中动态控制显示 -->
-                    <option value="super-admin" id="super-admin-option" style="display: none;">超级管理员</option>
+                    <option value="super-admin">超级管理员</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>权限设置</label>
                 <div class="permissions-grid" id="edit-permissions">
-                    <!-- 普通用户权限 -->
-                    <div class="permission-item" id="permission-view-hangar-times">
-                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
-                        <label for="edit-permission-view-hangar-times">机库开启时间预测显示</label>
-                    </div>
-                    <!-- 管理员权限（默认隐藏） -->
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-basic" value="basic">
                         <label for="edit-permission-basic">时间校准</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-notification" value="notification">
                         <label for="edit-permission-notification">通知管理</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-appearance" value="appearance">
                         <label for="edit-permission-appearance">外观设置</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-donation" value="donation">
                         <label for="edit-permission-donation">捐助设置</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-data" value="data">
                         <label for="edit-permission-data">数据管理</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-feedback" value="feedback">
                         <label for="edit-permission-feedback">反馈管理</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-visits" value="visits">
                         <label for="edit-permission-visits">访问统计</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-users" value="users">
                         <label for="edit-permission-users">用户管理</label>
                     </div>
-                    <div class="permission-item admin-permission" style="display: none;">
+                    <div class="permission-item">
                         <input type="checkbox" id="edit-permission-footer" value="footer">
                         <label for="edit-permission-footer">页脚信息</label>
+                    </div>
+                    <!-- 新增：机库开启时间显示权限 -->
+                    <div class="permission-item">
+                        <input type="checkbox" id="edit-permission-view-hangar-times" value="viewHangarTimes">
+                        <label for="edit-permission-view-hangar-times">机库开启时间显示</label>
                     </div>
                 </div>
             </div>
@@ -2412,7 +2401,7 @@
 
     <script>
         // API地址设置 - 使用固定默认值，不存储在localStorage中
-        let API_BASE = "https://bcfxclub.dpdns.org/api";
+        let API_BASE = "/api";
         
         // 初始化状态
         let startTime = new Date();
@@ -2484,7 +2473,7 @@
                         document.getElementById('timer-enabled').value = timerEnabled.toString();
                     }
                     
-                    // 新增：机库开启时间预测显示设置
+                    // 新增：机库开启时间显示设置
                     if (config.hangarTimesVisible !== undefined) {
                         document.getElementById('hangar-times-visible').value = config.hangarTimesVisible.toString();
                         localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
@@ -2644,12 +2633,6 @@
                         updateDonationButtonDisplay();
                     }
                     
-                    // 新增：加载捐助注释
-                    if (config.donationNote) {
-                        document.getElementById('donation-note').value = config.donationNote;
-                        document.getElementById('donation-note-display').textContent = config.donationNote;
-                    }
-                    
                     if (config.wechatQrcodeUrl) {
                         document.getElementById('wechat-qrcode-url').value = config.wechatQrcodeUrl;
                         document.getElementById('wechat-qrcode').src = config.wechatQrcodeUrl;
@@ -2763,7 +2746,7 @@
                 userManagementTab.style.display = 'none';
             }
             
-            // 新增：用户登录状态变化时刷新机库开启时间预测显示
+            // 新增：用户登录状态变化时刷新机库开启时间显示
             calculateHangarOpenTimes(adjustedStartTime);
         }
         
@@ -2833,7 +2816,6 @@
                 calibrationTime: document.getElementById('calibration-time').textContent.replace('校准时间: ', ''),
                 apiUrl: document.getElementById('api-url').value,
                 donationEnabled: document.getElementById('donation-enabled').value === 'true',
-                donationNote: document.getElementById('donation-note').value,
                 wechatQrcodeUrl: document.getElementById('wechat-qrcode-url').value,
                 alipayQrcodeUrl: document.getElementById('alipay-qrcode-url').value,
                 donationBtnColor: document.getElementById('donation-btn-color').value,
@@ -2864,7 +2846,7 @@
                     updateDonationButtonDisplay();
                     // 更新背景显示
                     updateBackgroundDisplay(config.bgType, config.bgImage, config.videoUrl);
-                    // 更新机库开启时间预测显示设置
+                    // 更新机库开启时间显示设置
                     localStorage.setItem('hangarTimesVisible', config.hangarTimesVisible.toString());
                     return true;
                 } else {
@@ -3163,6 +3145,7 @@
         // 捐助按钮
         document.getElementById('donation-btn').addEventListener('click', function() {
             document.getElementById('donation-modal').style.display = 'flex';
+            loadDonationRecords();
         });
         
         // 关闭后台管理面板
@@ -3339,7 +3322,7 @@
                         updateUserInterface();
                         alert('登录成功');
                         
-                        // 新增：登录成功后刷新机库开启时间预测显示
+                        // 新增：登录成功后刷新机库开启时间显示
                         calculateHangarOpenTimes(adjustedStartTime);
                     } else {
                         alert(result.error || '用户名或密码错误');
@@ -3587,13 +3570,9 @@
         // 保存捐助设置
         document.getElementById('save-donation-settings').addEventListener('click', function() {
             const donationEnabled = document.getElementById('donation-enabled').value === 'true';
-            const donationNote = document.getElementById('donation-note').value;
             const wechatQrcodeUrl = document.getElementById('wechat-qrcode-url').value;
             const alipayQrcodeUrl = document.getElementById('alipay-qrcode-url').value;
             const donationBtnColor = document.getElementById('donation-btn-color').value;
-            
-            // 更新捐助注释显示
-            document.getElementById('donation-note-display').textContent = donationNote;
             
             document.documentElement.style.setProperty('--donation-btn-bg', donationBtnColor);
             updateDonationButtonDisplay();
@@ -4040,7 +4019,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -4227,7 +4206,7 @@
                         } else if (user.isAdmin) {
                             roleBadge = '<span class="user-role-badge user-admin">管理员</span>';
                         } else if (user.approved) {
-                            roleBadge = '<span class="user-role-badge user-normal">普通用户</span>';
+                            roleBadge = '<span class="user-role-badge user-normal">已审核</span>';
                         } else {
                             roleBadge = '<span class="user-role-badge user-pending">待审核</span>';
                         }
@@ -4405,30 +4384,31 @@
                         document.getElementById('edit-email').value = user.email || '';
                         
                         // 设置用户角色
-                        const editRoleSelect = document.getElementById('edit-role');
-                        const superAdminOption = document.getElementById('super-admin-option');
-                        
-                        // 控制超级管理员选项显示
-                        if (currentUser && currentUser.isSuperAdmin) {
-                            superAdminOption.style.display = 'block';
-                        } else {
-                            superAdminOption.style.display = 'none';
-                        }
-                        
                         if (user.isSuperAdmin) {
-                            editRoleSelect.value = 'super-admin';
+                            document.getElementById('edit-role').value = 'super-admin';
                             // 超级管理员角色设置为只读
-                            editRoleSelect.disabled = true;
+                            document.getElementById('edit-role').disabled = true;
                         } else if (user.isAdmin) {
-                            editRoleSelect.value = 'admin';
-                            editRoleSelect.disabled = false;
+                            document.getElementById('edit-role').value = 'admin';
+                            document.getElementById('edit-role').disabled = false;
                         } else {
-                            editRoleSelect.value = 'normal';
-                            editRoleSelect.disabled = false;
+                            document.getElementById('edit-role').value = 'normal';
+                            document.getElementById('edit-role').disabled = false;
                         }
                         
-                        // 设置权限显示
-                        updatePermissionsDisplay(user.isAdmin || user.isSuperAdmin, user.permissions || {});
+                        // 如果是普通管理员编辑用户，不能设置超级管理员选项
+                        if (currentUser && !currentUser.isSuperAdmin) {
+                            const superAdminOption = document.querySelector('#edit-role option[value="super-admin"]');
+                            if (superAdminOption) {
+                                superAdminOption.style.display = 'none';
+                            }
+                        }
+                        
+                        // 设置权限
+                        const permissions = user.permissions || {};
+                        document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
+                            checkbox.checked = permissions[checkbox.value] || false;
+                        });
                         
                         // 设置审核状态
                         document.getElementById('edit-approved').value = user.approved ? 'true' : 'false';
@@ -4453,48 +4433,6 @@
                 alert('加载用户信息失败');
             }
         }
-        
-        // 更新权限选项显示
-        function updatePermissionsDisplay(isAdmin, permissions) {
-            const adminPermissions = document.querySelectorAll('.admin-permission');
-            const viewHangarTimesPermission = document.getElementById('permission-view-hangar-times');
-            
-            if (isAdmin) {
-                // 管理员：显示所有权限选项并默认勾选
-                adminPermissions.forEach(permission => {
-                    permission.style.display = 'flex';
-                });
-                viewHangarTimesPermission.style.display = 'flex';
-                
-                // 设置所有权限为选中状态
-                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.checked = true;
-                });
-            } else {
-                // 普通用户：只显示机库开启时间权限
-                adminPermissions.forEach(permission => {
-                    permission.style.display = 'none';
-                });
-                viewHangarTimesPermission.style.display = 'flex';
-                
-                // 只设置机库开启时间权限，其他权限取消选中
-                document.querySelectorAll('#edit-permissions input[type="checkbox"]').forEach(checkbox => {
-                    if (checkbox.value === 'viewHangarTimes') {
-                        checkbox.checked = permissions[checkbox.value] || false;
-                    } else {
-                        checkbox.checked = false;
-                    }
-                });
-            }
-        }
-
-        // 为角色下拉列表添加change事件
-        document.getElementById('edit-role').addEventListener('change', function() {
-            if (currentEditingUser) {
-                const isAdmin = this.value === 'admin' || this.value === 'super-admin';
-                updatePermissionsDisplay(isAdmin, currentEditingUser.permissions || {});
-            }
-        });
         
         // 保存用户编辑
         document.getElementById('save-user-edit').addEventListener('click', async function() {
@@ -4739,16 +4677,52 @@
             }
         });
         
+        // 加载捐助记录
+        async function loadDonationRecords() {
+            try {
+                const response = await fetch(`${API_BASE}/donations`, {
+                    headers: getAuthHeaders()
+                });
+                if (response.ok) {
+                    const donations = await response.json();
+                    const donationList = document.getElementById('donation-list');
+                    
+                    if (donations.length === 0) {
+                        donationList.innerHTML = '<div class="donation-record">暂无捐助记录</div>';
+                        return;
+                    }
+                    
+                    donationList.innerHTML = '';
+                    donations.forEach(item => {
+                        const donationRecord = document.createElement('div');
+                        donationRecord.className = 'donation-record';
+                        donationRecord.innerHTML = `
+                            <div><strong>${item.name || '匿名用户'}</strong> 捐助了 <strong>${item.amount}元</strong></div>
+                            <div class="feedback-date">${new Date(item.timestamp).toLocaleString()}</div>
+                            ${item.message ? `<div>留言: ${item.message}</div>` : ''}
+                        `;
+                        donationList.appendChild(donationRecord);
+                    });
+                } else {
+                    if (!checkAuthResponse(response)) {
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Load donations error:', error);
+            }
+        }
+        
         // 初始化计时器
         function initializeTimer(initialPhaseKey) {
             clearInterval(countdownInterval);
             
             // 检查计时器是否启用
             if (!timerEnabled) {
-                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-pause"></i> <span>计时器维护中，稍后再来</span>';
+                document.getElementById('phase-indicator').innerHTML = '<i class="fas fa-pause"></i> <span>计时器已关闭</span>';
                 document.getElementById('phase-indicator').className = 'phase-indicator phase-disabled';
                 document.getElementById('countdown').textContent = '00:00:00';
-                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-pause"></i> 维护中';
+                document.getElementById('hangar-open-time').innerHTML = '<i class="fas fa-pause"></i> 计时器已关闭';
                 
                 // 将所有灯设置为灰色
                 for (let i = 0; i < 5; i++) {
@@ -4807,10 +4781,10 @@
             let phaseName;
             let phaseIcon;
             
-            // 计算当前机库开启时间
+            // 计算机库开启时间
             const currentCycleStart = new Date(now.getTime() - cycleElapsedMs);
             const currentHangarOpenTime = new Date(currentCycleStart.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
-            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 当前机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
+            document.getElementById('hangar-open-time').innerHTML = `<i class="fas fa-play-circle"></i> 机库开启时间: ${formatDateTimeFull(currentHangarOpenTime)}`;
             
             if (cycleElapsedMs < PHASE_DURATIONS.reset * 60 * 1000) {
                 // 重置阶段 - 机库已关闭等待开启中
@@ -4892,7 +4866,7 @@
             const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
             const now = new Date();
             
-            // 检查机库开启时间预测开放设置
+            // 检查机库开启时间显示设置
             const hangarTimesVisible = localStorage.getItem('hangarTimesVisible') !== 'false'; // 默认为true
             
             // 检查用户权限
@@ -4933,7 +4907,7 @@
                 windowList.appendChild(prevItem);
             }
             
-            // 生成后续的8个机库开启时间预测节点
+            // 生成后续的8个机库开启时间节点
             for (let i = 0; i < 8; i++) {
                 const windowTime = new Date(previousWindowTime.getTime() + (i + 1) * totalCycleMs);
                 const listItem = document.createElement('li');
