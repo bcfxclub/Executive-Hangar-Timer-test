@@ -1661,9 +1661,9 @@ button:hover {
         bottom: 25px; /* 从15px调整为25px，上移10px */
     }
     
-    /* 修改：Logo容器在手机端的响应式调整 - 修复Logo大小不实时变化的问题 */
+    /* 修改：Logo容器在手机端的响应式调整 */
     .logo {
-        max-width: min(100%, var(--logo-size)); /* 修改：使用min函数确保Logo大小不超过容器且响应设置 */
+        max-width: 100%;
     }
     
     .logo-preview {
