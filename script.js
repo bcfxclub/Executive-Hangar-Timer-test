@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，修复手机版Logo调整大小不生效和推荐代码遮挡问题
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -236,11 +236,8 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
-                const logo = document.getElementById('logo');
-                if (logo) {
-                    logo.style.maxWidth = config.logoSize + 'px';
-                }
+                // 新增：立即应用Logo大小
+                applyLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -437,6 +434,23 @@ async function loadSettings() {
             document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
         }
         initializeTimer('5-green');
+    }
+}
+
+// 新增：应用Logo大小到容器
+function applyLogoSize(logoSize) {
+    const logoContainer = document.querySelector('.logo-container');
+    const logo = document.getElementById('logo');
+    
+    if (logoContainer && logo) {
+        // 设置Logo容器的最大宽度
+        logoContainer.style.maxWidth = logoSize + 'px';
+        // 设置Logo图片的样式
+        const logoImg = logo.querySelector('img');
+        if (logoImg) {
+            logoImg.style.maxWidth = '100%';
+            logoImg.style.height = 'auto';
+        }
     }
 }
 
@@ -706,18 +720,18 @@ function updateFooterNoticeDisplay(notice, link) {
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
     const logo = document.getElementById('logo');
-    const logoSize = document.getElementById('logo-size').value;
     
     if (url && url.trim() !== '') {
         // 修改：添加样式让Logo自适应容器宽度
         logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
         logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; height: auto;">`;
-        // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
-        logo.style.maxWidth = logoSize + 'px';
+        
+        // 新增：立即应用当前Logo大小
+        const logoSize = document.getElementById('logo-size').value;
+        applyLogoSize(logoSize);
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
-        logo.style.maxWidth = logoSize + 'px';
     }
 }
 
@@ -1299,6 +1313,8 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
+    // 新增：立即应用Logo大小
+    applyLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1379,11 +1395,8 @@ document.getElementById('header-font-size').addEventListener('input', function()
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
-    // 新增：直接设置Logo元素的最大宽度，确保手机端实时生效
-    const logo = document.getElementById('logo');
-    if (logo) {
-        logo.style.maxWidth = this.value + 'px';
-    }
+    // 新增：立即应用Logo大小
+    applyLogoSize(this.value);
 });
 
 // 颜色选择器预览
@@ -2547,7 +2560,7 @@ function calculateHangarOpenTimes(adjustedStartTime) {
     const windowList = document.getElementById('window-list');
     windowList.innerHTML = '';
     
-    const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000);
+    const totalCycleMs = (PHASE_DURATIONS.reset + PHASE_DURATIONS.card + PHASE_DURATIONS.poweroff) * 60 * 1000;
     const firstGreenTime = new Date(adjustedStartTime.getTime() + PHASE_DURATIONS.reset * 60 * 1000);
     const now = new Date();
     
