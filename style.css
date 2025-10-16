@@ -19,6 +19,7 @@
     --header-font-size: 1.8rem;
     --header-font-size-mobile: 1.4rem; /* 新增：手机端标题字体大小变量 */
     --logo-size: 120px;
+    --logo-width: 400px; /* 新增：logo宽度变量 */
     --window-text-color: var(--text-dark);
     --window-comment-color: var(--text-light);
     --calibration-text-color: var(--text-light);
@@ -100,7 +101,7 @@ body.video-bg {
 }
 
 .logo {
-    width: var(--logo-size);
+    width: var(--logo-width);
     height: var(--logo-size);
     display: flex;
     align-items: center;
@@ -859,8 +860,9 @@ button:hover {
 }
 
 .logo-preview {
-    width: 80px;
-    height: 80px;
+    width: 100%;
+    max-width: 300px;
+    height: 150px;
     border: 2px dashed #ddd;
     border-radius: 8px;
     margin-top: 8px;
@@ -1652,5 +1654,11 @@ button:hover {
     /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
     .calibration-time {
         bottom: 25px; /* 从15px调整为25px，上移10px */
+    }
+    
+    /* 新增：手机端logo宽度调整 */
+    .logo {
+        width: 100%;
+        max-width: 300px;
     }
 }
