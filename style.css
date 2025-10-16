@@ -124,21 +124,7 @@ body.video-bg {
     left: 20px;
     text-align: center;
     z-index: 100;
-    transition: all 0.3s ease;
-}
-
-/* 新增：二维码收起状态 */
-.qrcode-container.qrcode-hidden {
-    transform: translateX(-85px);
-}
-
-.qrcode-container.qrcode-hidden .qrcode {
-    opacity: 0.7;
-    transform: scale(0.8);
-}
-
-.qrcode-container.qrcode-hidden .qrcode-caption {
-    display: none;
+    transition: transform 0.3s ease;
 }
 
 .qrcode {
@@ -153,7 +139,7 @@ body.video-bg {
     overflow: hidden;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.3s;
 }
 
 .qrcode:hover {
@@ -171,7 +157,6 @@ body.video-bg {
     color: var(--qrcode-caption-color);
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
     max-width: 100px;
-    transition: all 0.3s ease;
 }
 
 .invite-code-container {
@@ -1063,80 +1048,57 @@ button:hover {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     cursor: pointer;
-    white-space: nowrap;
     transition: color 0.3s;
 }
 
 .footer-info a:hover {
-    color: #ffffff;
+    color: white;
     text-decoration: underline;
 }
 
+.footer-info i {
+    margin-right: 3px;
+}
+
+.footer-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1001;
+    justify-content: center;
+    align-items: center;
+}
+
 .footer-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
     max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     max-height: 80vh;
     overflow-y: auto;
 }
 
-.donation-modal-content {
-    max-width: 500px;
-}
-
-.donation-qrcodes {
-    display: flex;
-    justify-content: space-around;
-    margin: 20px 0;
-}
-
-.donation-qrcode {
+.footer-modal h2 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
     text-align: center;
 }
 
-.donation-qrcode img {
-    width: 150px;
-    height: 150px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 10px;
+.footer-modal p {
+    line-height: 1.6;
+    margin-bottom: 15px;
 }
 
-.donation-records {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
+.close-footer-modal {
+    background: var(--secondary-color);
+    width: auto;
     margin-top: 15px;
-}
-
-.donation-record {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.donation-record:last-child {
-    border-bottom: none;
-}
-
-.color-picker-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.color-preview {
-    width: 25px;
-    height: 25px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.admin-panel-footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #ddd;
 }
 
 .qrcode-modal {
@@ -1147,7 +1109,7 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1003;
+    z-index: 1001;
     justify-content: center;
     align-items: center;
 }
@@ -1157,161 +1119,29 @@ button:hover {
     padding: 20px;
     border-radius: 12px;
     text-align: center;
-    max-width: 300px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
 }
 
 .qrcode-modal img {
     max-width: 250px;
     max-height: 250px;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .qrcode-modal-caption {
     font-size: 1rem;
     color: var(--text-dark);
-    margin-top: 10px;
+    margin-bottom: 15px;
 }
 
-.contact-inputs {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.contact-inputs input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 0.9rem;
-}
-
-.link-input-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 5px;
-}
-
-.link-input-group input {
-    flex: 1;
-}
-
-/* 访问统计样式 */
-.visits-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.visit-item {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.visit-item:last-child {
-    border-bottom: none;
-}
-
-.visit-ip {
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.visit-date {
-    font-size: 0.8rem;
-    color: var(--text-light);
-}
-
-.visit-count {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-}
-
-/* 用户管理样式 */
-.user-list {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.user-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.user-item:last-child {
-    border-bottom: none;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.user-action-btn {
-    padding: 6px 10px;
-    font-size: 0.8rem;
+.close-qrcode-modal {
+    background: var(--secondary-color);
     width: auto;
-    min-width: 80px;
+    padding: 8px 16px;
 }
 
-.user-role-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-left: 5px;
-}
-
-.user-super-admin {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.user-admin {
-    background-color: #3498db;
-    color: white;
-}
-
-.user-normal {
-    background-color: #2ecc71;
-    color: white;
-}
-
-.user-pending {
-    background-color: #f39c12;
-    color: white;
-}
-
-.user-frozen {
-    background-color: #7f8c8d;
-    color: white;
-}
-
-.no-permission {
-    color: var(--text-light);
-    font-style: italic;
-    font-size: 0.8rem;
-}
-
-/* 用户编辑模态框 */
-.user-edit-modal {
+.password-modal {
     display: none;
     position: fixed;
     top: 0;
@@ -1319,45 +1149,84 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1003;
+    z-index: 1001;
     justify-content: center;
     align-items: center;
 }
 
-.user-edit-content {
+.password-modal-content {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 500px;
+    max-width: 400px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    max-height: 90vh;
-    overflow-y: auto;
+    text-align: center;
 }
 
-.permissions-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-top: 10px;
+.password-modal h2 {
+    margin-bottom: 15px;
+    color: var(--primary-color);
 }
 
-.permission-item {
+.password-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--secondary-color);
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin: 15px 0;
+    word-break: break-all;
+}
+
+.password-modal-buttons {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    gap: 12px;
+    margin-top: 20px;
 }
 
-.permission-item input[type="checkbox"] {
-    width: auto;
+.password-modal-buttons button {
+    flex: 1;
 }
 
-.permission-item label {
-    margin: 0;
-    font-weight: normal;
+.copy-password-btn {
+    background: linear-gradient(to right, #2ecc71, #27ae60);
 }
 
-/* 用户中心样式 */
+.login-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.login-tab {
+    padding: 10px 15px;
+    cursor: pointer;
+    background: #f1f1f1;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s;
+    flex: 1;
+    text-align: center;
+}
+
+.login-tab.active {
+    background: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.login-tab-content {
+    display: none;
+}
+
+.login-tab-content.active {
+    display: block;
+}
+
 .user-center {
     display: none;
     position: fixed;
@@ -1369,7 +1238,7 @@ button:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     padding: 20px;
     width: 90%;
-    max-width: 800px;
+    max-width: 600px;
     max-height: 85vh;
     overflow-y: auto;
     z-index: 1002;
@@ -1440,13 +1309,7 @@ button:hover {
     display: block;
 }
 
-.user-center-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 15px;
-}
-
-.user-info-card {
+.user-info-form {
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
     padding: 15px;
@@ -1454,7 +1317,7 @@ button:hover {
     margin-bottom: 15px;
 }
 
-.user-info-card h3 {
+.user-info-form h3 {
     margin-bottom: 12px;
     color: var(--primary-color);
     border-bottom: 1px solid var(--secondary-color);
@@ -1465,73 +1328,101 @@ button:hover {
     font-size: 1.1rem;
 }
 
-.user-info-display {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-
-.user-info-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.user-info-label {
+.user-role-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: bold;
-    width: 120px;
-    color: var(--text-dark);
+    margin-left: 8px;
 }
 
-.user-info-value {
-    flex: 1;
-    color: var(--text-light);
-}
-
-.security-question-select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    margin-bottom: 10px;
-}
-
-/* 登录模态框样式 */
-.login-tabs {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-}
-
-.login-tab {
-    padding: 10px 15px;
-    cursor: pointer;
-    background: #f1f1f1;
-    border: 1px solid #ddd;
-    border-bottom: none;
-    margin-right: 5px;
-    border-radius: 5px 5px 0 0;
-    transition: all 0.3s;
-}
-
-.login-tab.active {
-    background: var(--secondary-color);
+.user-super-admin {
+    background-color: #e74c3c;
     color: white;
-    border-color: var(--secondary-color);
 }
 
-.login-tab-content {
-    display: none;
+.user-admin {
+    background-color: #3498db;
+    color: white;
 }
 
-.login-tab-content.active {
-    display: block;
+.user-normal {
+    background-color: #2ecc71;
+    color: white;
 }
 
-/* 密码弹窗样式 */
-.password-modal {
+.user-pending {
+    background-color: #f39c12;
+    color: white;
+}
+
+.user-frozen {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.user-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.user-action-btn {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    background: var(--secondary-color);
+}
+
+.user-action-btn.delete-user {
+    background: var(--reset-color);
+}
+
+.user-action-btn.approve-user {
+    background: var(--card-color);
+}
+
+.user-action-btn.freeze-user {
+    background: #f39c12;
+}
+
+.user-action-btn.unfreeze-user {
+    background: #3498db;
+}
+
+.no-permission {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+.user-edit-modal {
     display: none;
     position: fixed;
     top: 0;
@@ -1539,58 +1430,183 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1004;
+    z-index: 1003;
     justify-content: center;
     align-items: center;
 }
 
-.password-modal-content {
+.user-edit-content {
     background-color: white;
     padding: 25px;
     border-radius: 12px;
     width: 90%;
-    max-width: 400px;
+    max-width: 500px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.user-edit-content h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
     text-align: center;
 }
 
-.password-display {
-    font-size: 1.2rem;
+.edit-permissions {
+    margin-top: 15px;
+}
+
+.permission-group {
+    margin-bottom: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.permission-item input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
+}
+
+.permission-item label {
+    margin-bottom: 0;
+    font-weight: normal;
+    flex: 1;
+}
+
+.permission-description {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-left: 25px;
+}
+
+.color-preview {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    border: 1px solid #ddd;
+}
+
+.range-value {
+    display: inline-block;
+    margin-left: 10px;
     font-weight: bold;
-    margin: 15px 0;
+    color: var(--secondary-color);
+}
+
+.donation-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.donation-qrcodes {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.donation-qrcode {
+    text-align: center;
+    flex: 1;
+    min-width: 150px;
+}
+
+.donation-qrcode img {
+    width: 150px;
+    height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.donation-note {
+    margin-top: 15px;
     padding: 10px;
     background-color: #f8f9fa;
     border-radius: 6px;
-    border: 2px dashed #ddd;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.donation-note-display {
+    font-style: italic;
+    color: var(--text-dark);
+}
+
+.visits-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.visit-item {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.visit-item:last-child {
+    border-bottom: none;
+}
+
+.visit-ip {
+    font-weight: bold;
     color: var(--primary-color);
 }
 
-/* 令牌管理样式 */
+.visit-date {
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.visit-count {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-weight: bold;
+}
+
+.visit-stats {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
 .token-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
     margin-bottom: 15px;
 }
 
 .token-stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 8px;
     background-color: #f8f9fa;
-    padding: 10px;
     border-radius: 6px;
-    text-align: center;
-    border: 1px solid #ddd;
-}
-
-.token-stat-label {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 5px;
 }
 
 .token-stat-value {
-    font-size: 1.2rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--secondary-color);
 }
 
 .token-user-list {
@@ -1605,8 +1621,7 @@ button:hover {
 .token-user-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 8px;
+    padding: 6px 0;
     border-bottom: 1px solid #eee;
 }
 
@@ -1618,7 +1633,7 @@ button:hover {
 @media (max-width: 768px) {
     body {
         padding: 10px;
-        padding-bottom: 80px;
+        padding-bottom: 50px;
     }
     
     header {
@@ -1627,67 +1642,21 @@ button:hover {
         margin-bottom: 15px;
     }
     
-    .main-content {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .logo {
+        max-width: var(--logo-size);
+        width: 100%;
     }
     
-    .timer-display {
-        padding: 15px;
-    }
-    
-    .countdown {
-        font-size: 2.5rem;
-        margin: 15px 0;
-    }
-    
-    .light {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .phase-indicator {
-        font-size: 1.1rem;
-        padding: 10px;
-    }
-    
-    .card-windows {
-        padding: 15px;
-    }
-    
-    .window-list {
-        grid-template-columns: 1fr;
-    }
-    
-    .window-list li {
-        padding: 10px;
-    }
-    
-    .admin-panel {
-        width: 95%;
-        max-width: none;
-        min-width: 300px;
-        padding: 15px;
-    }
-    
-    .user-center {
-        width: 95%;
-        max-width: none;
-        min-width: 300px;
-        padding: 15px;
-    }
-    
-    .admin-panel-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .user-center-grid {
-        grid-template-columns: 1fr;
+    .logo img {
+        max-width: 100%;
+        height: auto;
     }
     
     .qrcode-container {
-        bottom: 100px;
+        position: fixed;
+        bottom: 260px;
         left: 10px;
+        z-index: 100;
     }
     
     .qrcode {
@@ -1701,51 +1670,85 @@ button:hover {
     }
     
     .invite-code-container {
-        top: 10px;
+        position: fixed;
+        top: 25px; /* 修改：从15px调整为25px，避免遮挡Logo */
         right: 10px;
         padding: 6px 10px;
         font-size: 0.75rem;
     }
     
-    .user-login-btn {
-        bottom: 10px;
-        right: 10px;
+    .timer-display {
+        padding: 15px;
+    }
+    
+    .phase-indicator {
+        font-size: 1.2rem;
+    }
+    
+    .countdown {
+        font-size: 2.5rem;
+    }
+    
+    .light {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .card-windows {
+        padding: 15px;
+    }
+    
+    .window-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
         width: 45px;
         height: 45px;
+        bottom: 15px;
+        right: 15px;
     }
     
     .feedback-btn {
-        bottom: 65px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 70px;
     }
     
     .admin-panel-btn {
-        bottom: 120px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 125px;
     }
     
     .user-center-btn {
-        bottom: 175px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 180px;
     }
     
     .donation-btn {
-        bottom: 230px;
-        right: 10px;
-        width: 45px;
-        height: 45px;
+        bottom: 235px;
     }
     
-    .db-status {
-        bottom: 10px;
-        left: 10px;
-        font-size: 0.7rem;
+    .admin-panel {
+        width: 95%;
+        max-height: 90vh;
+        padding: 15px;
+    }
+    
+    .user-center {
+        width: 95%;
+        max-height: 90vh;
+        padding: 15px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .admin-panel-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .donation-qrcodes {
+        flex-direction: column;
+        align-items: center;
     }
     
     .footer {
@@ -1755,165 +1758,86 @@ button:hover {
     .footer-content {
         flex-direction: column;
         gap: 8px;
-        font-size: 0.75rem;
     }
     
     .footer-notice {
-        max-width: 150px;
+        max-width: 100%;
+        order: 2;
     }
     
     .footer-info {
-        flex-direction: column;
-        gap: 5px;
+        order: 1;
+        font-size: 0.8rem;
+    }
+    
+    .db-status {
+        bottom: 15px;
+        left: 15px;
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    .calibration-time {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin-top: 10px;
         text-align: center;
-    }
-    
-    .donation-qrcodes {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .donation-qrcode img {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .modal-content {
-        padding: 20px;
-        width: 95%;
-    }
-    
-    .user-edit-content {
-        padding: 20px;
-        width: 95%;
-    }
-    
-    .user-actions {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    .user-action-btn {
         width: 100%;
-        min-width: auto;
     }
     
-    .admin-tabs, .user-center-tabs, .login-tabs {
-        flex-wrap: wrap;
+    /* 新增：手机版二维码自动收起样式 */
+    .qrcode-container.qrcode-hidden {
+        transform: translateX(-85px);
     }
     
-    .admin-tab, .user-center-tab, .login-tab {
-        flex: 1;
-        text-align: center;
-        min-width: 80px;
+    .qrcode-container.qrcode-hidden .qrcode-caption {
+        display: none;
     }
     
-    .upload-group {
-        flex-direction: column;
-    }
-    
-    .upload-group button {
-        width: 100%;
+    .qrcode-container {
+        transition: transform 0.3s ease;
+        cursor: pointer;
     }
 }
 
-@media (max-width: 480px) {
-    .countdown {
-        font-size: 2rem;
+/* 新增：手机版二维码自动收起样式 - 移动端专用 */
+@media (max-width: 768px) {
+    .qrcode-container {
+        transition: transform 0.3s ease;
     }
     
-    .light {
-        width: 30px;
-        height: 30px;
+    .qrcode-container.qrcode-hidden {
+        transform: translateX(-85px);
     }
     
-    .phase-indicator {
-        font-size: 1rem;
-    }
-    
-    .hangar-open-time {
-        font-size: 1rem;
-    }
-    
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
-        width: 140px;
-    }
-    
-    .qrcode {
-        width: 70px;
-        height: 70px;
-    }
-    
-    .qrcode-caption {
-        font-size: 0.65rem;
-        max-width: 70px;
-    }
-    
-    .invite-code-container {
-        padding: 5px 8px;
-        font-size: 0.7rem;
-    }
-    
-    .footer-notice {
-        max-width: 120px;
-    }
-    
-    .footer-content {
-        font-size: 0.7rem;
+    .qrcode-container.qrcode-hidden .qrcode-caption {
+        display: none;
     }
 }
 
-/* 深色模式支持 */
+/* 打印样式 */
+@media print {
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn, .qrcode-container, .invite-code-container {
+        display: none !important;
+    }
+    
+    body {
+        background-color: white;
+        color: black;
+    }
+    
+    .timer-display, .card-windows {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+}
+
+/* 深色主题支持 */
 @media (prefers-color-scheme: dark) {
     :root {
         --panel-bg: #2d3748;
-        --text-dark: #f7fafc;
-        --text-light: #cbd5e0;
-        --notification-color: #f7fafc;
-        --header-text-color: #f7fafc;
-        --window-text-color: #f7fafc;
-        --window-comment-color: #cbd5e0;
-        --window-title-color: #f7fafc;
-        --calibration-text-color: #cbd5e0;
-        --countdown-text-color: #f7fafc;
-        --hangar-time-text-color: #f7fafc;
-        --status-text-color: #f7fafc;
-        --qrcode-caption-color: #f7fafc;
-    }
-    
-    .timer-display, .card-windows, .admin-card, .user-info-card, .modal-content, .admin-panel, .user-center, .user-edit-content, .password-modal-content, .qrcode-modal-content {
-        background-color: rgba(45, 55, 72, 0.9);
-    }
-    
-    input, select, textarea {
-        background-color: #4a5568;
-        color: #f7fafc;
-        border-color: #718096;
-    }
-    
-    .bg-preview, .video-preview, .logo-preview, .qrcode-preview {
-        border-color: #718096;
-    }
-    
-    .feedback-list, .visits-list, .user-list, .token-user-list {
-        border-color: #718096;
-        background-color: #4a5568;
-    }
-    
-    .feedback-item, .visit-item, .user-item, .token-user-item {
-        border-color: #718096;
-    }
-    
-    .user-info-display {
-        background-color: #4a5568;
-    }
-    
-    .api-test-result {
-        background-color: #4a5568;
+        --text-dark: #e2e8f0;
+        --text-light: #a0aec0;
     }
 }
