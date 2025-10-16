@@ -98,6 +98,7 @@ body.video-bg {
     justify-content: center;
     margin-bottom: 10px;
     width: 100%;
+    max-width: var(--logo-size); /* 新增：限制Logo容器最大宽度 */
 }
 
 .logo {
@@ -1070,7 +1071,6 @@ button:hover {
     display: flex;
     justify-content: space-around;
     margin: 20px 0;
-    gap: 20px;
 }
 
 .donation-qrcode {
@@ -1080,16 +1080,48 @@ button:hover {
 .donation-qrcode img {
     width: 150px;
     height: 150px;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.donation-records {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 15px;
+}
+
+.donation-record {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.donation-record:last-child {
+    border-bottom: none;
+}
+
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.color-preview {
+    width: 25px;
+    height: 25px;
+    border-radius: 4px;
     border: 1px solid #ddd;
 }
 
-.donation-note {
-    text-align: center;
-    margin: 15px 0;
-    font-style: italic;
-    color: var(--text-light);
+.admin-panel-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
 }
 
 .qrcode-modal {
@@ -1100,7 +1132,7 @@ button:hover {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1001;
+    z-index: 1003;
     justify-content: center;
     align-items: center;
 }
@@ -1111,72 +1143,35 @@ button:hover {
     border-radius: 12px;
     text-align: center;
     max-width: 300px;
-    width: 90%;
 }
 
 .qrcode-modal img {
-    max-width: 100%;
-    height: auto;
-    margin-bottom: 10px;
+    max-width: 250px;
+    max-height: 250px;
+    margin-bottom: 15px;
+}
+
+.qrcode-modal-caption {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin-bottom: 15px;
 }
 
 .close-qrcode-modal {
-    background: var(--reset-color);
+    background: var(--secondary-color);
+    padding: 8px 16px;
+    font-size: 0.9rem;
     width: auto;
-    margin-top: 10px;
-}
-
-.password-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1001;
-    justify-content: center;
-    align-items: center;
-}
-
-.password-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
-
-.password-display {
-    font-size: 1.5rem;
-    margin: 20px 0;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    border: 1px dashed #ddd;
-    word-break: break-all;
-}
-
-.password-modal-buttons {
-    display: flex;
-    gap: 12px;
-}
-
-.password-modal-buttons button {
-    flex: 1;
 }
 
 .login-tabs {
     display: flex;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border-bottom: 1px solid #ddd;
 }
 
 .login-tab {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
+    padding: 10px 15px;
     cursor: pointer;
     background: #f1f1f1;
     border: 1px solid #ddd;
@@ -1184,6 +1179,8 @@ button:hover {
     margin-right: 5px;
     border-radius: 5px 5px 0 0;
     transition: all 0.3s;
+    flex: 1;
+    text-align: center;
 }
 
 .login-tab.active {
@@ -1200,6 +1197,46 @@ button:hover {
     display: block;
 }
 
+.password-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1004;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.password-display {
+    font-size: 1.2rem;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px dashed #ddd;
+}
+
+.copy-password-btn {
+    background: var(--card-color);
+    width: auto;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
 .user-center {
     display: none;
     position: fixed;
@@ -1211,7 +1248,7 @@ button:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     padding: 20px;
     width: 90%;
-    max-width: 700px;
+    max-width: 800px;
     max-height: 85vh;
     overflow-y: auto;
     z-index: 1002;
@@ -1282,11 +1319,17 @@ button:hover {
     display: block;
 }
 
+.user-info-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
 .user-role-badge {
     display: inline-block;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
     font-weight: bold;
     margin-left: 5px;
 }
@@ -1316,48 +1359,6 @@ button:hover {
     color: white;
 }
 
-.user-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.user-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.user-item:last-child {
-    border-bottom: none;
-}
-
-.user-info {
-    flex: 1;
-}
-
-.user-actions {
-    display: flex;
-    gap: 5px;
-}
-
-.user-action-btn {
-    padding: 4px 8px;
-    font-size: 0.75rem;
-    width: auto;
-}
-
-.no-permission {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    font-style: italic;
-}
-
 .user-edit-modal {
     display: none;
     position: fixed;
@@ -1381,62 +1382,90 @@ button:hover {
     overflow-y: auto;
 }
 
-.edit-permissions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
-    margin-top: 10px;
+.user-edit-modal h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.user-edit-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.user-edit-buttons button {
+    flex: 1;
+}
+
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
     border: 1px solid #ddd;
-    padding: 10px;
     border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    background-color: white;
+}
+
+.user-item:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.user-action-btn {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+
+.no-permission {
+    color: var(--text-light);
+    font-size: 0.8rem;
+    font-style: italic;
+}
+
+.permissions-container {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
 }
 
 .permission-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.permission-item:last-child {
+    margin-bottom: 0;
 }
 
 .permission-item input[type="checkbox"] {
     width: auto;
-}
-
-.permission-item label {
-    font-weight: normal;
-    margin-bottom: 0;
-}
-
-.color-preview {
-    width: 30px;
-    height: 30px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-    margin-top: 5px;
-}
-
-.range-value {
-    display: inline-block;
-    margin-left: 10px;
-    font-weight: bold;
-    color: var(--secondary-color);
-}
-
-.range-container {
-    display: flex;
-    align-items: center;
-}
-
-.range-container input[type="range"] {
-    flex: 1;
-}
-
-.range-container span {
-    width: 60px;
-    text-align: center;
+    margin-right: 8px;
 }
 
 .visits-list {
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -1447,6 +1476,7 @@ button:hover {
 .visit-item {
     padding: 8px;
     border-bottom: 1px solid #eee;
+    background-color: white;
 }
 
 .visit-item:last-child {
@@ -1455,6 +1485,7 @@ button:hover {
 
 .visit-ip {
     font-weight: bold;
+    color: var(--primary-color);
 }
 
 .visit-date {
@@ -1465,6 +1496,7 @@ button:hover {
 .visit-count {
     font-size: 0.8rem;
     color: var(--secondary-color);
+    font-weight: bold;
 }
 
 .token-stats {
@@ -1474,10 +1506,10 @@ button:hover {
     margin-bottom: 15px;
 }
 
-.token-stat-card {
-    background: white;
-    padding: 15px;
+.token-stat-item {
+    background-color: white;
     border-radius: 8px;
+    padding: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
@@ -1486,7 +1518,6 @@ button:hover {
     font-size: 1.5rem;
     font-weight: bold;
     color: var(--secondary-color);
-    display: block;
     margin-top: 5px;
 }
 
@@ -1502,25 +1533,36 @@ button:hover {
 .token-user-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 8px;
     border-bottom: 1px solid #eee;
+    background-color: white;
 }
 
 .token-user-item:last-child {
     border-bottom: none;
 }
 
+.token-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.token-actions button {
+    flex: 1;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     body {
         padding: 10px;
-        padding-bottom: 80px;
+        padding-bottom: 60px;
     }
     
     header {
-        font-size: var(--header-font-size-mobile); /* 使用手机端标题字体大小变量 */
         padding: 0.8rem;
-        margin-bottom: 15px;
+        font-size: var(--header-font-size-mobile); /* 使用手机端字体大小变量 */
     }
     
     .countdown {
@@ -1528,7 +1570,7 @@ button:hover {
     }
     
     .phase-indicator {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
     
     .light {
@@ -1542,58 +1584,58 @@ button:hover {
     
     .qrcode-container {
         position: fixed;
-        bottom: 120px;
+        bottom: 140px;
         left: 10px;
+        transform: scale(0.9);
     }
     
     .invite-code-container {
-        top: 10px; /* 修改：手机端推荐代码容器上移 */
+        position: fixed;
+        top: 15px; /* 修改：向上移动推荐代码，避免遮挡Logo */
         right: 10px;
-        padding: 6px 10px;
         font-size: 0.75rem;
+        padding: 6px 10px;
     }
     
     .user-login-btn {
         bottom: 10px;
         right: 10px;
+        width: 45px;
+        height: 45px;
     }
     
     .feedback-btn {
-        bottom: 70px;
+        bottom: 65px;
         right: 10px;
+        width: 45px;
+        height: 45px;
     }
     
     .admin-panel-btn {
-        bottom: 130px;
+        bottom: 120px;
         right: 10px;
+        width: 45px;
+        height: 45px;
     }
     
     .user-center-btn {
-        bottom: 190px;
+        bottom: 175px;
         right: 10px;
+        width: 45px;
+        height: 45px;
     }
     
     .donation-btn {
-        bottom: 250px;
+        bottom: 230px;
         right: 10px;
+        width: 45px;
+        height: 45px;
     }
     
-    .admin-panel {
-        width: 95%;
-        height: 90vh;
-        max-height: 90vh;
-        padding: 15px;
-    }
-    
-    .user-center {
-        width: 95%;
-        height: 90vh;
-        max-height: 90vh;
-        padding: 15px;
-    }
-    
-    .admin-panel-grid {
-        grid-template-columns: 1fr;
+    .db-status {
+        bottom: 10px;
+        left: 10px;
+        font-size: 0.7rem;
     }
     
     .footer {
@@ -1601,71 +1643,50 @@ button:hover {
     }
     
     .footer-content {
-        flex-direction: column;
+        font-size: 0.75rem;
         gap: 8px;
     }
     
-    .footer-info {
-        gap: 8px;
+    .admin-panel {
+        width: 95%;
+        min-width: unset;
+        padding: 15px;
+    }
+    
+    .user-center {
+        width: 95%;
+        min-width: unset;
+        padding: 15px;
+    }
+    
+    .admin-panel-grid {
+        grid-template-columns: 1fr;
     }
     
     .donation-qrcodes {
         flex-direction: column;
         align-items: center;
+        gap: 20px;
     }
     
     .modal-content {
         padding: 20px;
-        margin: 10px;
     }
     
-    .admin-tabs {
-        flex-direction: column;
-    }
-    
-    .admin-tab {
-        margin-right: 0;
+    .logo-container {
         margin-bottom: 5px;
-        border-radius: 5px;
-    }
-    
-    .user-center-tabs {
-        flex-direction: column;
-    }
-    
-    .user-center-tab {
-        margin-right: 0;
-        margin-bottom: 5px;
-        border-radius: 5px;
-    }
-    
-    .login-tabs {
-        flex-direction: column;
-    }
-    
-    .login-tab {
-        margin-right: 0;
-        margin-bottom: 5px;
-        border-radius: 5px;
-    }
-    
-    .user-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .user-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    .token-stats {
-        grid-template-columns: 1fr;
     }
     
     .logo {
-        max-width: var(--logo-size); /* 确保手机端Logo大小设置生效 */
+        max-width: 100px; /* 手机端默认Logo大小 */
+    }
+    
+    .calibration-time {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        text-align: center;
+        margin-top: 10px;
     }
 }
 
@@ -1684,15 +1705,55 @@ button:hover {
         height: 30px;
     }
     
-    .timer-display, .card-windows {
-        padding: 15px;
+    .user-login-btn:hover,
+    .feedback-btn:hover,
+    .admin-panel-btn:hover,
+    .user-center-btn:hover,
+    .donation-btn:hover {
+        width: 45px;
+        border-radius: 50%;
     }
     
-    .modal-content {
-        padding: 15px;
+    .user-login-btn:hover span,
+    .feedback-btn:hover span,
+    .admin-panel-btn:hover span,
+    .user-center-btn:hover span,
+    .donation-btn:hover span {
+        display: none;
     }
     
-    .admin-panel, .user-center {
-        padding: 10px;
+    .admin-tabs,
+    .user-center-tabs {
+        flex-direction: column;
+    }
+    
+    .admin-tab,
+    .user-center-tab {
+        margin-right: 0;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    
+    .login-tabs {
+        flex-direction: column;
+    }
+    
+    .login-tab {
+        margin-right: 0;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .footer-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
     }
 }
