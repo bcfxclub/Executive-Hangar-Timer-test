@@ -236,8 +236,6 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 新增：同时更新手机端的Logo大小
-                updateLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -434,14 +432,6 @@ async function loadSettings() {
             document.getElementById('db-status').innerHTML = '<i class="fas fa-database" style="color: #e74c3c;"></i> <span>数据库状态: 连接失败</span>';
         }
         initializeTimer('5-green');
-    }
-}
-
-// 新增：更新Logo大小的函数
-function updateLogoSize(size) {
-    const logo = document.getElementById('logo');
-    if (logo) {
-        logo.style.maxWidth = size + 'px';
     }
 }
 
@@ -1300,8 +1290,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    // 新增：同时更新手机端的Logo大小
-    updateLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1380,11 +1368,8 @@ document.getElementById('header-font-size').addEventListener('input', function()
 
 // Logo大小调整
 document.getElementById('logo-size').addEventListener('input', function() {
-    const logoSize = this.value;
-    document.getElementById('logo-size-value').textContent = logoSize + 'px';
-    document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    // 新增：同时更新手机端的Logo大小
-    updateLogoSize(logoSize);
+    document.getElementById('logo-size-value').textContent = this.value + 'px';
+    document.documentElement.style.setProperty('--logo-size', this.value + 'px');
 });
 
 // 颜色选择器预览
