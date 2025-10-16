@@ -428,16 +428,23 @@
                     </div>
                     <div class="logo-preview" id="logo-preview"></div>
                 </div>
-                <div class="form-group">
-                    <label for="logo-size">Logo高度</label>
-                    <input type="range" id="logo-size" min="80" max="200" value="120">
-                    <span id="logo-size-value">120px</span>
-                </div>
-                <!-- 新增：Logo宽度设置 -->
+                <!-- 修改：Logo尺寸设置 -->
                 <div class="form-group">
                     <label for="logo-width">Logo宽度</label>
-                    <input type="range" id="logo-width" min="100" max="800" value="400">
-                    <span id="logo-width-value">400px</span>
+                    <input type="range" id="logo-width" min="50" max="800" value="200">
+                    <span id="logo-width-value">200px</span>
+                </div>
+                <div class="form-group">
+                    <label for="logo-height">Logo高度</label>
+                    <input type="range" id="logo-height" min="20" max="400" value="80">
+                    <span id="logo-height-value">80px</span>
+                </div>
+                <div class="form-group">
+                    <label for="logo-full-width">Logo全宽显示</label>
+                    <select id="logo-full-width">
+                        <option value="false">固定尺寸</option>
+                        <option value="true">全宽显示</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="qrcode-url">二维码URL</label>
