@@ -1208,17 +1208,17 @@ button:hover {
 
 .visit-date {
     color: var(--text-light);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
 }
 
 .visit-count {
-    margin-top: 10px;
-    font-weight: bold;
     color: var(--secondary-color);
+    font-size: 0.8rem;
 }
 
+/* 用户列表样式 */
 .user-list {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -1245,19 +1245,14 @@ button:hover {
 .user-actions {
     display: flex;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .user-action-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
     width: auto;
-    padding: 5px 10px;
-    font-size: 0.75rem;
-    margin: 0;
-}
-
-.no-permission {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    font-style: italic;
+    flex: none;
 }
 
 .user-role-badge {
@@ -1270,17 +1265,17 @@ button:hover {
 }
 
 .user-super-admin {
-    background-color: #9b59b6;
+    background-color: #8e44ad;
     color: white;
 }
 
 .user-admin {
-    background-color: #3498db;
+    background-color: var(--secondary-color);
     color: white;
 }
 
 .user-normal {
-    background-color: #2ecc71;
+    background-color: var(--card-color);
     color: white;
 }
 
@@ -1290,10 +1285,83 @@ button:hover {
 }
 
 .user-frozen {
-    background-color: #e74c3c;
+    background-color: var(--reset-color);
     color: white;
 }
 
+.no-permission {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    font-style: italic;
+}
+
+/* 登录弹窗样式 */
+.login-tabs {
+    display: flex;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.login-tab {
+    padding: 10px 15px;
+    cursor: pointer;
+    background: #f1f1f1;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 5px;
+    border-radius: 5px 5px 0 0;
+    transition: all 0.3s;
+}
+
+.login-tab.active {
+    background: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+}
+
+.login-tab-content {
+    display: none;
+}
+
+.login-tab-content.active {
+    display: block;
+}
+
+.password-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1001;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.password-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    word-break: break-all;
+}
+
+/* 用户中心样式 */
 .user-center {
     display: none;
     position: fixed;
@@ -1379,74 +1447,71 @@ button:hover {
 .user-info-display {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 15px;
-}
-
-.login-tabs {
-    display: flex;
+    gap: 10px;
     margin-bottom: 15px;
-    border-bottom: 1px solid #ddd;
 }
 
-.login-tab {
-    padding: 10px 15px;
-    cursor: pointer;
-    background: #f1f1f1;
-    border: 1px solid #ddd;
-    border-bottom: none;
-    margin-right: 5px;
-    border-radius: 5px 5px 0 0;
-    transition: all 0.3s;
-}
-
-.login-tab.active {
-    background: var(--secondary-color);
-    color: white;
-    border-color: var(--secondary-color);
-}
-
-.login-tab-content {
-    display: none;
-}
-
-.login-tab-content.active {
-    display: block;
-}
-
-.password-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1003;
-    justify-content: center;
+.user-info-item {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
-.password-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
+.user-info-item:last-child {
+    border-bottom: none;
 }
 
-.password-display {
-    font-size: 1.2rem;
+.user-info-label {
     font-weight: bold;
-    color: var(--secondary-color);
-    margin: 15px 0;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    word-break: break-all;
+    color: var(--text-dark);
 }
 
-/* 令牌统计样式 */
+.user-info-value {
+    color: var(--text-light);
+}
+
+.user-center-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+/* 用户编辑模态框样式 */
+#user-edit-modal .modal-content {
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.permissions-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+}
+
+.permission-item input[type="checkbox"] {
+    width: auto;
+}
+
+.permission-label {
+    font-weight: normal;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* 令牌管理样式 */
 .token-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1454,24 +1519,19 @@ button:hover {
     margin-bottom: 15px;
 }
 
-.token-stat-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px;
+.token-stat-item {
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
     text-align: center;
-    border-left: 4px solid var(--secondary-color);
-}
-
-.token-stat-card h4 {
-    margin: 0 0 5px 0;
-    font-size: 0.9rem;
-    color: var(--text-light);
 }
 
 .token-stat-value {
     font-size: 1.5rem;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--secondary-color);
+    display: block;
+    margin-top: 5px;
 }
 
 .token-user-list {
@@ -1484,67 +1544,48 @@ button:hover {
 }
 
 .token-user-item {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
 }
 
 .token-user-item:last-child {
     border-bottom: none;
 }
 
-/* 权限设置样式 */
-.permissions-container {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.permission-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.permission-item:last-child {
-    border-bottom: none;
-}
-
-.permission-info {
-    flex: 1;
-}
-
-.permission-name {
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-.permission-desc {
-    font-size: 0.75rem;
-    color: var(--text-light);
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .container {
+    body {
         padding: 10px;
+        padding-bottom: 80px;
     }
     
     header {
-        padding: 0.8rem;
         font-size: var(--header-font-size-mobile);
+        padding: 0.8rem;
+        margin-bottom: 15px;
     }
     
-    .main-content {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .logo {
+        max-width: min(var(--logo-size), 100%);
+    }
+    
+    .qrcode-container {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        margin: 20px auto;
+        text-align: center;
+    }
+    
+    .invite-code-container {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin: 0 auto 15px;
+        width: fit-content;
     }
     
     .countdown {
@@ -1552,15 +1593,25 @@ button:hover {
     }
     
     .light {
-        width: 40px;
-        height: 40px;
+        width: 35px;
+        height: 35px;
     }
     
     .window-list {
         grid-template-columns: 1fr;
     }
     
-    .admin-panel {
+    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 0.8rem;
+    }
+    
+    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+        width: 140px;
+    }
+    
+    .admin-panel, .user-center {
         width: 95%;
         max-width: none;
         min-width: 300px;
@@ -1571,34 +1622,9 @@ button:hover {
         grid-template-columns: 1fr;
     }
     
-    .qrcode-container {
-        position: fixed;
-        bottom: 120px;
-        left: 10px;
-        text-align: center;
-        z-index: 100;
-    }
-    
-    .qrcode {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .invite-code-container {
-        top: 10px;
-        right: 10px;
-        font-size: 0.75rem;
-        padding: 6px 10px;
-    }
-    
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 0.9rem;
-    }
-    
-    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
-        width: 140px;
+    .modal-content {
+        width: 95%;
+        padding: 20px;
     }
     
     .footer {
@@ -1606,61 +1632,76 @@ button:hover {
     }
     
     .footer-content {
-        font-size: 0.75rem;
-        gap: 10px;
-    }
-    
-    .footer-notice {
-        max-width: 150px;
-    }
-    
-    .footer-info {
+        flex-direction: column;
         gap: 8px;
     }
     
-    .modal-content {
-        width: 95%;
-        padding: 20px;
-    }
-    
-    .admin-tabs, .user-center-tabs, .login-tabs {
-        flex-wrap: wrap;
-    }
-    
-    .admin-tab, .user-center-tab, .login-tab {
-        font-size: 0.8rem;
-        padding: 8px 12px;
-    }
-    
-    /* 修改：移动端Logo大小调整 */
-    .logo {
-        max-width: var(--logo-size) !important;
-        width: var(--logo-size) !important;
+    .footer-info {
+        flex-direction: column;
+        gap: 5px;
     }
     
     .donation-qrcodes {
         flex-direction: column;
-        align-items: center;
-        gap: 15px;
+        gap: 20px;
+    }
+    
+    .qrcode-modal-content {
+        max-width: 90%;
+    }
+    
+    .qrcode-modal img {
+        max-width: 200px;
+        max-height: 200px;
     }
     
     .token-stats {
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     }
+    
+    .user-actions {
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .user-action-btn {
+        width: 100%;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .upload-group {
+        flex-direction: column;
+    }
+    
+    .upload-group button {
+        width: 100%;
+    }
+    
+    .admin-tabs, .login-tabs, .user-center-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .admin-tab, .login-tab, .user-center-tab {
+        flex: 1;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+    
+    .link-input-group {
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 480px) {
-    .container {
-        padding: 5px;
-    }
-    
-    header {
-        padding: 0.6rem;
-        font-size: 1.2rem;
-    }
-    
     .countdown {
         font-size: 2rem;
+    }
+    
+    .phase-indicator {
+        font-size: 1.2rem;
     }
     
     .light {
@@ -1668,59 +1709,26 @@ button:hover {
         height: 30px;
     }
     
-    .admin-panel {
-        width: 98%;
+    .timer-display, .card-windows {
+        padding: 15px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .admin-panel, .user-center {
         padding: 10px;
         min-width: 280px;
-    }
-    
-    .qrcode-container {
-        display: none;
-    }
-    
-    .invite-code-container {
-        font-size: 0.7rem;
-        padding: 4px 8px;
     }
     
     .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
         width: 40px;
         height: 40px;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
     
     .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
         width: 120px;
-    }
-    
-    .footer {
-        padding: 5px 8px;
-    }
-    
-    .footer-content {
-        font-size: 0.7rem;
-        gap: 8px;
-    }
-    
-    .footer-notice {
-        max-width: 120px;
-    }
-    
-    .footer-info {
-        gap: 5px;
-    }
-    
-    .modal-content {
-        width: 98%;
-        padding: 15px;
-    }
-    
-    .admin-tab, .user-center-tab, .login-tab {
-        font-size: 0.75rem;
-        padding: 6px 10px;
-    }
-    
-    .token-stats {
-        grid-template-columns: 1fr;
     }
 }
