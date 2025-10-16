@@ -101,8 +101,8 @@ body.video-bg {
 }
 
 .logo {
-    width: 100%;
-    max-width: var(--logo-size);
+    width: var(--logo-size);
+    height: var(--logo-size);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -124,6 +124,17 @@ body.video-bg {
     left: 20px;
     text-align: center;
     z-index: 100;
+    transition: all 0.3s ease;
+}
+
+/* 新增：二维码收起状态 */
+.qrcode-container.qrcode-minimized {
+    transform: translateX(-70px);
+    opacity: 0.7;
+}
+
+.qrcode-container.qrcode-minimized .qrcode-caption {
+    display: none;
 }
 
 .qrcode {
@@ -1589,6 +1600,12 @@ button:hover {
         left: 10px;
     }
     
+    /* 新增：手机端二维码收起状态 */
+    .qrcode-container.qrcode-minimized {
+        transform: translateX(-60px);
+        opacity: 0.6;
+    }
+    
     .footer-content {
         flex-direction: column;
         gap: 8px;
@@ -1604,9 +1621,9 @@ button:hover {
         gap: 10px;
     }
     
-    /* 修复：手机版邀请码容器位置上移，避免遮挡logo */
+    /* 修改：手机端推荐代码位置上移 */
     .invite-code-container {
-        top: 80px; /* 从15px调整为80px，上移65px */
+        top: 60px; /* 从15px调整为60px，避免遮挡Logo */
         right: 15px;
         font-size: 0.75rem;
         padding: 6px 10px;
@@ -1662,11 +1679,11 @@ button:hover {
         bottom: 25px; /* 从15px调整为25px，上移10px */
     }
     
-    /* 修复：手机版Logo调整大小实时生效 */
+    /* 修改：Logo容器在手机端的响应式调整 */
     .logo {
-        max-width: var(--logo-size) !important;
-        width: auto !important;
-        height: auto !important;
+        max-width: 100%;
+        width: var(--logo-size) !important;
+        height: var(--logo-size) !important;
     }
     
     .logo-preview {
