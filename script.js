@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，修复手机版Logo实时调整问题和推荐代码遮挡问题
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -236,8 +236,6 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 修复：手机端Logo大小实时更新
-                updateLogoSizeForMobile();
             }
             
             if (config.qrcodeUrl) {
@@ -711,23 +709,6 @@ function updateLogoPreview(url) {
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
-    }
-}
-
-// 修复：手机端Logo大小实时更新函数
-function updateLogoSizeForMobile() {
-    const logo = document.getElementById('logo');
-    const logoSize = parseInt(document.getElementById('logo-size').value) || 120;
-    
-    // 在手机端应用最大宽度限制，同时保持比例
-    if (window.innerWidth <= 768) {
-        logo.style.maxWidth = 'min(100%, ' + logoSize + 'px)';
-        logo.style.width = 'auto';
-        logo.style.height = 'auto';
-    } else {
-        logo.style.maxWidth = logoSize + 'px';
-        logo.style.width = 'auto';
-        logo.style.height = 'auto';
     }
 }
 
@@ -1309,8 +1290,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    // 修复：手机端Logo大小实时更新
-    updateLogoSizeForMobile();
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1387,12 +1366,10 @@ document.getElementById('header-font-size').addEventListener('input', function()
     document.documentElement.style.setProperty('--header-font-size-mobile', this.value + 'rem');
 });
 
-// Logo大小调整 - 修复手机端实时更新问题
+// Logo大小调整
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
-    // 修复：手机端Logo大小实时更新
-    updateLogoSizeForMobile();
 });
 
 // 颜色选择器预览
@@ -3003,10 +2980,5 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.style.display = 'none';
             });
         }
-    });
-    
-    // 修复：窗口大小变化时更新Logo大小
-    window.addEventListener('resize', function() {
-        updateLogoSizeForMobile();
     });
 });

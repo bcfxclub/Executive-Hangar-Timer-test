@@ -808,7 +808,7 @@ input[type="datetime-local"], select, input[type="password"], input[type="text"]
     transition: border-color 0.3s;
 }
 
-input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus, input[type="file"]:focus, input[type="color"]:focus, input[type="email"]:focus {
+input[type="datetime-local"]:focus, select:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="range"]:focus, textarea:focus, input[type="url"]:focus, input[type="color"]:focus, input[type="email"]:focus {
     border-color: var(--secondary-color);
     outline: none;
 }
@@ -1317,24 +1317,19 @@ button:hover {
 .user-role-badge {
     display: inline-block;
     padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
     font-weight: bold;
     margin-left: 5px;
 }
 
-.user-super-admin {
+.user-admin {
     background-color: #e74c3c;
     color: white;
 }
 
-.user-admin {
-    background-color: #3498db;
-    color: white;
-}
-
 .user-normal {
-    background-color: #2ecc71;
+    background-color: #3498db;
     color: white;
 }
 
@@ -1343,63 +1338,20 @@ button:hover {
     color: white;
 }
 
-.user-frozen {
-    background-color: #95a5a6;
+.user-super-admin {
+    background-color: #9b59b6;
     color: white;
 }
 
-.no-permission {
-    color: var(--text-light);
-    font-size: 0.85rem;
-    font-style: italic;
-}
-
-.password-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1003;
-    justify-content: center;
-    align-items: center;
-}
-
-.password-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    text-align: center;
-}
-
-.password-display {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--secondary-color);
-    margin: 20px 0;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    border: 2px dashed #ddd;
-}
-
-.range-value {
-    display: inline-block;
-    margin-left: 10px;
-    font-weight: bold;
-    color: var(--secondary-color);
-    min-width: 40px;
+.user-frozen {
+    background-color: #7f8c8d;
+    color: white;
 }
 
 .user-center-tabs {
     display: flex;
     flex-wrap: wrap;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     border-bottom: 1px solid #ddd;
 }
 
@@ -1428,33 +1380,9 @@ button:hover {
     display: block;
 }
 
-.user-edit-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1003;
-    justify-content: center;
-    align-items: center;
-}
-
-.user-edit-modal-content {
-    background-color: white;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
 .permissions-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
     margin-top: 10px;
 }
@@ -1465,45 +1393,115 @@ button:hover {
     gap: 8px;
 }
 
-.permission-item input {
+.permission-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+}
+
+.user-edit-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1004;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-edit-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* 找回密码弹窗样式 */
+.password-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1005;
+    justify-content: center;
+    align-items: center;
+}
+
+.password-modal-content {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+}
+
+.password-display {
+    background-color: #f8f9fa;
+    border: 2px dashed #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    word-break: break-all;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.copy-password-btn {
+    background: var(--card-color);
     width: auto;
+    padding: 8px 15px;
+    margin-left: 10px;
 }
 
-.permission-item label {
-    margin: 0;
-    font-weight: normal;
-}
-
-/* 令牌统计样式 */
+/* 令牌管理样式 */
 .token-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
     margin-bottom: 15px;
 }
 
 .token-stat-item {
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-    text-align: center;
-    border: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.token-stat-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .token-stat-label {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--text-dark);
 }
 
 .token-stat-value {
-    font-size: 1.2rem;
+    color: var(--secondary-color);
     font-weight: bold;
-    color: var(--primary-color);
 }
 
 .token-user-list {
-    max-height: 200px;
+    max-height: 150px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 6px;
@@ -1514,235 +1512,161 @@ button:hover {
 .token-user-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #eee;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .token-user-item:last-child {
     border-bottom: none;
 }
 
-/* 响应式设计 */
+.token-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.token-actions button {
+    flex: 1;
+}
+
+.clean-expired-btn {
+    background: linear-gradient(to right, #f39c12, #e67e22);
+}
+
+.clean-all-btn {
+    background: linear-gradient(to right, #e74c3c, #c0392b);
+}
+
 @media (max-width: 768px) {
-    body {
+    .container {
         padding: 10px;
-        padding-bottom: 50px;
     }
     
     header {
-        font-size: var(--header-font-size-mobile);
         padding: 1rem;
-        margin-bottom: 15px;
+        font-size: var(--header-font-size-mobile);
     }
     
-    .logo-container {
-        margin-bottom: 5px;
-    }
-    
-    .logo {
-        max-width: min(100%, var(--logo-size));
-        width: auto;
-        height: auto;
-    }
-    
-    .timer-display {
+    .timer-display, .card-windows, .admin-panel, .user-center {
         padding: 15px;
-        margin-bottom: 15px;
     }
     
     .countdown {
         font-size: 2.5rem;
     }
     
-    .light {
-        width: 35px;
-        height: 35px;
+    .phase-indicator {
+        font-size: 1.2rem;
+        flex-direction: column;
+        text-align: center;
     }
     
-    .card-windows {
-        padding: 15px;
+    .light {
+        width: 40px;
+        height: 40px;
     }
     
     .window-list {
         grid-template-columns: 1fr;
     }
     
-    .qrcode-container {
-        position: fixed;
-        bottom: 120px;
-        left: 10px;
-        transform: scale(0.9);
-    }
-    
-    .invite-code-container {
-        position: fixed;
-        top: 25px;
-        right: 10px;
-        font-size: 0.75rem;
-        padding: 6px 10px;
-        transform: scale(0.9);
-    }
-    
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
-        width: 45px;
-        height: 45px;
-        bottom: 15px;
-        right: 15px;
-    }
-    
-    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
-        width: 140px;
-    }
-    
-    .user-login-btn {
-        bottom: 15px;
-    }
-    
-    .feedback-btn {
-        bottom: 70px;
-    }
-    
-    .admin-panel-btn {
-        bottom: 125px;
-    }
-    
-    .user-center-btn {
-        bottom: 180px;
-    }
-    
-    .donation-btn {
-        bottom: 235px;
-    }
-    
-    .db-status {
-        bottom: 15px;
-        left: 15px;
-        font-size: 0.7rem;
-    }
-    
-    .footer {
-        padding: 8px 10px;
-    }
-    
-    .footer-content {
-        font-size: 0.75rem;
-        gap: 8px;
-    }
-    
-    .footer-notice {
-        max-width: 150px;
-    }
-    
-    .admin-panel {
-        width: 95%;
-        max-height: 80vh;
-        padding: 15px;
-    }
-    
     .admin-panel-grid {
         grid-template-columns: 1fr;
     }
     
-    .modal-content {
-        width: 95%;
-        padding: 20px;
+    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
+        width: 50px;
+        border-radius: 50%;
     }
     
-    .donation-qrcodes {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .donation-qrcode img {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .calibration-time {
-        position: static;
-        margin-top: 10px;
-        text-align: center;
-    }
-    
-    .status-indicators {
-        justify-content: center;
-        gap: 10px;
-    }
-    
-    .admin-tab, .login-tab, .user-center-tab {
-        padding: 8px 12px;
-        font-size: 0.85rem;
-    }
-    
-    button {
-        padding: 8px 12px;
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .countdown {
-        font-size: 2rem;
-    }
-    
-    .phase-indicator {
-        font-size: 1.2rem;
-    }
-    
-    .light {
-        width: 30px;
-        height: 30px;
+    .user-login-btn:hover span, .feedback-btn:hover span, .admin-panel-btn:hover span, .user-center-btn:hover span, .donation-btn:hover span {
+        display: none;
     }
     
     .qrcode-container {
-        transform: scale(0.8);
-        left: 5px;
-        bottom: 100px;
-    }
-    
-    .invite-code-container {
-        transform: scale(0.8);
-        right: 5px;
-        top: 15px;
-    }
-    
-    .user-login-btn, .feedback-btn, .admin-panel-btn, .user-center-btn, .donation-btn {
-        width: 40px;
-        height: 40px;
-        bottom: 10px;
-        right: 10px;
-    }
-    
-    .user-login-btn:hover, .feedback-btn:hover, .admin-panel-btn:hover, .user-center-btn:hover, .donation-btn:hover {
-        width: 120px;
-    }
-    
-    .user-login-btn {
-        bottom: 10px;
-    }
-    
-    .feedback-btn {
-        bottom: 60px;
-    }
-    
-    .admin-panel-btn {
-        bottom: 110px;
-    }
-    
-    .user-center-btn {
-        bottom: 160px;
-    }
-    
-    .donation-btn {
-        bottom: 210px;
+        bottom: 260px;
+        left: 10px;
     }
     
     .footer-content {
         flex-direction: column;
-        gap: 5px;
+        gap: 8px;
+    }
+    
+    .footer-notice {
+        max-width: 90%;
+        order: 2;
     }
     
     .footer-info {
-        gap: 8px;
+        order: 1;
+        gap: 10px;
+    }
+    
+    .invite-code-container {
+        top: 15px;
+        right: 15px;
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+    
+    .donation-qrcodes {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .admin-card {
+        padding: 12px;
+    }
+    
+    .admin-panel, .user-center {
+        width: 95%;
+        min-width: unset;
+        padding: 15px;
+    }
+    
+    .user-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .user-actions {
+        margin-top: 10px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .password-display {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .copy-password-btn {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .token-actions {
+        flex-direction: column;
+    }
+    
+    /* 新增：校准时间在手机端上移，避免与状态指示灯文字重叠 */
+    .calibration-time {
+        bottom: 25px; /* 从15px调整为25px，上移10px */
+    }
+    
+    /* 修改：Logo容器在手机端的响应式调整 */
+    .logo {
+        max-width: 100%;
+    }
+    
+    .logo-preview {
+        max-width: 200px;
     }
 }
