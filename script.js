@@ -24,10 +24,6 @@ const TOKEN_CHECK_INTERVAL = 30 * 60 * 1000; // 30分钟
 // 新增：令牌续期阈值（过期前1小时）
 const TOKEN_RENEW_THRESHOLD = 60 * 60 * 1000; // 1小时
 
-// 新增：二维码自动收起相关变量
-let qrcodeAutoHideTimeout = null;
-let isQrcodeHidden = false;
-
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
     const headers = {
@@ -240,8 +236,6 @@ async function loadSettings() {
                 document.getElementById('logo-size').value = config.logoSize;
                 document.getElementById('logo-size-value').textContent = config.logoSize + 'px';
                 document.documentElement.style.setProperty('--logo-size', config.logoSize + 'px');
-                // 新增：实时更新Logo大小
-                updateLogoSize(config.logoSize);
             }
             
             if (config.qrcodeUrl) {
@@ -703,15 +697,6 @@ function updateFooterNoticeDisplay(notice, link) {
     }
 }
 
-// 新增：更新Logo大小
-function updateLogoSize(size) {
-    const logo = document.getElementById('logo');
-    if (logo) {
-        logo.style.width = '100%';
-        logo.style.maxWidth = size + 'px';
-    }
-}
-
 // 更新Logo预览
 function updateLogoPreview(url) {
     const logoPreview = document.getElementById('logo-preview');
@@ -721,10 +706,6 @@ function updateLogoPreview(url) {
         // 修改：添加样式让Logo自适应容器宽度
         logoPreview.innerHTML = `<img src="${url}" alt="Logo Preview" style="max-width: 100%; height: auto;">`;
         logo.innerHTML = `<img src="${url}" alt="Logo" style="max-width: 100%; height: auto;">`;
-        
-        // 新增：实时应用Logo大小
-        const logoSize = parseInt(document.getElementById('logo-size').value) || 120;
-        updateLogoSize(logoSize);
     } else {
         logoPreview.innerHTML = '<span>无Logo</span>';
         logo.innerHTML = '';
@@ -1309,8 +1290,6 @@ document.getElementById('save-appearance').addEventListener('click', function() 
     
     updateLogoPreview(logoUrl);
     document.documentElement.style.setProperty('--logo-size', logoSize + 'px');
-    // 新增：实时更新Logo大小
-    updateLogoSize(logoSize);
     
     updateQrcodePreview(qrcodeUrl);
     
@@ -1391,8 +1370,6 @@ document.getElementById('header-font-size').addEventListener('input', function()
 document.getElementById('logo-size').addEventListener('input', function() {
     document.getElementById('logo-size-value').textContent = this.value + 'px';
     document.documentElement.style.setProperty('--logo-size', this.value + 'px');
-    // 新增：实时更新Logo大小
-    updateLogoSize(this.value);
 });
 
 // 颜色选择器预览
@@ -2959,67 +2936,6 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
     }
 });
 
-// 新增：检测是否为移动设备
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-}
-
-// 新增：初始化二维码自动收起功能
-function initQrcodeAutoHide() {
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    if (!qrcodeContainer) return;
-    
-    // 只在移动设备上启用自动收起功能
-    if (isMobileDevice()) {
-        // 5秒后自动收起
-        qrcodeAutoHideTimeout = setTimeout(() => {
-            hideQrcode();
-        }, 5000);
-        
-        // 点击二维码容器切换显示/隐藏状态
-        qrcodeContainer.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (isQrcodeHidden) {
-                showQrcode();
-                // 显示5秒后再次自动收起
-                clearTimeout(qrcodeAutoHideTimeout);
-                qrcodeAutoHideTimeout = setTimeout(() => {
-                    hideQrcode();
-                }, 5000);
-            } else {
-                hideQrcode();
-            }
-        });
-        
-        // 点击其他地方也收起二维码
-        document.addEventListener('click', function(e) {
-            if (!qrcodeContainer.contains(e.target) && !isQrcodeHidden) {
-                hideQrcode();
-            }
-        });
-    }
-}
-
-// 新增：隐藏二维码
-function hideQrcode() {
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    if (qrcodeContainer) {
-        qrcodeContainer.classList.add('qrcode-hidden');
-        isQrcodeHidden = true;
-    }
-}
-
-// 新增：显示二维码
-function showQrcode() {
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    if (qrcodeContainer) {
-        qrcodeContainer.classList.remove('qrcode-hidden');
-        isQrcodeHidden = false;
-    }
-}
-
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     // 检查数据库状态
@@ -3043,9 +2959,6 @@ document.addEventListener('DOMContentLoaded', function() {
             await checkTokenStatus();
         }
     }, 2000);
-    
-    // 新增：初始化二维码自动收起功能
-    initQrcodeAutoHide();
     
     // 添加点击外部关闭模态框的功能
     window.addEventListener('click', function(event) {
