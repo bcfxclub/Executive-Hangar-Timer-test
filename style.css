@@ -108,6 +108,11 @@ body.video-bg {
     justify-content: center;
     overflow: hidden;
     transition: all 0.3s ease;
+    /* 新增：确保Logo大小在手机端也生效 */
+    width: var(--logo-size);
+    height: var(--logo-size);
+    max-width: var(--logo-size);
+    max-height: var(--logo-size);
 }
 
 .logo img {
@@ -1661,9 +1666,13 @@ button:hover {
         bottom: 25px; /* 从15px调整为25px，上移10px */
     }
     
-    /* 修改：Logo容器在手机端的响应式调整 */
+    /* 修改：Logo容器在手机端的响应式调整 - 确保使用CSS变量 */
     .logo {
-        max-width: 100%;
+        max-width: var(--logo-size);
+        width: var(--logo-size);
+        height: var(--logo-size);
+        max-width: var(--logo-size);
+        max-height: var(--logo-size);
     }
     
     .logo-preview {
