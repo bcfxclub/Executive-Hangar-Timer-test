@@ -1122,11 +1122,13 @@ async function handleFeedbackRequest(request, kv) {
   return new Response('Method Not Allowed', { status: 405 });
 }
 
-// 处理访问统计请求
+// 处理访问记录请求
 async function handleVisitsRequest(request, kv) {
-  if (request.method === 'GET') {
-    try {
-      // 获取所有访问记录 - 需要管理员权限
+  const url = new URL(request.url);
+  
+  try {
+    if (request.method === 'GET') {
+      // 获取访问统计 - 需要管理员权限
       const auth = await authenticate(request, kv, true, 'visits');
       if (!auth.success) {
         return new Response(JSON.stringify({ error: auth.error }), {
@@ -1138,61 +1140,66 @@ async function handleVisitsRequest(request, kv) {
         });
       }
       
-      const visits = await kv.get('visits', { type: 'json' }) || [];
+      let visits = await kv.get('visits', { type: 'json' }) || [];
       
       // 按IP聚合数据
-      const ipStats = {};
+      const aggregatedVisits = {};
+      let totalVisits = 0;
+      
       visits.forEach(visit => {
-        if (!ipStats[visit.ip]) {
-          ipStats[visit.ip] = {
+        totalVisits++;
+        if (!aggregatedVisits[visit.ip]) {
+          aggregatedVisits[visit.ip] = {
             ip: visit.ip,
-            lastVisit: visit.timestamp,
-            visitCount: 0,
             firstVisit: visit.timestamp,
-            userAgent: visit.userAgent
+            lastVisit: visit.timestamp,
+            visitCount: 1
           };
-        }
-        ipStats[visit.ip].visitCount++;
-        if (new Date(visit.timestamp) > new Date(ipStats[visit.ip].lastVisit)) {
-          ipStats[visit.ip].lastVisit = visit.timestamp;
-        }
-        if (new Date(visit.timestamp) < new Date(ipStats[visit.ip].firstVisit)) {
-          ipStats[visit.ip].firstVisit = visit.timestamp;
+        } else {
+          aggregatedVisits[visit.ip].visitCount++;
+          if (new Date(visit.timestamp) > new Date(aggregatedVisits[visit.ip].lastVisit)) {
+            aggregatedVisits[visit.ip].lastVisit = visit.timestamp;
+          }
+          if (new Date(visit.timestamp) < new Date(aggregatedVisits[visit.ip].firstVisit)) {
+            aggregatedVisits[visit.ip].firstVisit = visit.timestamp;
+          }
         }
       });
       
-      const aggregatedVisits = Object.values(ipStats);
+      // 转换为数组
+      const visitsArray = Object.values(aggregatedVisits);
       
-      return new Response(JSON.stringify(aggregatedVisits), {
+      return new Response(JSON.stringify({
+        visits: visitsArray,
+        totalVisits: totalVisits
+      }), {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
       });
-    } catch (error) {
-      console.error('Visits error:', error);
-      return new Response(JSON.stringify({ error: '获取访问记录失败' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-  } else if (request.method === 'POST') {
-    try {
-      // 记录新访问 - 公开接口
-      const visits = await kv.get('visits', { type: 'json' }) || [];
-      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    } else if (request.method === 'POST') {
+      // 记录访问 - 公开接口
+      const clientIP = request.headers.get('CF-Connecting-IP') || 
+                      request.headers.get('X-Forwarded-For') || 
+                      'unknown';
       
-      const newVisit = {
+      let visits = await kv.get('visits', { type: 'json' }) || [];
+      
+      const visit = {
         id: Date.now().toString(),
-        ip: ip,
+        ip: clientIP,
         timestamp: new Date().toISOString(),
         userAgent: request.headers.get('User-Agent') || 'unknown'
       };
       
-      visits.push(newVisit);
+      visits.push(visit);
+      
+      // 限制访问记录数量，最多保留1000条
+      if (visits.length > 1000) {
+        visits = visits.slice(-1000);
+      }
+      
       await kv.put('visits', JSON.stringify(visits));
       
       return new Response(JSON.stringify({ success: true }), {
@@ -1201,19 +1208,8 @@ async function handleVisitsRequest(request, kv) {
           'Access-Control-Allow-Origin': '*',
         },
       });
-    } catch (error) {
-      console.error('Record visit error:', error);
-      return new Response(JSON.stringify({ success: false, error: '记录访问失败' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-  } else if (request.method === 'DELETE') {
-    try {
-      // 清除所有访问记录 - 需要管理员权限
+    } else if (request.method === 'DELETE') {
+      // 清除访问记录 - 需要管理员权限
       const auth = await authenticate(request, kv, true, 'visits');
       if (!auth.success) {
         return new Response(JSON.stringify({ error: auth.error }), {
@@ -1225,23 +1221,23 @@ async function handleVisitsRequest(request, kv) {
         });
       }
       
-      await kv.delete('visits');
+      await kv.put('visits', JSON.stringify([]));
       return new Response(JSON.stringify({ success: true }), {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
       });
-    } catch (error) {
-      console.error('Clear visits error:', error);
-      return new Response(JSON.stringify({ success: false, error: '清除访问记录失败' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
     }
+  } catch (error) {
+    console.error('Visits request error:', error);
+    return new Response(JSON.stringify({ success: false, error: '操作失败' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
   
   return new Response('Method Not Allowed', { status: 405 });
@@ -1686,63 +1682,75 @@ async function handleRecoverPasswordRequest(request, kv) {
 
 // 处理导出请求
 async function handleExportRequest(request, kv) {
-  if (request.method === 'GET') {
-    try {
-      // 验证权限
-      const auth = await authenticate(request, kv, true, 'data');
-      if (!auth.success) {
-        return new Response(JSON.stringify({ error: auth.error }), {
-          status: auth.status,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
-      }
-      
-      const config = await kv.get('config');
-      const feedback = await kv.get('feedback', { type: 'json' }) || [];
-      const visits = await kv.get('visits', { type: 'json' }) || [];
-      const users = await kv.get('users', { type: 'json' }) || [];
-      
-      // 过滤用户敏感信息
-      const safeUsers = users.map(user => {
-        const { password, securityAnswer, ...safeUser } = user;
-        return safeUser;
-      });
-      
-      // 获取令牌统计信息
-      const tokenManager = new TokenManager(kv);
-      const tokenStats = await tokenManager.getTokenStats();
-      const tokenExpirationDays = await tokenManager.getTokenExpirationDays();
-      
-      const exportData = {
-        config: config ? JSON.parse(config) : {},
-        feedback,
-        visits,
-        users: safeUsers,
-        tokenStats,
-        tokenExpirationDays,
-        exportedAt: new Date().toISOString()
-      };
-      
-      return new Response(JSON.stringify(exportData), {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    } catch (error) {
-      console.error('Export error:', error);
-      return new Response(JSON.stringify({ error: '导出数据失败' }), {
-        status: 500,
+  try {
+    // 验证权限
+    const auth = await authenticate(request, kv, true, 'data');
+    if (!auth.success) {
+      return new Response(JSON.stringify({ error: auth.error }), {
+        status: auth.status,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
       });
     }
+    
+    const config = await kv.get('config', { type: 'json' }) || {};
+    const feedback = await kv.get('feedback', { type: 'json' }) || [];
+    const visits = await kv.get('visits', { type: 'json' }) || [];
+    const users = await kv.get('users', { type: 'json' }) || [];
+    
+    // 过滤用户的敏感信息
+    const safeUsers = users.map(user => {
+      const { password, securityAnswer, ...safeUser } = user;
+      return safeUser;
+    });
+       // 获取令牌统计信息
+       const tokenManager = new TokenManager(kv);
+       const tokenStats = await tokenManager.getTokenStats();
+       const tokenExpirationDays = await tokenManager.getTokenExpirationDays();
+       
+       const exportData = {
+         config: config ? JSON.parse(config) : {},
+         feedback,
+         visits,
+         users: safeUsers,
+         tokenStats,
+         tokenExpirationDays,
+         exportedAt: new Date().toISOString()
+       };
+       
+       return new Response(JSON.stringify(exportData), {
+         headers: {
+           'Content-Type': 'application/json',
+           'Access-Control-Allow-Origin': '*',
+         },
+       });   
+    const data = {
+      config,
+      feedback,
+      visits,
+      users: safeUsers,
+      exportTime: new Date().toISOString()
+    };
+    
+    return new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (error) {
+    console.error('Export error:', error);
+    return new Response(JSON.stringify({ success: false, error: '导出失败' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
+
   
   return new Response('Method Not Allowed', { status: 405 });
 }
