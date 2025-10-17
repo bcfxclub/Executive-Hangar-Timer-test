@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制
+// script.js - 修改后的版本，增加手机端二维码和推荐码自动收起功能
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -24,9 +24,10 @@ const TOKEN_CHECK_INTERVAL = 30 * 60 * 1000; // 30分钟
 // 新增：令牌续期阈值（过期前1小时）
 const TOKEN_RENEW_THRESHOLD = 60 * 60 * 1000; // 1小时
 
-// 新增：手机端元素自动收起相关变量
-let mobileCollapseTimeout = null;
-const MOBILE_COLLAPSE_DELAY = 5000; // 5秒后自动收起
+// 新增：手机端二维码和推荐码自动收起相关变量
+let qrCodeAutoHideTimer = null;
+let inviteCodeAutoHideTimer = null;
+const AUTO_HIDE_DELAY = 5000; // 5秒后自动收起
 
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
@@ -153,6 +154,54 @@ function initTokenCheck() {
         setTimeout(async () => {
             await checkTokenStatus();
         }, 1000);
+    }
+}
+
+// 新增：手机端二维码自动收起功能
+function initMobileQrCodeAutoHide() {
+    const qrCodeContainer = document.querySelector('.qrcode-container');
+    const inviteCodeContainer = document.getElementById('invite-code-container');
+    
+    // 只在手机端启用自动收起功能
+    if (window.innerWidth <= 768) {
+        // 设置5秒后自动收起
+        qrCodeAutoHideTimer = setTimeout(() => {
+            qrCodeContainer.classList.add('minimized');
+        }, AUTO_HIDE_DELAY);
+        
+        if (inviteCodeContainer.style.display !== 'none') {
+            inviteCodeAutoHideTimer = setTimeout(() => {
+                inviteCodeContainer.classList.add('minimized');
+            }, AUTO_HIDE_DELAY);
+        }
+        
+        // 点击收起状态的二维码容器展开
+        qrCodeContainer.addEventListener('click', function(e) {
+            if (this.classList.contains('minimized')) {
+                this.classList.remove('minimized');
+                // 重新设置定时器，5秒后再次收起
+                clearTimeout(qrCodeAutoHideTimer);
+                qrCodeAutoHideTimer = setTimeout(() => {
+                    this.classList.add('minimized');
+                }, AUTO_HIDE_DELAY);
+                e.stopPropagation();
+            }
+        });
+        
+        // 点击收起状态的推荐码容器展开
+        if (inviteCodeContainer.style.display !== 'none') {
+            inviteCodeContainer.addEventListener('click', function(e) {
+                if (this.classList.contains('minimized')) {
+                    this.classList.remove('minimized');
+                    // 重新设置定时器，5秒后再次收起
+                    clearTimeout(inviteCodeAutoHideTimer);
+                    inviteCodeAutoHideTimer = setTimeout(() => {
+                        this.classList.add('minimized');
+                    }, AUTO_HIDE_DELAY);
+                    e.stopPropagation();
+                }
+            });
+        }
     }
 }
 
@@ -2943,68 +2992,6 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
     }
 });
 
-// 新增：手机端元素自动收起功能
-function initMobileCollapse() {
-    // 只在手机端执行
-    if (window.innerWidth > 768) {
-        return;
-    }
-    
-    const qrcodeContainer = document.querySelector('.qrcode-container');
-    const inviteContainer = document.querySelector('.invite-code-container');
-    
-    if (!qrcodeContainer || !inviteContainer) {
-        return;
-    }
-    
-    // 添加收起样式类
-    qrcodeContainer.classList.add('mobile-collapsible');
-    inviteContainer.classList.add('mobile-collapsible');
-    
-    // 5秒后自动收起
-    mobileCollapseTimeout = setTimeout(() => {
-        qrcodeContainer.classList.add('collapsed');
-        inviteContainer.classList.add('collapsed');
-    }, MOBILE_COLLAPSE_DELAY);
-    
-    // 点击展开/收起功能
-    qrcodeContainer.addEventListener('click', function(e) {
-        // 阻止事件冒泡，避免触发其他点击事件
-        e.stopPropagation();
-        
-        if (this.classList.contains('collapsed')) {
-            // 展开
-            this.classList.remove('collapsed');
-            // 5秒后再次自动收起
-            clearTimeout(mobileCollapseTimeout);
-            mobileCollapseTimeout = setTimeout(() => {
-                this.classList.add('collapsed');
-            }, MOBILE_COLLAPSE_DELAY);
-        } else {
-            // 收起
-            this.classList.add('collapsed');
-        }
-    });
-    
-    inviteContainer.addEventListener('click', function(e) {
-        // 阻止事件冒泡，避免触发链接跳转
-        e.stopPropagation();
-        
-        if (this.classList.contains('collapsed')) {
-            // 展开
-            this.classList.remove('collapsed');
-            // 5秒后再次自动收起
-            clearTimeout(mobileCollapseTimeout);
-            mobileCollapseTimeout = setTimeout(() => {
-                this.classList.add('collapsed');
-            }, MOBILE_COLLAPSE_DELAY);
-        } else {
-            // 收起
-            this.classList.add('collapsed');
-        }
-    });
-}
-
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     // 检查数据库状态
@@ -3022,15 +3009,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // 更新用户界面
     updateUserInterface();
     
-    // 新增：初始化手机端元素自动收起功能
-    initMobileCollapse();
-    
     // 新增：页面加载时检查令牌状态
     setTimeout(async () => {
         if (currentUser && currentUser.token) {
             await checkTokenStatus();
         }
     }, 2000);
+    
+    // 新增：初始化手机端二维码自动收起功能
+    initMobileQrCodeAutoHide();
     
     // 添加点击外部关闭模态框的功能
     window.addEventListener('click', function(event) {
