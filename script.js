@@ -1686,17 +1686,14 @@ async function loadVisits() {
             headers: getAuthHeaders()
         });
         if (response.ok) {
-            const visits = await response.json();
+            const data = await response.json();
+            const visits = data.visits;
+            const totalVisits = data.totalVisits;
             const visitsList = document.getElementById('visits-list');
             const visitCount = document.getElementById('visit-count');
             
-            // 计算总访问次数
-            let totalVisits = 0;
-            visits.forEach(visit => {
-                totalVisits += visit.visitCount;
-            });
-            
-            visitCount.textContent = `总IP数: ${visits.length} | 总访问次数: ${totalVisits}`;
+            // 修改：显示总IP数和总访问数
+            visitCount.textContent = `总IP数: ${visits.length}, 总访问数: ${totalVisits}`;
             
             if (visits.length === 0) {
                 visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
