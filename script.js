@@ -1,4 +1,4 @@
-// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制，增加移动端二维码和推荐码自动收起功能
+// script.js - 修改后的版本，增加令牌过期检测和自动续期功能，并完善用户管理权限控制，以及移动端二维码和推荐码自动收起功能
 
 // API地址设置 - 使用固定默认值，不存储在localStorage中
 let API_BASE = "/api";
@@ -23,11 +23,6 @@ let tokenCheckInterval = null;
 const TOKEN_CHECK_INTERVAL = 30 * 60 * 1000; // 30分钟
 // 新增：令牌续期阈值（过期前1小时）
 const TOKEN_RENEW_THRESHOLD = 60 * 60 * 1000; // 1小时
-
-// 新增：移动端二维码和推荐码自动收起功能
-let isMobileView = window.innerWidth <= 768;
-let qrCodeAutoHideTimer = null;
-let inviteCodeAutoHideTimer = null;
 
 // 获取认证头信息 - 修改为使用令牌
 function getAuthHeaders() {
@@ -154,62 +149,6 @@ function initTokenCheck() {
         setTimeout(async () => {
             await checkTokenStatus();
         }, 1000);
-    }
-}
-
-// 新增：初始化移动端二维码和推荐码自动收起功能
-function initMobileAutoHide() {
-    if (!isMobileView) return;
-    
-    const qrCodeContainer = document.querySelector('.qrcode-container');
-    const inviteCodeContainer = document.getElementById('invite-code-container');
-    
-    if (qrCodeContainer) {
-        // 添加移动端样式类
-        qrCodeContainer.classList.add('mobile-qrcode');
-        
-        // 设置5秒后自动收起
-        qrCodeAutoHideTimer = setTimeout(() => {
-            qrCodeContainer.classList.add('collapsed');
-        }, 5000);
-        
-        // 点击展开/收起
-        qrCodeContainer.addEventListener('click', function(e) {
-            e.stopPropagation();
-            this.classList.toggle('collapsed');
-            
-            // 如果展开，重新设置5秒后自动收起
-            if (!this.classList.contains('collapsed')) {
-                clearTimeout(qrCodeAutoHideTimer);
-                qrCodeAutoHideTimer = setTimeout(() => {
-                    this.classList.add('collapsed');
-                }, 5000);
-            }
-        });
-    }
-    
-    if (inviteCodeContainer && inviteCodeContainer.style.display !== 'none') {
-        // 添加移动端样式类
-        inviteCodeContainer.classList.add('mobile-invite');
-        
-        // 设置5秒后自动收起
-        inviteCodeAutoHideTimer = setTimeout(() => {
-            inviteCodeContainer.classList.add('collapsed');
-        }, 5000);
-        
-        // 点击展开/收起
-        inviteCodeContainer.addEventListener('click', function(e) {
-            e.stopPropagation();
-            this.classList.toggle('collapsed');
-            
-            // 如果展开，重新设置5秒后自动收起
-            if (!this.classList.contains('collapsed')) {
-                clearTimeout(inviteCodeAutoHideTimer);
-                inviteCodeAutoHideTimer = setTimeout(() => {
-                    this.classList.add('collapsed');
-                }, 5000);
-            }
-        });
     }
 }
 
@@ -3000,6 +2939,68 @@ document.getElementById('set-token-expiration').addEventListener('click', async 
     }
 });
 
+// 新增：移动端二维码和推荐码自动收起功能
+function initMobileCollapse() {
+    // 检查是否为移动设备
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) {
+        return; // 非移动设备不执行
+    }
+    
+    const qrcodeContainer = document.querySelector('.qrcode-container');
+    const inviteContainer = document.querySelector('.invite-code-container');
+    
+    // 为容器添加移动端样式类
+    qrcodeContainer.classList.add('mobile-collapsible');
+    inviteContainer.classList.add('mobile-collapsible');
+    
+    // 创建切换按钮
+    const qrcodeToggle = document.createElement('div');
+    qrcodeToggle.className = 'mobile-toggle-btn qrcode-toggle';
+    qrcodeToggle.innerHTML = '<i class="fas fa-qrcode"></i>';
+    
+    const inviteToggle = document.createElement('div');
+    inviteToggle.className = 'mobile-toggle-btn invite-toggle';
+    inviteToggle.innerHTML = '<i class="fas fa-gift"></i>';
+    
+    // 添加切换按钮到页面
+    document.body.appendChild(qrcodeToggle);
+    document.body.appendChild(inviteToggle);
+    
+    // 5秒后自动收起
+    setTimeout(() => {
+        qrcodeContainer.classList.add('collapsed');
+        inviteContainer.classList.add('collapsed');
+        qrcodeToggle.classList.add('visible');
+        inviteToggle.classList.add('visible');
+    }, 5000);
+    
+    // 二维码切换按钮点击事件
+    qrcodeToggle.addEventListener('click', function() {
+        qrcodeContainer.classList.toggle('collapsed');
+        this.classList.toggle('active');
+    });
+    
+    // 推荐码切换按钮点击事件
+    inviteToggle.addEventListener('click', function() {
+        inviteContainer.classList.toggle('collapsed');
+        this.classList.toggle('active');
+    });
+    
+    // 点击容器外部收起
+    document.addEventListener('click', function(e) {
+        if (!qrcodeContainer.contains(e.target) && !qrcodeToggle.contains(e.target)) {
+            qrcodeContainer.classList.add('collapsed');
+            qrcodeToggle.classList.remove('active');
+        }
+        if (!inviteContainer.contains(e.target) && !inviteToggle.contains(e.target)) {
+            inviteContainer.classList.add('collapsed');
+            inviteToggle.classList.remove('active');
+        }
+    });
+}
+
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     // 检查数据库状态
@@ -3024,8 +3025,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 2000);
     
-    // 新增：初始化移动端二维码和推荐码自动收起功能
-    initMobileAutoHide();
+    // 新增：初始化移动端收起功能
+    initMobileCollapse();
     
     // 添加点击外部关闭模态框的功能
     window.addEventListener('click', function(event) {
@@ -3046,18 +3047,6 @@ document.addEventListener('DOMContentLoaded', function() {
             modals.forEach(modal => {
                 modal.style.display = 'none';
             });
-        }
-    });
-    
-    // 新增：监听窗口大小变化，重新初始化移动端功能
-    window.addEventListener('resize', function() {
-        const newIsMobileView = window.innerWidth <= 768;
-        if (newIsMobileView !== isMobileView) {
-            isMobileView = newIsMobileView;
-            // 如果是移动端视图，重新初始化自动收起功能
-            if (isMobileView) {
-                initMobileAutoHide();
-            }
         }
     });
 });
