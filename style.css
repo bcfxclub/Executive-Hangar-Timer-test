@@ -626,17 +626,17 @@ header {
 }
 
 .db-status {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    font-size: 0.8rem;
-    color: var(--text-light);
-    background: rgba(255, 255, 255, 0.8);
-    padding: 5px 10px;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+position: fixed;
+bottom: 20px;
+left: 20px;
+font-size: 0.8rem;
+color: var(--text-light);
+background: transparent; /* 改为透明 */
+padding: 5px 10px;
+border-radius: 5px;
+display: flex;
+align-items: center;
+gap: 5px;
 }
 
 .modal {
