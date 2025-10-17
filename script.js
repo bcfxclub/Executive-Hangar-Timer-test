@@ -1690,7 +1690,13 @@ async function loadVisits() {
             const visitsList = document.getElementById('visits-list');
             const visitCount = document.getElementById('visit-count');
             
-            visitCount.textContent = `总IP数: ${visits.length}`;
+            // 计算总访问次数
+            let totalVisits = 0;
+            visits.forEach(visit => {
+                totalVisits += visit.visitCount;
+            });
+            
+            visitCount.textContent = `总IP数: ${visits.length} | 总访问次数: ${totalVisits}`;
             
             if (visits.length === 0) {
                 visitsList.innerHTML = '<div class="visit-item">暂无访问记录</div>';
