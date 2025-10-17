@@ -30,6 +30,8 @@
     --window-title-color: var(--primary-color);
     --mobile-toggle-bg: rgba(52, 152, 219, 0.9); /* 新增：移动端切换按钮颜色 */
     --mobile-toggle-hover: rgba(41, 128, 185, 0.9); /* 新增：移动端切换按钮悬停颜色 */
+    --invite-toggle-bg: rgba(255, 215, 0, 0.9); /* 新增：金色礼物图标背景色 */
+    --invite-toggle-hover: rgba(255, 193, 7, 0.9); /* 新增：金色礼物图标悬停颜色 */
 }
 
 /* 新增：通知动画 */
@@ -1562,7 +1564,6 @@ button:hover {
         position: fixed;
         width: 40px;
         height: 40px;
-        background: var(--mobile-toggle-bg);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -1582,24 +1583,35 @@ button:hover {
     }
     
     .mobile-toggle-btn.active {
-        background: var(--mobile-toggle-hover);
         transform: scale(1.1);
     }
     
     .mobile-toggle-btn:hover {
-        background: var(--mobile-toggle-hover);
+        transform: scale(1.05);
     }
     
-    /* 二维码切换按钮位置 */
+    /* 二维码切换按钮位置和颜色 */
     .qrcode-toggle {
         bottom: 140px;
         left: 15px;
+        background: var(--mobile-toggle-bg);
     }
     
-    /* 推荐码切换按钮位置 */
+    .qrcode-toggle.active,
+    .qrcode-toggle:hover {
+        background: var(--mobile-toggle-hover);
+    }
+    
+    /* 推荐码切换按钮位置和颜色 - 改为金色 */
     .invite-toggle {
         top: 15px;
         right: 15px;
+        background: var(--invite-toggle-bg);
+    }
+    
+    .invite-toggle.active,
+    .invite-toggle:hover {
+        background: var(--invite-toggle-hover);
     }
     
     /* 调整收起后二维码和推荐码的位置，避免与切换按钮重叠 */
