@@ -30,8 +30,8 @@
     --window-title-color: var(--primary-color);
     --mobile-toggle-bg: rgba(52, 152, 219, 0.9); /* 新增：移动端切换按钮颜色 */
     --mobile-toggle-hover: rgba(41, 128, 185, 0.9); /* 新增：移动端切换按钮悬停颜色 */
-    --invite-toggle-bg: rgba(255, 215, 0, 0.9); /* 新增：金色礼物图标背景色 */
-    --invite-toggle-hover: rgba(255, 193, 7, 0.9); /* 新增：金色礼物图标悬停颜色 */
+    --invite-toggle-bg: rgba(255, 215, 0, 0.9); /* 新增：推荐码切换按钮金色背景 */
+    --invite-toggle-hover: rgba(255, 193, 7, 0.9); /* 新增：推荐码切换按钮金色悬停颜色 */
 }
 
 /* 新增：通知动画 */
@@ -626,17 +626,17 @@ header {
 }
 
 .db-status {
-position: fixed;
-bottom: 20px;
-left: 20px;
-font-size: 0.8rem;
-color: var(--text-light);
-background: transparent; /* 改为透明 */
-padding: 5px 10px;
-border-radius: 5px;
-display: flex;
-align-items: center;
-gap: 5px;
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    background: transparent; /* 改为透明 */
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .modal {
@@ -1597,21 +1597,19 @@ button:hover {
         background: var(--mobile-toggle-bg);
     }
     
-    .qrcode-toggle.active,
-    .qrcode-toggle:hover {
+    .qrcode-toggle.active, .qrcode-toggle:hover {
         background: var(--mobile-toggle-hover);
     }
     
-    /* 推荐码切换按钮位置和颜色 - 改为金色 */
+    /* 推荐码切换按钮位置和颜色 - 调整为金色并下移 */
     .invite-toggle {
-        top: 15px;
+        top: 65px; /* 从15px调整为65px，下移50px避免压在推荐码上 */
         right: 15px;
-        background: var(--invite-toggle-bg);
+        background: var(--invite-toggle-bg); /* 金色背景 */
     }
     
-    .invite-toggle.active,
-    .invite-toggle:hover {
-        background: var(--invite-toggle-hover);
+    .invite-toggle.active, .invite-toggle:hover {
+        background: var(--invite-toggle-hover); /* 金色悬停颜色 */
     }
     
     /* 调整收起后二维码和推荐码的位置，避免与切换按钮重叠 */
